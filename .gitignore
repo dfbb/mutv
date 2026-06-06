@@ -16,6 +16,7 @@ scripts/public/
 *.mp3
 *.srt
 *.lrc
+*.jpg
 
 # OS
 .DS_Store
