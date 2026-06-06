@@ -18,7 +18,9 @@
  *   --offset       Lyric timing offset in seconds (default: -0.5)
  *   --output       Output file path (default: out/video.mp4)
  *   --codec        Video codec: h264, h265, vp8, vp9 (default: h264)
- *   --background   Background image file path (if omitted, uses animated gradient)
+ *   --bg-img       Background image file (mutually exclusive with --bg-video/--bganim)
+ *   --bg-video     Background video file (mutually exclusive)
+ *   --bganim       Animated background effect label under animbg/<label>/ (mutually exclusive)
  *   --preset       Visual template under preset/<label>/ (default: orig)
  *   --res          Output resolution WxH (default: 1920x1080)
  *   --fps          Frames per second (default: 30)
@@ -329,23 +331,51 @@ if (args.lyrics) {
   console.log(`Loaded ${lyrics.length} lyric lines from JSON file`);
 }
 
-// Handle background image
-let backgroundImage = '';
-if (args.background) {
-  const resolvedBg = resolveFilePath(args.background);
-  if (!existsSync(resolvedBg)) {
-    console.error(`Error: Background image not found: ${resolvedBg}`);
+// --- Background sources (mutually exclusive): video > image > anim ---
+const bgFlags = ['bg-video', 'bg-img', 'bganim'].filter((k) => args[k]);
+if (bgFlags.length > 1) {
+  console.error(`Error: choose only one background source (got: ${bgFlags.map((f) => '--' + f).join(', ')})`);
+  process.exit(1);
+}
+
+function copyToPublic(srcPath, kind) {
+  const resolved = resolveFilePath(srcPath);
+  if (!existsSync(resolved)) {
+    console.error(`Error: ${kind} file not found: ${resolved}`);
     process.exit(1);
   }
   const pubDir = resolve('public');
   mkdirSync(pubDir, {recursive: true});
-  const bgName = basename(resolvedBg);
-  const bgDest = resolve(pubDir, bgName);
-  if (resolve(resolvedBg) !== bgDest) {
-    copyFileSync(resolvedBg, bgDest);
-    console.log(`Copied background image to public/${bgName}`);
+  const name = basename(resolved);
+  const dest = resolve(pubDir, name);
+  if (resolve(resolved) !== dest) {
+    copyFileSync(resolved, dest);
+    console.log(`Copied ${kind} to public/${name}`);
   }
-  backgroundImage = bgName;
+  return name;
+}
+
+let backgroundImage = '';
+let backgroundVideo = '';
+let backgroundAnimHtml = '';
+
+if (args['bg-img']) {
+  backgroundImage = copyToPublic(args['bg-img'], 'background image');
+} else if (args['bg-video']) {
+  backgroundVideo = copyToPublic(args['bg-video'], 'background video');
+} else if (args.bganim) {
+  const animLabel = args.bganim;
+  const animFile = resolve('animbg', animLabel, 'index.html');
+  if (!existsSync(animFile)) {
+    const avail = existsSync(resolve('animbg'))
+      ? readdirSync(resolve('animbg')).filter((d) => existsSync(join(resolve('animbg'), d, 'index.html')))
+      : [];
+    console.error(`Error: bganim "${animLabel}" not found (expected ${animFile})`);
+    console.error(`Available animated backgrounds: ${avail.length ? avail.join(', ') : '(none — run scripts/fetch_animbg.py)'}`);
+    process.exit(1);
+  }
+  backgroundAnimHtml = readFileSync(animFile, 'utf-8');
+  console.log(`Using animated background: ${animLabel}`);
 }
 
 // Determine audio duration
@@ -378,6 +408,8 @@ const inputProps = {
   durationInSeconds: duration,
   lyricOffset: args.offset ? parseFloat(args.offset) : -0.5,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   width: resWidth,
   height: resHeight,
   fps,
@@ -402,6 +434,8 @@ if (args.html) {
   console.log(`  Resolution: ${resWidth}x${resHeight} @ ${fps}fps`);
   console.log(`  Lyrics: ${lyrics.length} lines`);
   if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
+  if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
+  if (backgroundAnimHtml) console.log(`  Background anim: ${args.bganim}`);
   console.log('');
   console.log('  A browser tab will open at http://localhost:3000 (Composition: MusicVideo).');
   console.log('  Press Ctrl+C to stop the server.\n');
@@ -449,6 +483,8 @@ console.log(`  Lyrics: ${lyrics.length} lines`);
 console.log(`  Output: ${output}`);
 console.log(`  Codec: ${codec}`);
 if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
+if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
+if (backgroundAnimHtml) console.log(`  Background anim: ${args.bganim}`);
 if (browserExe) console.log(`  Browser: ${browserExe}`);
 if (chromeMode !== 'headless-shell') console.log(`  Chrome mode: ${chromeMode}`);
 console.log('');
