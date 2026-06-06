@@ -28,8 +28,9 @@
  */
 
 import {execSync, spawn} from 'child_process';
-import {readFileSync, readdirSync, existsSync, copyFileSync, mkdirSync} from 'fs';
+import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
+import {injectVirtualMouse, needsVirtualMouse} from './animbgInject.mjs';
 import {homedir} from 'os';
 
 /**
@@ -394,10 +395,17 @@ if (args['bg-image']) {
   // Copy the effect HTML into public/ and load it via <IFrame src>. We must NOT
   // inline the HTML as a prop: Studio writes inputProps into an inline <script>,
   // and effect HTML containing </script> would break that script (SyntaxError).
+  // Effects that react to a moving cursor get a virtual-mouse script injected so
+  // they animate without a real user.
   const pubDir = resolve('public');
   mkdirSync(pubDir, {recursive: true});
   const animPublicName = `animbg-${animLabel}.html`;
-  copyFileSync(animFile, resolve(pubDir, animPublicName));
+  let animHtml = readFileSync(animFile, 'utf-8');
+  if (needsVirtualMouse(animHtml)) {
+    animHtml = injectVirtualMouse(animHtml);
+    console.log('Injected virtual mouse (effect reacts to cursor movement)');
+  }
+  writeFileSync(resolve(pubDir, animPublicName), animHtml);
   backgroundAnim = animPublicName;
   backgroundAnimLabel = animLabel;
   console.log(`Using animated background: ${animLabel}`);
@@ -445,7 +453,6 @@ const codec = args.codec || 'h264';
 
 // Write props to temp file to avoid shell escaping issues
 const propsFile = resolve('.render-props.json');
-const {writeFileSync} = await import('fs');
 writeFileSync(propsFile, JSON.stringify(inputProps));
 
 // --html mode: launch the Remotion Studio (local web preview) instead of rendering.

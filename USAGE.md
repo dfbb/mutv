@@ -214,6 +214,8 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 71 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
 
+> 部分特效原本依赖鼠标移动才会动（如 `mouse-trails`、`gravity-points`）。渲染时检测到这类特效会自动注入一个“虚拟鼠标”脚本，按随机平滑曲线轨迹模拟光标移动，无需真实鼠标即可让特效动起来。
+
 ### 3D & WebGL
 
 | label | 效果简介 | tech |
