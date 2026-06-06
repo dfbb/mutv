@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>1. Urban Downpour with Lightning</title>
+<style>
+    :root {
+        --rain-bg: #11141d;
+        --drop-color: #cbd5e1;
+    }
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: var(--rain-bg);
+        overflow: hidden;
+        position: relative;
+    }
+    .rain-container {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+    }
+    .rain-drop {
+        position: absolute;
+        bottom: 100%;
+        width: 2px;
+        background: linear-gradient(to top, transparent, var(--drop-color));
+        animation: fall 10s infinite linear;
+    }
+    /* Far layer - slower, smaller, more transparent */
+    .rain-drop.back {
+        opacity: 0.4;
+        height: 30px;
+        animation-duration: 2s;
+        animation-timing-function: linear;
+    }
+    /* Mid layer - standard */
+    .rain-drop.mid {
+        opacity: 0.6;
+        height: 50px;
+        animation-duration: 1.2s;
+        animation-timing-function: linear;
+    }
+    /* Near layer - faster, larger, more opaque */
+    .rain-drop.front {
+        opacity: 1;
+        height: 80px;
+        animation-duration: 0.7s;
+        animation-timing-function: linear;
+    }
+    @keyframes fall {
+        from { transform: translateY(0vh); }
+        to { transform: translateY(110vh); }
+    }
+    .splash {
+        position: absolute;
+        bottom: 0;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: var(--drop-color);
+        opacity: 0;
+        transform: scale(0);
+        animation: splash-up 10s infinite ease-out;
+    }
+    @keyframes splash-up {
+        0% { opacity: 0; transform: scale(0) translateY(0); }
+        2% { opacity: 1; transform: scale(1) translateY(-10px); } /* Initial impact */
+        5% { opacity: 0; transform: scale(1.5, 0.5) translateY(-50px); } /* Disperse */
+        100% { opacity: 0; }
+    }
+    /* Lightning Flash Effect */
+    .lightning {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: radial-gradient(circle at 50% 0%, white, transparent 40%);
+        opacity: 0;
+        animation: flash 10s infinite step-end;
+    }
+    @keyframes flash {
+        0%, 94%, 100% { opacity: 0; }
+        94.1% { opacity: 0.6; }
+        94.2% { opacity: 0.1; }
+        94.3% { opacity: 0.8; }
+        94.6% { opacity: 0; }
+    }
+</style>
+</head>
+<body>
+    <div class="lightning"></div>
+    <div class="rain-container" id="rainContainer"></div>
+<script>
+    const container = document.getElementById('rainContainer');
+    const totalDrops = 400;
+
+    for (let i = 0; i < totalDrops; i++) {
+        const drop = document.createElement('div');
+        const splash = document.createElement('div');
+        const layer = Math.random();
+        
+        let layerClass = 'front';
+        if (layer < 0.33) layerClass = 'back';
+        else if (layer < 0.66) layerClass = 'mid';
+
+        drop.className = `rain-drop ${layerClass}`;
+        splash.className = 'splash';
+
+        const leftPosition = `${Math.random() * 105 - 5}%`; // -5 to 105 to cover edges
+        drop.style.left = leftPosition;
+        splash.style.left = leftPosition;
+
+        const delay = Math.random() * -10; // Use negative delay to start immediately
+        drop.style.animationDelay = `${delay}s`;
+        
+        // Match splash delay to the corresponding drop duration
+        const dropDuration = parseFloat(drop.style.animationDuration || '0.7s');
+        splash.style.animationDelay = `${delay + dropDuration}s`;
+
+        container.appendChild(drop);
+        container.appendChild(splash);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cyber Fiber Optics</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, #0a1128 0%, #000000 70%);
+  }
+  .optic-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+<canvas class="optic-canvas"></canvas>
+<script>
+  const canvas = document.querySelector('.optic-canvas');
+  const ctx = canvas.getContext('2d');
+  let width, height, centerX, centerY;
+  let particles = [];
+
+  function setSize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    centerX = width / 2;
+    centerY = height / 2;
+  }
+
+  class Particle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+        this.z = Math.random() * width;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * (width / 3);
+        this.x = centerX + Math.cos(angle) * radius;
+        this.y = centerY + Math.sin(angle) * radius;
+        this.speed = 1 + Math.random() * 3;
+        this.hue = 180 + Math.random() * 50;
+    }
+    update() {
+      this.z -= this.speed;
+      if (this.z < 1) {
+        this.reset();
+      }
+    }
+    draw() {
+        const scale = width / this.z;
+        const x2d = (this.x - centerX) * scale + centerX;
+        const y2d = (this.y - centerY) * scale + centerY;
+        
+        const prev_scale = width / (this.z + this.speed * 10);
+        const prev_x2d = (this.x - centerX) * prev_scale + centerX;
+        const prev_y2d = (this.y - centerY) * prev_scale + centerY;
+
+        ctx.beginPath();
+        ctx.moveTo(prev_x2d, prev_y2d);
+        ctx.lineTo(x2d, y2d);
+        ctx.lineWidth = scale * 1.5;
+        ctx.strokeStyle = `hsla(${this.hue}, 80%, 60%, ${0.1 + 0.8 * (1 - this.z/width)})`;
+        ctx.stroke();
+    }
+  }
+
+  function init() {
+    setSize();
+    particles = [];
+    for (let i = 0; i < 600; i++) {
+      particles.push(new Particle());
+    }
+  }
+
+  function animate() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, 0, width, height);
+
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', setSize);
+  init();
+  animate();
+</script>
+</body>
+</html>

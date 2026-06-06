@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Gradients</title>
+<meta name="category" content="Abstract">
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: diagonalShift 15s ease infinite;
+    }
+
+    @keyframes diagonalShift {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+</style>
+</head>
+<body>
+</body>
+</html>

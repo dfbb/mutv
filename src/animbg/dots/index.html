@@ -1,0 +1,54 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Dots</title>
+    <style>
+      /*
+        Vanta.js Dots
+        ----------------
+        This page demonstrates Vanta's DOTS effect with all user
+        interaction disabled.  The canvas fills the viewport.
+      */
+      html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #0a0a0a;
+      }
+      #vanta {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <!-- Dots uses three.js for rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.dots.min.js"></script>
+  </head>
+  <body>
+    <div id="vanta"></div>
+    <script>
+      // Initialize the DOTS effect with controls disabled.  Colors and spacing
+      // have been customized to create a subtle star field.
+      VANTA.DOTS({
+        el: "#vanta",
+        mouseControls: false,
+        touchControls: false,
+        gyroControls: false,
+        // Primary color of the points
+        color: 0xffffff,
+        // Secondary color used for connecting lines
+        color2: 0xff6ec7,
+        // Background behind the dots
+        backgroundColor: 0x0a0a0a,
+        // Size of each dot
+        size: 2.5,
+        // Distance between points in the grid
+        spacing: 30.0,
+        // Show connecting lines between random pairs of points
+        showLines: true
+      });
+    </script>
+  </body>
+</html>

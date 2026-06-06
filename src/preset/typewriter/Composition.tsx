@@ -2,13 +2,13 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
   interpolate,
 } from 'remotion';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 import {lyricsToData, LyricsLine} from '../lyricsToData';
 
 // Typewriter / retro lyric overlay (ported from ai-music-video-maker's
@@ -128,6 +128,8 @@ const TypewriterLine: React.FC<{
 export const TypewriterComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   lyrics,
   lyricOffset,
 }) => {
@@ -137,17 +139,15 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
   const fontSize = Math.round(height * 0.044);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http') ? backgroundImage : staticFile(backgroundImage)
-    : '';
 
   return (
     <AbsoluteFill style={{backgroundColor: '#0a0a0a'}}>
-      {bgSrc ? (
-        <Img src={bgSrc} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      ) : (
-        <AbsoluteFill style={{background: 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)'}} />
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient="linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)"
+      />
 
       <Audio src={audioSrc} />
 

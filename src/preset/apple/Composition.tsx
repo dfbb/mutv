@@ -2,13 +2,13 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
   interpolate,
 } from 'remotion';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 import {Lyrics} from './Lyrics';
 
 /**
@@ -22,61 +22,30 @@ import {Lyrics} from './Lyrics';
 export const AppleLyrics: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   lyrics,
   lyricOffset,
   title,
   subtitle,
 }) => {
   const frame = useCurrentFrame();
-  const {fps, durationInFrames} = useVideoConfig();
+  const {fps} = useVideoConfig();
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
     : staticFile(audioFileName);
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http')
-      ? backgroundImage
-      : staticFile(backgroundImage)
-    : '';
-
-  // Slow drift over the whole video for the "fluid" feel.
-  const drift = interpolate(frame, [0, durationInFrames], [0, 1]);
-  const scale = 1.25 + Math.sin(drift * Math.PI * 2) * 0.08;
-  const translateX = Math.sin(drift * Math.PI * 2) * 4;
-  const translateY = Math.cos(drift * Math.PI * 2) * 4;
-  const hue = interpolate(frame, [0, durationInFrames], [0, 40]);
 
   return (
     <AbsoluteFill style={{backgroundColor: '#0a0a0a'}}>
       {/* Background: blurred, scaled, slowly drifting image — or animated gradient */}
-      {bgSrc ? (
-        <AbsoluteFill>
-          <Img
-            src={bgSrc}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              filter: `blur(60px) saturate(1.8) brightness(0.75) hue-rotate(${hue}deg)`,
-              transform: `scale(${scale}) translate(${translateX}%, ${translateY}%)`,
-            }}
-          />
-          {/* Darkening + vignette overlay for lyric readability */}
-          <AbsoluteFill
-            style={{
-              background:
-                'radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.6) 100%)',
-            }}
-          />
-        </AbsoluteFill>
-      ) : (
-        <AbsoluteFill
-          style={{
-            background: `linear-gradient(135deg, hsl(${260 + hue}, 55%, 22%) 0%, hsl(${320 + hue}, 50%, 14%) 100%)`,
-            transform: `scale(${scale})`,
-          }}
-        />
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient="linear-gradient(135deg, hsl(260, 55%, 22%) 0%, hsl(320, 50%, 14%) 100%)"
+        overlay="radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.6) 100%)"
+      />
 
       <Audio src={audioSrc} />
 

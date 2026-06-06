@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Canvas Orbital Trails</title>
+  <style>
+    /* Base page styling */
+    body {
+      background: #000;
+      color: #aaa;
+      font: 100%/20px helvetica, arial, sans-serif;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    /* Full‑screen canvas */
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Control panel styling */
+    #control-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid #333;
+      z-index: 2;
+    }
+    #control-panel p {
+      margin: 0 0 5px;
+      font-size: 12px;
+    }
+    #control-panel label {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    #control-panel button {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    #control-panel a {
+      font-size: 12px;
+      color: #fff;
+      border-bottom: 1px dotted #444;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="control-panel">
+    <p>Click and drag to make more!</p>
+    <label>Trails: </label>
+    <input type="checkbox" id="trail" name="trail" checked />
+    <button id="clear">Clear</button>
+    <a href="https://codepen.io/jackrugile/pen/aCzHs" target="_blank">View Version 2</a>
+  </div>
+  <canvas id="c"></canvas>
+
+  <script>
+    // Polyfill for requestAnimationFrame
+    window.requestAnimFrame = (function() {
+      return window.requestAnimationFrame ||
+             window.webkitRequestAnimationFrame ||
+             window.mozRequestAnimationFrame ||
+             window.oRequestAnimationFrame ||
+             window.msRequestAnimationFrame ||
+             function(callback) {
+               window.setTimeout(callback, 1000 / 60);
+             };
+    })();
+
+    // Prevent text selection while interacting
+    document.onselectstart = function() {
+      return false;
+    };
+
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    let cw = window.innerWidth;
+    let ch = window.innerHeight;
+    canvas.width = cw * dpr;
+    canvas.height = ch * dpr;
+    ctx.scale(dpr, dpr);
+
+    // Helper to generate a random integer between rMin and rMax
+    function rand(rMin, rMax) {
+      return Math.floor(Math.random() * (rMax - rMin + 1)) + rMin;
+    }
+
+    ctx.lineCap = 'round';
+    let orbs = [];
+
+    const trailCB = document.getElementById('trail');
+    let trail = trailCB.checked;
+    const clearBtn = document.getElementById('clear');
+
+    /**
+     * Create a new orb object and push it into the orbs array. The orb
+     * calculates its own colour and position based on the distance from
+     * the canvas centre and uses polar coordinates for circular motion.
+     */
+    function createOrb(mx, my) {
+      const dx = (cw / 2) - mx;
+      const dy = (ch / 2) - my;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const baseAngle = Math.atan2(dy, dx);
+      orbs.push({
+        x: mx,
+        y: my,
+        lastX: mx,
+        lastY: my,
+        colourAngle: 0,
+        angle: baseAngle + Math.PI / 2,
+        size: rand(1, 3) / 2,
+        centerX: cw / 2,
+        centerY: ch / 2,
+        radius: dist,
+        speed: (rand(5, 10) / 1000) * (dist / 750) + 0.015,
+        update() {
+          this.lastX = this.x;
+          this.lastY = this.y;
+
+          // Determine colour angle from position relative to centre
+          const x1 = cw / 2;
+          const y1 = ch / 2;
+          const x2 = this.x;
+          const y2 = this.y;
+          const rise = y1 - y2;
+          const run = x1 - x2;
+          let slope = -(rise / run);
+          let radian = Math.atan(slope);
+          let angleH = Math.floor(radian * (180 / Math.PI));
+          if (x2 < x1 && y2 < y1) angleH += 180;
+          if (x2 < x1 && y2 > y1) angleH += 180;
+          if (x2 > x1 && y2 > y1) angleH += 360;
+          if (y2 < y1 && slope === -Infinity) angleH = 90;
+          if (y2 > y1 && slope === Infinity) angleH = 270;
+          if (x2 < x1 && slope === 0) angleH = 180;
+          if (isNaN(angleH)) angleH = 0;
+          this.colourAngle = angleH;
+
+          // Update position along circular orbit
+          this.x = this.centerX + Math.sin(this.angle * -1) * this.radius;
+          this.y = this.centerY + Math.cos(this.angle * -1) * this.radius;
+          this.angle += this.speed;
+        },
+        draw() {
+          ctx.strokeStyle = `hsla(${this.colourAngle},100%,50%,1)`;
+          ctx.lineWidth = this.size;
+          ctx.beginPath();
+          ctx.moveTo(this.lastX, this.lastY);
+          ctx.lineTo(this.x, this.y);
+          ctx.stroke();
+        }
+      });
+    }
+
+    // Handle user input to spawn orbs
+    function onMouseDown(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      createOrb(mx, my);
+      canvas.addEventListener('mousemove', onMouseMove);
+    }
+    function onMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      createOrb(mx, my);
+    }
+    function onMouseUp() {
+      canvas.removeEventListener('mousemove', onMouseMove);
+    }
+
+    function onToggleTrails() {
+      trail = trailCB.checked;
+    }
+    function clearOrbs() {
+      orbs = [];
+    }
+
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    trailCB.addEventListener('change', onToggleTrails);
+    clearBtn.addEventListener('click', clearOrbs);
+
+    // Initialise orbs around the centre
+    let count = 100;
+    while (count--) {
+      createOrb(cw / 2, ch / 2 + (count * 2));
+    }
+
+    // Main animation loop
+    function loop() {
+      requestAnimFrame(loop);
+      if (trail) {
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0, 0, cw, ch);
+      } else {
+        ctx.clearRect(0, 0, cw, ch);
+      }
+      for (let i = 0; i < orbs.length; i++) {
+        // Update and draw each orb multiple times for smoother paths
+        for (let j = 0; j < 3; j++) {
+          orbs[i].update();
+          orbs[i].draw();
+        }
+      }
+    }
+    loop();
+
+    // Handle resize events
+    window.addEventListener('resize', function() {
+      cw = window.innerWidth;
+      ch = window.innerHeight;
+      canvas.width = cw * dpr;
+      canvas.height = ch * dpr;
+      ctx.scale(dpr, dpr);
+    });
+  </script>
+</body>
+</html>

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   useCurrentFrame,
   useVideoConfig,
   interpolate,
@@ -11,6 +10,7 @@ import {
 } from 'remotion';
 import {useAudioData, visualizeAudio} from '@remotion/media-utils';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 
 export const AudioVisualization: React.FC<MVInputProps> = ({
   audioFileName,
@@ -20,6 +20,8 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   creditText,
   lyricOffset,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
 }) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames} = useVideoConfig();
@@ -73,43 +75,16 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   const avgAmplitude =
     visualization.reduce((sum, val) => sum + val, 0) / visualization.length;
 
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http')
-      ? backgroundImage
-      : staticFile(backgroundImage)
-    : '';
-
   return (
     <AbsoluteFill>
       {/* Background: image or animated gradient */}
-      {bgSrc ? (
-        <>
-          <AbsoluteFill>
-            <Img
-              src={bgSrc}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-          </AbsoluteFill>
-          {/* Dark overlay for readability */}
-          <AbsoluteFill
-            style={{
-              background: `rgba(0, 0, 0, 0.45)`,
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <AbsoluteFill
-            style={{
-              background: `linear-gradient(135deg, hsl(${hue}, 80%, 12%) 0%, hsl(${hue + 80}, 70%, 8%) 100%)`,
-            }}
-          />
-        </>
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient={`linear-gradient(135deg, hsl(${hue}, 80%, 12%) 0%, hsl(${hue + 80}, 70%, 8%) 100%)`}
+        overlay="rgba(0, 0, 0, 0.45)"
+      />
 
       {/* Radial glow effect */}
       <AbsoluteFill

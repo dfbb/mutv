@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glowing Fireflies</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #020617;
+            /* Very dark slate */
+            /* Add some depth to the night sky */
+            background-image: radial-gradient(circle at 50% 100%, #0f172a 0%, #020617 80%);
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fireflyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fireflyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let fireflies = [];
+
+        const config = {
+            count: 150,
+            color: '#d9f99d', // Lime/yellow glow
+            sizeMin: 1,
+            sizeMax: 2.5,
+            speed: 0.5,
+            wander: 0.2 // How erratic they move (Brownian motion)
+        };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Firefly {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * config.speed;
+                this.vy = (Math.random() - 0.5) * config.speed;
+                this.baseSize = config.sizeMin + Math.random() * (config.sizeMax - config.sizeMin);
+
+                // For pulsing glow
+                this.angle = Math.random() * Math.PI * 2;
+                this.pulseSpeed = 0.02 + Math.random() * 0.03;
+
+                // For organic drifting
+                this.wanderAngle = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                // Organic erratic drifting (Brownian motion)
+                this.wanderAngle += (Math.random() - 0.5) * 0.5;
+                this.vx += Math.cos(this.wanderAngle) * config.wander * 0.1;
+                this.vy += Math.sin(this.wanderAngle) * config.wander * 0.1;
+
+                // Speed limits
+                const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (currentSpeed > config.speed * 2) {
+                    this.vx = (this.vx / currentSpeed) * config.speed * 2;
+                    this.vy = (this.vy / currentSpeed) * config.speed * 2;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Screen wrapping
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+
+                // Update pulsing
+                this.angle += this.pulseSpeed;
+            }
+
+            draw() {
+                // Calculate opacity using sine wave for smooth throbbing glow
+                const alpha = (Math.sin(this.angle) * 0.5 + 0.5) * 0.8 + 0.1;
+                const size = this.baseSize;
+
+                // Core
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(217, 249, 157, ${alpha})`;
+                ctx.fill();
+
+                // Diffuse Glow
+                if (alpha > 0.4) {
+                    ctx.beginPath();
+                    const gradient = ctx.createRadialGradient(this.x, this.y, size, this.x, this.y, size * 6);
+                    gradient.addColorStop(0, `rgba(163, 230, 53, ${alpha * 0.5})`);
+                    gradient.addColorStop(1, 'rgba(163, 230, 53, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, size * 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function init() {
+            resize();
+            fireflies = [];
+            let c = window.innerWidth < 768 ? Math.floor(config.count / 2) : config.count;
+            for (let i = 0; i < c; i++) {
+                fireflies.push(new Firefly());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Optional: Draw some ambient foreground elements or background trees here
+
+            // Draw fireflies
+            ctx.globalCompositeOperation = 'screen';
+            for (let i = 0; i < fireflies.length; i++) {
+                fireflies[i].update();
+                fireflies[i].draw();
+            }
+            ctx.globalCompositeOperation = 'source-over';
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+
+        init();
+        animate();
+    </script>
+</body>
+
+</html>

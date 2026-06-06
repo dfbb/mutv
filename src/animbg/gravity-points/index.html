@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Gravity Points</title>
+    <style>
+      /*
+        Gravity Points
+        --------------
+        A simplified version of the gravity points experiment.  Hundreds of
+        particles drift randomly across the canvas until you click to create
+        a gravity point.  Each gravity point attracts nearby particles with a
+        force inversely proportional to distance squared.  Multiple points
+        can be created, and they decay over time to avoid permanent chaos.
+      */
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #222;
+        color: #eee;
+        font-family: sans-serif;
+      }
+      #info {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 5px 10px;
+        font-size: 14px;
+        background: rgba(0,0,0,0.4);
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gravity"></canvas>
+    <div id="info">Click to add gravity point</div>
+    <script>
+      (function() {
+          const canvas = document.getElementById('gravity');
+          const ctx    = canvas.getContext('2d');
+          function resize() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+          }
+          window.addEventListener('resize', resize);
+          resize();
+          // Particle class
+          class Particle {
+            constructor() {
+              this.x = Math.random() * canvas.width;
+              this.y = Math.random() * canvas.height;
+              this.vx = (Math.random() - 0.5) * 0.5;
+              this.vy = (Math.random() - 0.5) * 0.5;
+              this.radius = 2;
+              this.colour = `hsl(${Math.random() * 360}, 60%, 60%)`;
+            }
+            update(gravityPoints) {
+              // Apply gravitational forces
+              for (const gp of gravityPoints) {
+                const dx = gp.x - this.x;
+                const dy = gp.y - this.y;
+                const distSq = dx * dx + dy * dy + 0.1;
+                const dist = Math.sqrt(distSq);
+                const force = gp.strength / distSq;
+                this.vx += (dx / dist) * force;
+                this.vy += (dy / dist) * force;
+              }
+              // Dampen velocity slightly
+              this.vx *= 0.99;
+              this.vy *= 0.99;
+              this.x += this.vx;
+              this.y += this.vy;
+              // Wrap around edges
+              if (this.x < -this.radius) this.x = canvas.width + this.radius;
+              if (this.x > canvas.width + this.radius) this.x = -this.radius;
+              if (this.y < -this.radius) this.y = canvas.height + this.radius;
+              if (this.y > canvas.height + this.radius) this.y = -this.radius;
+            }
+            draw(ctx) {
+              ctx.beginPath();
+              ctx.fillStyle = this.colour;
+              ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          // Gravity point class
+          class GravityPoint {
+            constructor(x, y) {
+              this.x = x;
+              this.y = y;
+              this.strength = 200; // gravitational strength
+              this.life = 5000; // ms life
+              this.birth = performance.now();
+            }
+            isAlive(now) {
+              return now - this.birth < this.life;
+            }
+          }
+          const particles = [];
+          const count = 400;
+          for (let i = 0; i < count; i++) particles.push(new Particle());
+          const gravityPoints = [];
+          canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            gravityPoints.push(new GravityPoint(x, y));
+          });
+          function animate() {
+            ctx.fillStyle = 'rgba(34,34,34,0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const now = performance.now();
+            // Remove expired gravity points
+            for (let i = gravityPoints.length - 1; i >= 0; i--) {
+              if (!gravityPoints[i].isAlive(now)) gravityPoints.splice(i, 1);
+            }
+            // Update particles
+            for (const p of particles) p.update(gravityPoints);
+            // Draw particles
+            for (const p of particles) p.draw(ctx);
+            // Draw gravity points for reference
+            for (const gp of gravityPoints) {
+              const alpha = 1 - (now - gp.birth) / gp.life;
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+              ctx.lineWidth = 2;
+              ctx.arc(gp.x, gp.y, 10, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            requestAnimationFrame(animate);
+          }
+          animate();
+      })();
+    </script>
+  </body>
+</html>

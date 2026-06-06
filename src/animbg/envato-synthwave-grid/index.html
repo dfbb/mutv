@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthwave Grid Run</title>
+    <style>
+        :root {
+            --grid-color: #f0f;
+            --bg-color: #050114;
+            --horizon-color: #00ffff;
+            --sun-color: #ff0055;
+            --speed: 2s;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(to bottom, #110022 0%, var(--bg-color) 40%);
+            height: 100vh;
+            perspective: 600px;
+        }
+
+        /* The Sun */
+        .sun {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(to bottom, #ffea00 0%, var(--sun-color) 60%, transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 50px var(--sun-color);
+            z-index: 1;
+        }
+
+        /* The Horizon Glow */
+        .horizon {
+            position: absolute;
+            top: 45%;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: var(--horizon-color);
+            filter: blur(20px);
+            opacity: 0.5;
+            z-index: 2;
+        }
+
+        /* The 3D Perspective Plane */
+        .plane {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            transform-origin: top center;
+            transform: rotateX(80deg);
+            z-index: 3;
+            /* Create the Grid */
+            background-image:
+                linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
+                linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px);
+            background-size: 80px 80px;
+
+            /* Fog effect fading into the horizon */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 60%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 60%);
+
+            /* The illusion of infinite forward motion */
+            animation: gridMove var(--speed) linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 80px;
+                /* Must perfectly match background-size height */
+            }
+        }
+
+        /* Optional: Scanlines overlay */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.25) 51%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sun"></div>
+    <div class="horizon"></div>
+    <div class="plane"></div>
+    <div class="scanlines"></div>
+</body>
+
+</html>

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
@@ -11,6 +10,7 @@ import {
   random,
 } from 'remotion';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Playful bounce lyric overlay (ported from ai-music-video-maker's
@@ -109,6 +109,8 @@ const BounceLine: React.FC<{
 export const BounceComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   lyrics,
   lyricOffset,
 }) => {
@@ -118,17 +120,15 @@ export const BounceComposition: React.FC<MVInputProps> = ({
   const fontSize = Math.round(height * 0.059);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http') ? backgroundImage : staticFile(backgroundImage)
-    : '';
 
   return (
     <AbsoluteFill style={{fontFamily: '"Fredoka One", "Bubblegum Sans", "Comic Sans MS", cursive', backgroundColor: '#10131a'}}>
-      {bgSrc ? (
-        <Img src={bgSrc} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      ) : (
-        <AbsoluteFill style={{background: 'linear-gradient(135deg, #2b1055 0%, #7597de 100%)'}} />
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient="linear-gradient(135deg, #2b1055 0%, #7597de 100%)"
+      />
 
       <Audio src={audioSrc} />
 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supernova Collapse & Rebirth</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+        background: radial-gradient(ellipse at center, #1b2735 0%, #090a0f 100%);
+    }
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, centerX, centerY;
+    let particles = [];
+    const particleCount = 2000;
+    const animationDuration = 10000; // 10 seconds in ms
+
+    function resizeCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        centerX = width / 2;
+        centerY = height / 2;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+        constructor() {
+            this.angle = Math.random() * Math.PI * 2;
+            this.radius = Math.random() * 1.5 + 0.5;
+            this.speed = Math.random() * 400 + 200; // pixels per second during explosion
+            this.maxDistance = Math.random() * Math.max(width, height) * 0.6;
+        }
+
+        update(progress) {
+            // Easing function: explosive start, slow down, then accelerate back
+            // The function goes from 0 -> 1 -> 0 over the duration
+            let easedProgress = 1 - Math.pow(Math.abs(progress - 0.5) * 2, 2);
+
+            let currentDistance = easedProgress * this.maxDistance;
+
+            this.x = centerX + Math.cos(this.angle) * currentDistance;
+            this.y = centerY + Math.sin(this.angle) * currentDistance;
+
+            // Determine previous position for motion blur trail
+            let prevDistance = (1 - Math.pow(Math.abs((progress - 0.01) - 0.5) * 2, 2)) * this.maxDistance;
+            this.prevX = centerX + Math.cos(this.angle) * prevDistance;
+            this.prevY = centerY + Math.sin(this.angle) * prevDistance;
+
+            // Color changes based on the phase (explosion vs. collapse)
+            if (progress < 0.5) { // Explosion phase
+                this.color = `hsl(50, 100%, ${60 + easedProgress * 40}%)`;
+            } else { // Collapse phase
+                this.color = `hsl(240, 100%, ${60 + easedProgress * 40}%)`;
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.moveTo(this.prevX, this.prevY);
+            ctx.lineTo(this.x, this.y);
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = this.radius * 2;
+            ctx.stroke();
+        }
+    }
+
+    function init() {
+        particles = [];
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate(timestamp) {
+        const elapsed = timestamp % animationDuration;
+        const progress = elapsed / animationDuration;
+
+        // Fading effect
+        ctx.fillStyle = 'rgba(10, 10, 20, 0.1)';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.lineCap = 'round';
+        
+        particles.forEach(p => {
+            p.update(progress);
+            p.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    init();
+    requestAnimationFrame(animate);
+</script>
+</body>
+</html>

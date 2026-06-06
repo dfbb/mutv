@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Mouse Trails</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="magneticCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('magneticCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        const config = {
+            particleCount: 500, // Reduced for wider compatibility, can handle thousands
+            repelRadius: 150,
+            returnSpeed: 0.1,
+            color: '#38bdf8'
+        };
+
+        let mouse = { x: -1000, y: -1000, vx: 0, vy: 0 };
+        let lastMouse = { x: -1000, y: -1000 };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            init();
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.ox = x; // Origin X
+                this.oy = y; // Origin Y
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.size = Math.random() * 2 + 1;
+                // Randomize color slightly around the base blue
+                const brightness = Math.floor(Math.random() * 50) + 200;
+                this.color = `rgba(56, 189, 248, ${Math.random() * 0.5 + 0.5})`;
+            }
+
+            update() {
+                // Calculate distance to mouse
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // Magnetic Repulsion
+                if (dist < config.repelRadius) {
+                    const force = (config.repelRadius - dist) / config.repelRadius;
+                    const angle = Math.atan2(dy, dx);
+
+                    // We push the particle AWAY from the mouse
+                    // and add some of the mouse velocity for a "swirl" effect
+                    this.vx -= Math.cos(angle) * force * 5 + mouse.vx * force * 0.1;
+                    this.vy -= Math.sin(angle) * force * 5 + mouse.vy * force * 0.1;
+                }
+
+                // Spring back to origin (magnetic attraction to home base)
+                this.vx += (this.ox - this.x) * config.returnSpeed;
+                this.vy += (this.oy - this.y) * config.returnSpeed;
+
+                // Friction
+                this.vx *= 0.85;
+                this.vy *= 0.85;
+
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            particles = [];
+            // Create a grid of particles
+            const spacing = 20;
+            const cols = Math.floor(width / spacing);
+            const rows = Math.floor(height / spacing);
+
+            // Adjust offset to center grid
+            const offsetX = (width - cols * spacing) / 2;
+            const offsetY = (height - rows * spacing) / 2;
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    // Skip some for organic feel
+                    if (Math.random() > 0.2) {
+                        particles.push(new Particle(offsetX + i * spacing, offsetY + j * spacing));
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            // Fading trail effect via low opacity clearRect alternative
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Calculate mouse velocity for swirling
+            mouse.vx = mouse.x - lastMouse.x;
+            mouse.vy = mouse.y - lastMouse.y;
+            lastMouse.x = mouse.x;
+            lastMouse.y = mouse.y;
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+        });
+
+        // Touch support for mobile interaction
+        window.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+        });
+
+        resize();
+        animate();
+    </script>
+</body>
+
+</html>

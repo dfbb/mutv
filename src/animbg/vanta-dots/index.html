@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vanta.js Dots</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #07080d;
+        color: #f5f7fb;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #vanta {
+        position: fixed;
+        inset: 0;
+      }
+
+    </style>
+    <script src="../vendor/three.r134.min.js"></script>
+    <script src="../vendor/p5.min.js"></script>
+    <script src="../vendor/vanta/dist/vanta.dots.min.js"></script>
+  </head>
+  <body>
+    <div id="vanta"></div>
+    <script>
+      VANTA.DOTS({
+        el: "#vanta",
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        color: 0xffffff,
+        color2: 0xff6ec7,
+        backgroundColor: 0x090b10,
+        size: 2.6,
+        spacing: 30,
+        showLines: true
+      });
+    </script>
+  </body>
+</html>

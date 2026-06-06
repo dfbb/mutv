@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Background 3: Symbolic Gyre</title>
+<style>
+    :root {
+        --bg-color: #101010;
+        --symbol-color: #444;
+        --glow-color: #ffffff;
+    }
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: var(--bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    .symbol-grid {
+        width: 105vw;
+        height: 105vh;
+        display: grid;
+        grid-template-columns: repeat(var(--cols), 1fr);
+    }
+    .symbol {
+        font-family: monospace;
+        font-size: 1.5em;
+        text-align: center;
+        color: var(--symbol-color);
+        transform-origin: center;
+        will-change: transform, color;
+        animation: ripple 10s ease-out infinite;
+    }
+    
+    @keyframes ripple {
+        0%, 30%, 100% {
+            transform: scale(1) rotate(0deg);
+            color: var(--symbol-color);
+            text-shadow: none;
+        }
+        15% {
+            transform: scale(2) rotate(180deg);
+            color: var(--glow-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+    }
+</style>
+</head>
+<body>
+    <div class="symbol-grid" id="grid"></div>
+<script>
+    const grid = document.getElementById('grid');
+    const symbol = '+';
+    
+    const size = Math.floor(Math.max(window.innerWidth, window.innerHeight) / 30);
+    const cols = Math.floor(window.innerWidth / size);
+    const rows = Math.floor(window.innerHeight / size);
+    
+    grid.style.setProperty('--cols', cols);
+
+    const centerX = cols / 2;
+    const centerY = rows / 2;
+
+    for(let i = 0; i < cols * rows; i++) {
+        const symbolSpan = document.createElement('span');
+        symbolSpan.className = 'symbol';
+        symbolSpan.textContent = symbol;
+        
+        const x = i % cols;
+        const y = Math.floor(i / cols);
+
+        // Calculate distance from center
+        const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+        
+        // Use distance to calculate animation delay, creating the ripple
+        const delay = dist * 0.15; // The multiplier controls the speed of the ripple
+        symbolSpan.style.animationDelay = `${delay}s`;
+
+        grid.appendChild(symbolSpan);
+    }
+</script>
+</body>
+</html>

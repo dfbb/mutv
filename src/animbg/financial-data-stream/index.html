@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Financial Data Stream</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #03045e;
+    }
+    .container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        filter: blur(0.5px);
+    }
+    .packet {
+        position: absolute;
+        top: calc(var(--y) * 1%);
+        padding: 8px 15px;
+        background: linear-gradient(90deg, rgba(0, 119, 182, 0.7), rgba(2, 62, 138, 0.5));
+        border: 1px solid #00b4d8;
+        border-radius: 5px;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        white-space: nowrap;
+        animation: slide 10s linear infinite;
+        animation-delay: calc(var(--d) * -1s);
+        box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+    }
+    .packet::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -400px;
+        width: 400px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 180, 216, 0.3));
+    }
+    @keyframes slide {
+        0% {
+            transform: translateX(110vw);
+        }
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+    .up {
+        color: #48cae4;
+    }
+    .down {
+        color: #ff595e;
+    }
+</style>
+</head>
+<body>
+<div class="container" id="stream-container"></div>
+<script>
+    const container = document.getElementById('stream-container');
+    const tickers = ['BTC/USD', 'ETH/USD', 'EUR/USD', 'USD/JPY', 'GBP/CHF', 'AAPL', 'TSLA', 'SOL/EUR', 'XRP/USD'];
+    const numPackets = 50;
+
+    function generatePacket() {
+        const ticker = tickers[Math.floor(Math.random() * tickers.length)];
+        const isUp = Math.random() > 0.5;
+        const change = (Math.random() * 2.5).toFixed(2);
+        const arrow = isUp ? '▲' : '▼';
+        const colorClass = isUp ? 'up' : 'down';
+
+        return `${ticker} <span class="${colorClass}">${arrow} ${change}%</span>`;
+    }
+
+    for (let i = 0; i < numPackets; i++) {
+        const packet = document.createElement('div');
+        packet.className = 'packet';
+        packet.innerHTML = generatePacket();
+
+        packet.style.setProperty('--y', Math.random() * 95);
+        packet.style.setProperty('--d', Math.random() * 10);
+        
+        // Vary speeds and sizes for more dynamic look
+        const randomSpeed = Math.random() * 5 + 7; // duration between 7 and 12 seconds
+        const randomScale = Math.random() * 0.4 + 0.8; // scale between 0.8 and 1.2
+        packet.style.animationDuration = `${randomSpeed}s`;
+        packet.style.transform = `scale(${randomScale})`;
+
+
+        container.appendChild(packet);
+    }
+
+    // Optional: Refresh packet content periodically to simulate live data
+    setInterval(() => {
+        const packets = document.querySelectorAll('.packet');
+        packets.forEach(p => {
+            p.innerHTML = generatePacket();
+        });
+    }, 5000);
+
+</script>
+</body>
+</html>

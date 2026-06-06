@@ -1,12 +1,15 @@
-import {AbsoluteFill, Audio, Img, staticFile} from 'remotion';
+import {AbsoluteFill, Audio, staticFile} from 'remotion';
 import {Bottom} from './Bottom';
 import {fontSize} from './Dots';
 import {Subtitles} from './Subtitles';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 
 export const MyComposition: React.FC<MVInputProps> = ({
 	audioFileName,
 	backgroundImage,
+	backgroundVideo,
+	backgroundAnimHtml,
 	lyrics,
 	lyricOffset,
 	title,
@@ -14,11 +17,6 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	const audioSrc = audioFileName.startsWith('http')
 		? audioFileName
 		: staticFile(audioFileName);
-	const bgSrc = backgroundImage
-		? backgroundImage.startsWith('http')
-			? backgroundImage
-			: staticFile(backgroundImage)
-		: '';
 
 	return (
 		<AbsoluteFill
@@ -29,14 +27,12 @@ export const MyComposition: React.FC<MVInputProps> = ({
 				backgroundColor: 'black',
 			}}
 		>
-			{bgSrc ? (
-				<AbsoluteFill>
-					<Img
-						src={bgSrc}
-						style={{width: '100%', height: '100%', objectFit: 'cover'}}
-					/>
-				</AbsoluteFill>
-			) : null}
+			<BackgroundLayer
+				backgroundVideo={backgroundVideo}
+				backgroundImage={backgroundImage}
+				backgroundAnimHtml={backgroundAnimHtml}
+				fallbackGradient="black"
+			/>
 			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} />
 			<Audio src={audioSrc} />
 			<Bottom audioSrc={audioSrc} title={title} />
