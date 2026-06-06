@@ -2,7 +2,6 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
@@ -11,6 +10,7 @@ import {
   Easing,
 } from 'remotion';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Cinematic / movie-trailer lyric overlay (ported from ai-music-video-maker's
@@ -107,6 +107,8 @@ const CinemaLine: React.FC<{
 export const CinemaComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   lyrics,
   lyricOffset,
 }) => {
@@ -116,17 +118,15 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
   const fontSize = Math.round(height * 0.083);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http') ? backgroundImage : staticFile(backgroundImage)
-    : '';
 
   return (
     <AbsoluteFill style={{fontFamily: '"Bebas Neue", "Anton", Impact, sans-serif', backgroundColor: '#000'}}>
-      {bgSrc ? (
-        <Img src={bgSrc} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      ) : (
-        <AbsoluteFill style={{background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)'}} />
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient="radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)"
+      />
 
       <Audio src={audioSrc} />
 

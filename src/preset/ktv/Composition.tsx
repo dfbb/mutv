@@ -1,6 +1,7 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Img, staticFile} from 'remotion';
+import {AbsoluteFill, Audio, staticFile} from 'remotion';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 import {Lyrics} from './Lyrics';
 
 /**
@@ -16,6 +17,8 @@ import {Lyrics} from './Lyrics';
 export const KtvLyrics: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   lyrics,
   lyricOffset,
   title,
@@ -23,30 +26,15 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
     : staticFile(audioFileName);
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http')
-      ? backgroundImage
-      : staticFile(backgroundImage)
-    : '';
 
   return (
     <AbsoluteFill style={{backgroundColor: '#05060f'}}>
-      {bgSrc ? (
-        <AbsoluteFill>
-          <Img
-            src={bgSrc}
-            style={{width: '100%', height: '100%', objectFit: 'cover'}}
-          />
-          <AbsoluteFill style={{background: 'rgba(5, 6, 15, 0.55)'}} />
-        </AbsoluteFill>
-      ) : (
-        <AbsoluteFill
-          style={{
-            background:
-              'linear-gradient(180deg, #0a1030 0%, #05060f 60%, #03040a 100%)',
-          }}
-        />
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient="linear-gradient(180deg, #0a1030 0%, #05060f 60%, #03040a 100%)"
+      />
 
       <Audio src={audioSrc} />
 

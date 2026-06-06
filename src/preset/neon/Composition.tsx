@@ -2,7 +2,6 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
@@ -12,6 +11,7 @@ import {
   random,
 } from 'remotion';
 import {MVInputProps} from '../../types';
+import {BackgroundLayer} from '../BackgroundLayer';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Neon / cyberpunk lyric overlay (ported from ai-music-video-maker's
@@ -142,6 +142,8 @@ const NeonLine: React.FC<{
 export const NeonComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
+  backgroundVideo,
+  backgroundAnimHtml,
   lyrics,
   lyricOffset,
 }) => {
@@ -151,17 +153,15 @@ export const NeonComposition: React.FC<MVInputProps> = ({
   const fontSize = Math.round(height * 0.055);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
-  const bgSrc = backgroundImage
-    ? backgroundImage.startsWith('http') ? backgroundImage : staticFile(backgroundImage)
-    : '';
 
   return (
     <AbsoluteFill style={{fontFamily: '"Orbitron", "Rajdhani", system-ui, sans-serif', backgroundColor: '#0a0014'}}>
-      {bgSrc ? (
-        <Img src={bgSrc} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      ) : (
-        <AbsoluteFill style={{background: 'linear-gradient(135deg, #1a0033 0%, #0a0014 60%, #05000a 100%)'}} />
-      )}
+      <BackgroundLayer
+        backgroundVideo={backgroundVideo}
+        backgroundImage={backgroundImage}
+        backgroundAnimHtml={backgroundAnimHtml}
+        fallbackGradient="linear-gradient(135deg, #1a0033 0%, #0a0014 60%, #05000a 100%)"
+      />
 
       <Audio src={audioSrc} />
 
