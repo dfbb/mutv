@@ -19,8 +19,12 @@ export interface MVInputProps extends Record<string, unknown> {
   durationInSeconds: number;
   /** Lyric timing offset in seconds (positive = delay, negative = advance) */
   lyricOffset: number;
-  /** Background image filename (relative to public/ or absolute URL). If empty, uses animated gradient. */
+  /** Background image filename (relative to public/ or absolute URL). */
   backgroundImage: string;
+  /** Background video filename (relative to public/ or absolute URL). Takes priority over image/anim. */
+  backgroundVideo: string;
+  /** Full self-contained HTML of an animated background effect (from animbg/<label>/index.html). */
+  backgroundAnimHtml: string;
   /** Output width in pixels (set via CLI --res) */
   width: number;
   /** Output height in pixels (set via CLI --res) */
@@ -38,6 +42,8 @@ export const defaultProps: MVInputProps = {
   durationInSeconds: 150,
   lyricOffset: -0.5,
   backgroundImage: '',
+  backgroundVideo: '',
+  backgroundAnimHtml: '',
   width: 1920,
   height: 1080,
   fps: 30,
