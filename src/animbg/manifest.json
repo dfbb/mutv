@@ -1,54 +1,6 @@
 [
   {
-    "label": "1-crimson-glitch-stream",
-    "name": "Crimson Glitch Stream",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/1-crimson-glitch-stream",
-    "fetchedAt": "2026-06-06T17:09:13.137678+00:00"
-  },
-  {
-    "label": "1-system-corruption-breach",
-    "name": "System Corruption Breach",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/1-system-corruption-breach",
-    "fetchedAt": "2026-06-06T17:09:14.196962+00:00"
-  },
-  {
-    "label": "1-urban-downpour-with-lightning",
-    "name": "Urban Downpour",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/1-urban-downpour-with-lightning",
-    "fetchedAt": "2026-06-06T17:08:15.525846+00:00"
-  },
-  {
-    "label": "3-ascendant-light",
-    "name": "Ascendant Light",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/3-ascendant-light",
-    "fetchedAt": "2026-06-06T17:08:16.491152+00:00"
-  },
-  {
-    "label": "3d-perspective-data-tunnel",
-    "name": "Data Tunnel",
-    "category": "interactive",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/interactive/3d-perspective-data-tunnel",
-    "fetchedAt": "2026-06-06T17:08:46.063082+00:00"
-  },
-  {
-    "label": "abstract-particle-flow-animation",
-    "name": "Particle Flow",
-    "category": "particles-systems",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/abstract-particle-flow-animation",
-    "fetchedAt": "2026-06-06T17:08:52.244305+00:00"
-  },
-  {
-    "label": "abstract-particle-system",
+    "label": "abstract-particles",
     "name": "Abstract Particles",
     "category": "particles-systems",
     "tech": "canvas",
@@ -56,31 +8,15 @@
     "fetchedAt": "2026-06-06T17:08:53.197733+00:00"
   },
   {
-    "label": "animated-background-dynamic-pixel-flow",
-    "name": "Dynamic Pixel Flow",
-    "category": "retro-cyberpunk",
+    "label": "ascendant-light",
+    "name": "Ascendant Light",
+    "category": "backgrounds",
     "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/animated-background-dynamic-pixel-flow",
-    "fetchedAt": "2026-06-06T17:09:15.572334+00:00"
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/3-ascendant-light",
+    "fetchedAt": "2026-06-06T17:08:16.491152+00:00"
   },
   {
-    "label": "animated-background-particle-field",
-    "name": "Particle Field",
-    "category": "particles-systems",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/animated-background-particle-field",
-    "fetchedAt": "2026-06-06T17:08:54.183957+00:00"
-  },
-  {
-    "label": "anime-js-fireworks",
-    "name": "Fireworks",
-    "category": "celebration",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/celebration/anime-js-fireworks",
-    "fetchedAt": "2026-06-06T17:08:37.083999+00:00"
-  },
-  {
-    "label": "aurora-borealis",
+    "label": "aurora",
     "name": "Aurora Borealis",
     "category": "backgrounds",
     "tech": "canvas",
@@ -88,36 +24,20 @@
     "fetchedAt": "2026-06-06T17:08:17.666177+00:00"
   },
   {
-    "label": "background-2-hex-code-wave",
-    "name": "Hex Code Wave",
-    "category": "text-typography",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/text-typography/background-2-hex-code-wave",
-    "fetchedAt": "2026-06-06T17:09:25.033908+00:00"
+    "label": "birds",
+    "name": "Vanta Birds",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-birds",
+    "fetchedAt": "2026-06-06T17:08:07.273068+00:00"
   },
   {
-    "label": "background-2-hyperspace-corridor",
-    "name": "Hyperspace Corridor",
-    "category": "retro-cyberpunk",
+    "label": "bouncing-balloons",
+    "name": "Bouncing SVG Balloons",
+    "category": "celebration",
     "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/background-2-hyperspace-corridor",
-    "fetchedAt": "2026-06-06T17:09:16.725218+00:00"
-  },
-  {
-    "label": "background-3-star-genesis",
-    "name": "Star Genesis",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/background-3-star-genesis",
-    "fetchedAt": "2026-06-06T17:08:18.848262+00:00"
-  },
-  {
-    "label": "background-3-symbolic-gyre",
-    "name": "Symbolic Gyre",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/background-3-symbolic-gyre",
-    "fetchedAt": "2026-06-06T17:08:20.046277+00:00"
+    "sourceUrl": "https://htmlhub.org/library/celebration/envato-bouncing-balloons",
+    "fetchedAt": "2026-06-06T17:08:40.313743+00:00"
   },
   {
     "label": "cartoon",
@@ -128,6 +48,22 @@
     "fetchedAt": "2026-06-06T17:08:38.052360+00:00"
   },
   {
+    "label": "cells",
+    "name": "Vanta Cells",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-cells",
+    "fetchedAt": "2026-06-06T17:08:08.238028+00:00"
+  },
+  {
+    "label": "circuit-tracers",
+    "name": "Circuit Tracers",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/digital-circuit-tracers",
+    "fetchedAt": "2026-06-06T17:09:20.049842+00:00"
+  },
+  {
     "label": "click-response",
     "name": "Click Response",
     "category": "interactive",
@@ -136,12 +72,20 @@
     "fetchedAt": "2026-06-06T17:08:47.342979+00:00"
   },
   {
-    "label": "colorful-ribbons",
-    "name": "Colorful Ribbons",
+    "label": "clouds",
+    "name": "Vanta Clouds",
     "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/colorful-ribbons",
-    "fetchedAt": "2026-06-06T17:08:21.277300+00:00"
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-clouds",
+    "fetchedAt": "2026-06-06T17:08:30.616548+00:00"
+  },
+  {
+    "label": "clouds2",
+    "name": "Vanta Clouds 2",
+    "category": "backgrounds",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-clouds2",
+    "fetchedAt": "2026-06-06T17:08:31.629790+00:00"
   },
   {
     "label": "confetti",
@@ -160,7 +104,15 @@
     "fetchedAt": "2026-06-06T17:08:55.146499+00:00"
   },
   {
-    "label": "crt-boot-sequence",
+    "label": "crimson-glitch",
+    "name": "Crimson Glitch Stream",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/1-crimson-glitch-stream",
+    "fetchedAt": "2026-06-06T17:09:13.137678+00:00"
+  },
+  {
+    "label": "crt-boot",
     "name": "CRT Boot",
     "category": "retro-cyberpunk",
     "tech": "canvas",
@@ -168,108 +120,20 @@
     "fetchedAt": "2026-06-06T17:09:17.910872+00:00"
   },
   {
-    "label": "cyber-fiber-optics",
-    "name": "Cyber Fiber Optics",
-    "category": "retro-cyberpunk",
+    "label": "data-tunnel",
+    "name": "Data Tunnel",
+    "category": "interactive",
     "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/cyber-fiber-optics",
-    "fetchedAt": "2026-06-06T17:09:18.880884+00:00"
+    "sourceUrl": "https://htmlhub.org/library/interactive/3d-perspective-data-tunnel",
+    "fetchedAt": "2026-06-06T17:08:46.063082+00:00"
   },
   {
-    "label": "digital-circuit-tracers",
-    "name": "Circuit Tracers",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/digital-circuit-tracers",
-    "fetchedAt": "2026-06-06T17:09:20.049842+00:00"
-  },
-  {
-    "label": "digital-dust-motes",
+    "label": "digital-dust",
     "name": "Digital Dust",
     "category": "particles-systems",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/particles-systems/digital-dust-motes",
     "fetchedAt": "2026-06-06T17:08:56.331280+00:00"
-  },
-  {
-    "label": "dots",
-    "name": "Dots",
-    "category": "particles-systems",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/dots",
-    "fetchedAt": "2026-06-06T17:08:57.493286+00:00"
-  },
-  {
-    "label": "envato-bouncing-balloons",
-    "name": "Bouncing SVG Balloons",
-    "category": "celebration",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/celebration/envato-bouncing-balloons",
-    "fetchedAt": "2026-06-06T17:08:40.313743+00:00"
-  },
-  {
-    "label": "envato-glassmorphism-orbs",
-    "name": "Glassmorphism Orbs",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/envato-glassmorphism-orbs",
-    "fetchedAt": "2026-06-06T17:08:22.436179+00:00"
-  },
-  {
-    "label": "envato-glowing-fireflies",
-    "name": "Glowing Fireflies",
-    "category": "particles-systems",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/envato-glowing-fireflies",
-    "fetchedAt": "2026-06-06T17:08:58.727348+00:00"
-  },
-  {
-    "label": "envato-infinite-mirror-room",
-    "name": "Infinite Mirror Room",
-    "category": "3d-webgl",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/envato-infinite-mirror-room",
-    "fetchedAt": "2026-06-06T17:08:04.266267+00:00"
-  },
-  {
-    "label": "envato-liquid-distortion",
-    "name": "Liquid Distortion Shader",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/envato-liquid-distortion",
-    "fetchedAt": "2026-06-06T17:08:05.294594+00:00"
-  },
-  {
-    "label": "envato-liquid-metal-text",
-    "name": "Liquid Metal Text morph",
-    "category": "text-typography",
-    "tech": "svg",
-    "sourceUrl": "https://htmlhub.org/library/text-typography/envato-liquid-metal-text",
-    "fetchedAt": "2026-06-06T17:09:26.197505+00:00"
-  },
-  {
-    "label": "envato-magnetic-mouse-trails",
-    "name": "Magnetic Mouse Trails",
-    "category": "interactive",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/interactive/envato-magnetic-mouse-trails",
-    "fetchedAt": "2026-06-06T17:08:48.540442+00:00"
-  },
-  {
-    "label": "envato-quantum-mesh",
-    "name": "Quantum Node Mesh",
-    "category": "particles-systems",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/envato-quantum-mesh",
-    "fetchedAt": "2026-06-06T17:08:59.941508+00:00"
-  },
-  {
-    "label": "envato-synthwave-grid",
-    "name": "Synthwave Grid Run",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/envato-synthwave-grid",
-    "fetchedAt": "2026-06-06T17:09:21.232590+00:00"
   },
   {
     "label": "falling-confetti",
@@ -280,12 +144,36 @@
     "fetchedAt": "2026-06-06T17:08:41.461115+00:00"
   },
   {
-    "label": "financial-data-stream",
+    "label": "fiber-optics",
+    "name": "Cyber Fiber Optics",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/cyber-fiber-optics",
+    "fetchedAt": "2026-06-06T17:09:18.880884+00:00"
+  },
+  {
+    "label": "financial-stream",
     "name": "Financial Stream",
     "category": "text-typography",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/text-typography/financial-data-stream",
     "fetchedAt": "2026-06-06T17:09:27.453360+00:00"
+  },
+  {
+    "label": "fireflies",
+    "name": "Glowing Fireflies",
+    "category": "particles-systems",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/envato-glowing-fireflies",
+    "fetchedAt": "2026-06-06T17:08:58.727348+00:00"
+  },
+  {
+    "label": "fireworks",
+    "name": "Fireworks",
+    "category": "celebration",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/celebration/anime-js-fireworks",
+    "fetchedAt": "2026-06-06T17:08:37.083999+00:00"
   },
   {
     "label": "fizzy-sparks",
@@ -294,6 +182,30 @@
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/celebration/fizzy-sparks",
     "fetchedAt": "2026-06-06T17:08:42.740821+00:00"
+  },
+  {
+    "label": "fog",
+    "name": "Vanta Fog",
+    "category": "backgrounds",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-fog",
+    "fetchedAt": "2026-06-06T17:08:35.104342+00:00"
+  },
+  {
+    "label": "glass-orbs",
+    "name": "Glassmorphism Orbs",
+    "category": "backgrounds",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/envato-glassmorphism-orbs",
+    "fetchedAt": "2026-06-06T17:08:22.436179+00:00"
+  },
+  {
+    "label": "globe",
+    "name": "Vanta Globe",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-globe",
+    "fetchedAt": "2026-06-06T17:08:09.422159+00:00"
   },
   {
     "label": "gradients",
@@ -312,6 +224,30 @@
     "fetchedAt": "2026-06-06T17:08:49.823934+00:00"
   },
   {
+    "label": "halo",
+    "name": "Vanta Halo",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-halo",
+    "fetchedAt": "2026-06-06T17:08:10.405331+00:00"
+  },
+  {
+    "label": "hex-wave",
+    "name": "Hex Code Wave",
+    "category": "text-typography",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/text-typography/background-2-hex-code-wave",
+    "fetchedAt": "2026-06-06T17:09:25.033908+00:00"
+  },
+  {
+    "label": "hyperspace-corridor",
+    "name": "Hyperspace Corridor",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/background-2-hyperspace-corridor",
+    "fetchedAt": "2026-06-06T17:09:16.725218+00:00"
+  },
+  {
     "label": "interactive-stars",
     "name": "Interactive Stars",
     "category": "backgrounds",
@@ -320,7 +256,7 @@
     "fetchedAt": "2026-06-06T17:08:24.863894+00:00"
   },
   {
-    "label": "kernel-panic-data-dump",
+    "label": "kernel-panic",
     "name": "Kernel Panic",
     "category": "retro-cyberpunk",
     "tech": "canvas",
@@ -328,7 +264,7 @@
     "fetchedAt": "2026-06-06T17:09:22.686442+00:00"
   },
   {
-    "label": "kinetic-typography-swarm",
+    "label": "kinetic-swarm",
     "name": "Kinetic Swarm",
     "category": "text-typography",
     "tech": "canvas",
@@ -336,12 +272,28 @@
     "fetchedAt": "2026-06-06T17:09:28.420829+00:00"
   },
   {
-    "label": "liquid-morphing-blobs",
+    "label": "liquid-blobs",
     "name": "Liquid Morphing Blobs",
     "category": "backgrounds",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/backgrounds/liquid-morphing-blobs",
     "fetchedAt": "2026-06-06T17:08:26.022658+00:00"
+  },
+  {
+    "label": "liquid-distortion",
+    "name": "Liquid Distortion Shader",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/envato-liquid-distortion",
+    "fetchedAt": "2026-06-06T17:08:05.294594+00:00"
+  },
+  {
+    "label": "liquid-metal",
+    "name": "Liquid Metal Text morph",
+    "category": "text-typography",
+    "tech": "svg",
+    "sourceUrl": "https://htmlhub.org/library/text-typography/envato-liquid-metal-text",
+    "fetchedAt": "2026-06-06T17:09:26.197505+00:00"
   },
   {
     "label": "long-shadow",
@@ -360,15 +312,23 @@
     "fetchedAt": "2026-06-06T17:08:27.225375+00:00"
   },
   {
-    "label": "movingpeeps",
-    "name": "Walking Peeps",
-    "category": "celebration",
+    "label": "mirror-room",
+    "name": "Infinite Mirror Room",
+    "category": "3d-webgl",
     "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/celebration/movingpeeps",
-    "fetchedAt": "2026-06-06T17:08:43.745842+00:00"
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/envato-infinite-mirror-room",
+    "fetchedAt": "2026-06-06T17:08:04.266267+00:00"
   },
   {
-    "label": "neon-hexagon-patterns",
+    "label": "mouse-trails",
+    "name": "Magnetic Mouse Trails",
+    "category": "interactive",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/interactive/envato-magnetic-mouse-trails",
+    "fetchedAt": "2026-06-06T17:08:48.540442+00:00"
+  },
+  {
+    "label": "neon-hexagons",
     "name": "Neon Hexagons",
     "category": "retro-cyberpunk",
     "tech": "canvas",
@@ -376,12 +336,28 @@
     "fetchedAt": "2026-06-06T17:09:23.844948+00:00"
   },
   {
-    "label": "neon-particle-network",
+    "label": "neon-network",
     "name": "Neon Particle Network",
     "category": "particles-systems",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/particles-systems/neon-particle-network",
     "fetchedAt": "2026-06-06T17:09:00.948861+00:00"
+  },
+  {
+    "label": "net",
+    "name": "Vanta Net",
+    "category": "particles-systems",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-net",
+    "fetchedAt": "2026-06-06T17:09:10.187267+00:00"
+  },
+  {
+    "label": "net-dots",
+    "name": "Vanta Dots",
+    "category": "particles-systems",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-dots",
+    "fetchedAt": "2026-06-06T17:09:09.220771+00:00"
   },
   {
     "label": "orbital-trails",
@@ -400,12 +376,36 @@
     "fetchedAt": "2026-06-06T17:08:28.382919+00:00"
   },
   {
-    "label": "particle-collision-reaction",
+    "label": "particle-collision",
     "name": "Particle Collision",
     "category": "particles-systems",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/particles-systems/particle-collision-reaction",
     "fetchedAt": "2026-06-06T17:09:05.829958+00:00"
+  },
+  {
+    "label": "particle-dots",
+    "name": "Dots",
+    "category": "particles-systems",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/dots",
+    "fetchedAt": "2026-06-06T17:08:57.493286+00:00"
+  },
+  {
+    "label": "particle-field",
+    "name": "Particle Field",
+    "category": "particles-systems",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/animated-background-particle-field",
+    "fetchedAt": "2026-06-06T17:08:54.183957+00:00"
+  },
+  {
+    "label": "particle-flow",
+    "name": "Particle Flow",
+    "category": "particles-systems",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/abstract-particle-flow-animation",
+    "fetchedAt": "2026-06-06T17:08:52.244305+00:00"
   },
   {
     "label": "particle-swarm",
@@ -416,12 +416,60 @@
     "fetchedAt": "2026-06-06T17:09:07.023394+00:00"
   },
   {
+    "label": "pixel-flow",
+    "name": "Dynamic Pixel Flow",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/animated-background-dynamic-pixel-flow",
+    "fetchedAt": "2026-06-06T17:09:15.572334+00:00"
+  },
+  {
+    "label": "quantum-mesh",
+    "name": "Quantum Node Mesh",
+    "category": "particles-systems",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/envato-quantum-mesh",
+    "fetchedAt": "2026-06-06T17:08:59.941508+00:00"
+  },
+  {
+    "label": "ribbons",
+    "name": "Colorful Ribbons",
+    "category": "backgrounds",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/colorful-ribbons",
+    "fetchedAt": "2026-06-06T17:08:21.277300+00:00"
+  },
+  {
+    "label": "rings",
+    "name": "Vanta Rings",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-rings",
+    "fetchedAt": "2026-06-06T17:08:11.496200+00:00"
+  },
+  {
+    "label": "ripple",
+    "name": "Vanta Ripple",
+    "category": "backgrounds",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-ripple",
+    "fetchedAt": "2026-06-06T17:08:36.129320+00:00"
+  },
+  {
     "label": "rotating-spiral",
     "name": "Rotating Spiral",
     "category": "backgrounds",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/backgrounds/rotating-spiral",
     "fetchedAt": "2026-06-06T17:08:29.596688+00:00"
+  },
+  {
+    "label": "star-genesis",
+    "name": "Star Genesis",
+    "category": "backgrounds",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/background-3-star-genesis",
+    "fetchedAt": "2026-06-06T17:08:18.848262+00:00"
   },
   {
     "label": "starfield-warp",
@@ -432,12 +480,52 @@
     "fetchedAt": "2026-06-06T17:09:08.250327+00:00"
   },
   {
-    "label": "supernova-collapse-rebirth",
+    "label": "supernova",
     "name": "Supernova",
     "category": "celebration",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/celebration/supernova-collapse-rebirth",
     "fetchedAt": "2026-06-06T17:08:44.717446+00:00"
+  },
+  {
+    "label": "symbolic-gyre",
+    "name": "Symbolic Gyre",
+    "category": "backgrounds",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/background-3-symbolic-gyre",
+    "fetchedAt": "2026-06-06T17:08:20.046277+00:00"
+  },
+  {
+    "label": "synthwave-grid",
+    "name": "Synthwave Grid Run",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/envato-synthwave-grid",
+    "fetchedAt": "2026-06-06T17:09:21.232590+00:00"
+  },
+  {
+    "label": "system-breach",
+    "name": "System Corruption Breach",
+    "category": "retro-cyberpunk",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/1-system-corruption-breach",
+    "fetchedAt": "2026-06-06T17:09:14.196962+00:00"
+  },
+  {
+    "label": "topology",
+    "name": "Vanta Topology",
+    "category": "particles-systems",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-topology",
+    "fetchedAt": "2026-06-06T17:09:11.199526+00:00"
+  },
+  {
+    "label": "trunk",
+    "name": "Vanta Trunk",
+    "category": "particles-systems",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-trunk",
+    "fetchedAt": "2026-06-06T17:09:12.166182+00:00"
   },
   {
     "label": "tunnel",
@@ -448,116 +536,12 @@
     "fetchedAt": "2026-06-06T17:08:06.285831+00:00"
   },
   {
-    "label": "vanta-birds",
-    "name": "Vanta Birds",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-birds",
-    "fetchedAt": "2026-06-06T17:08:07.273068+00:00"
-  },
-  {
-    "label": "vanta-cells",
-    "name": "Vanta Cells",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-cells",
-    "fetchedAt": "2026-06-06T17:08:08.238028+00:00"
-  },
-  {
-    "label": "vanta-clouds",
-    "name": "Vanta Clouds",
+    "label": "urban-downpour",
+    "name": "Urban Downpour",
     "category": "backgrounds",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-clouds",
-    "fetchedAt": "2026-06-06T17:08:30.616548+00:00"
-  },
-  {
-    "label": "vanta-clouds2",
-    "name": "Vanta Clouds 2",
-    "category": "backgrounds",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-clouds2",
-    "fetchedAt": "2026-06-06T17:08:31.629790+00:00"
-  },
-  {
-    "label": "vanta-dots",
-    "name": "Vanta Dots",
-    "category": "particles-systems",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-dots",
-    "fetchedAt": "2026-06-06T17:09:09.220771+00:00"
-  },
-  {
-    "label": "vanta-fog",
-    "name": "Vanta Fog",
-    "category": "backgrounds",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-fog",
-    "fetchedAt": "2026-06-06T17:08:35.104342+00:00"
-  },
-  {
-    "label": "vanta-globe",
-    "name": "Vanta Globe",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-globe",
-    "fetchedAt": "2026-06-06T17:08:09.422159+00:00"
-  },
-  {
-    "label": "vanta-halo",
-    "name": "Vanta Halo",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-halo",
-    "fetchedAt": "2026-06-06T17:08:10.405331+00:00"
-  },
-  {
-    "label": "vanta-net",
-    "name": "Vanta Net",
-    "category": "particles-systems",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-net",
-    "fetchedAt": "2026-06-06T17:09:10.187267+00:00"
-  },
-  {
-    "label": "vanta-rings",
-    "name": "Vanta Rings",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-rings",
-    "fetchedAt": "2026-06-06T17:08:11.496200+00:00"
-  },
-  {
-    "label": "vanta-ripple",
-    "name": "Vanta Ripple",
-    "category": "backgrounds",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-ripple",
-    "fetchedAt": "2026-06-06T17:08:36.129320+00:00"
-  },
-  {
-    "label": "vanta-topology",
-    "name": "Vanta Topology",
-    "category": "particles-systems",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-topology",
-    "fetchedAt": "2026-06-06T17:09:11.199526+00:00"
-  },
-  {
-    "label": "vanta-trunk",
-    "name": "Vanta Trunk",
-    "category": "particles-systems",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/particles-systems/vanta-trunk",
-    "fetchedAt": "2026-06-06T17:09:12.166182+00:00"
-  },
-  {
-    "label": "vanta-waves",
-    "name": "Vanta Waves",
-    "category": "3d-webgl",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-waves",
-    "fetchedAt": "2026-06-06T17:08:13.321769+00:00"
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/backgrounds/1-urban-downpour-with-lightning",
+    "fetchedAt": "2026-06-06T17:08:15.525846+00:00"
   },
   {
     "label": "voxel-paris",
@@ -566,5 +550,21 @@
     "tech": "webgl",
     "sourceUrl": "https://htmlhub.org/library/3d-webgl/voxel-paris",
     "fetchedAt": "2026-06-06T17:08:14.536920+00:00"
+  },
+  {
+    "label": "walking-peeps",
+    "name": "Walking Peeps",
+    "category": "celebration",
+    "tech": "canvas",
+    "sourceUrl": "https://htmlhub.org/library/celebration/movingpeeps",
+    "fetchedAt": "2026-06-06T17:08:43.745842+00:00"
+  },
+  {
+    "label": "waves",
+    "name": "Vanta Waves",
+    "category": "3d-webgl",
+    "tech": "webgl",
+    "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-waves",
+    "fetchedAt": "2026-06-06T17:08:13.321769+00:00"
   }
 ]
