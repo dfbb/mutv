@@ -110,7 +110,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
   backgroundVideo,
-  backgroundAnimHtml,
+  backgroundAnim,
   lyrics,
   lyricOffset,
 }) => {
@@ -126,7 +126,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
-        backgroundAnimHtml={backgroundAnimHtml}
+        backgroundAnim={backgroundAnim}
         fallbackGradient="linear-gradient(135deg, #2b1055 0%, #7597de 100%)"
       />
 

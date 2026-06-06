@@ -23,8 +23,8 @@ export interface MVInputProps extends Record<string, unknown> {
   backgroundImage: string;
   /** Background video filename (relative to public/ or absolute URL). Takes priority over image/anim. */
   backgroundVideo: string;
-  /** Full self-contained HTML of an animated background effect (from animbg/<label>/index.html). */
-  backgroundAnimHtml: string;
+  /** Animated background HTML filename in public/ (copied from animbg/<label>/index.html). Loaded via IFrame src. */
+  backgroundAnim: string;
   /** Output width in pixels (set via CLI --res) */
   width: number;
   /** Output height in pixels (set via CLI --res) */
@@ -43,7 +43,7 @@ export const defaultProps: MVInputProps = {
   lyricOffset: -0.5,
   backgroundImage: '',
   backgroundVideo: '',
-  backgroundAnimHtml: '',
+  backgroundAnim: '',
   width: 1920,
   height: 1080,
   fps: 30,

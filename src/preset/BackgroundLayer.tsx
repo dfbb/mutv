@@ -7,18 +7,18 @@ import {AbsoluteFill, Img, IFrame, Video, staticFile} from 'remotion';
  *
  * - backgroundVideo:    looping Video, cover
  * - backgroundImage:    Img, cover (+ optional dark overlay)
- * - backgroundAnimHtml: full self-contained HTML in an <IFrame srcDoc>
+ * - backgroundAnim:     animated HTML effect (filename in public/) in an <IFrame src>
  * - fallbackGradient:   CSS background value supplied by each preset so its
  *                       own visual style is preserved when no source is given
  */
 export const BackgroundLayer: React.FC<{
   backgroundVideo?: string;
   backgroundImage?: string;
-  backgroundAnimHtml?: string;
+  backgroundAnim?: string;
   fallbackGradient: string;
   /** Optional dark overlay over video/image for text readability (e.g. 'rgba(0,0,0,0.45)'). */
   overlay?: string;
-}> = ({backgroundVideo, backgroundImage, backgroundAnimHtml, fallbackGradient, overlay}) => {
+}> = ({backgroundVideo, backgroundImage, backgroundAnim, fallbackGradient, overlay}) => {
   const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
 
   if (backgroundVideo) {
@@ -48,10 +48,10 @@ export const BackgroundLayer: React.FC<{
     );
   }
 
-  if (backgroundAnimHtml) {
+  if (backgroundAnim) {
     return (
       <AbsoluteFill>
-        <IFrame srcDoc={backgroundAnimHtml} style={{width: '100%', height: '100%', border: 'none'}} />
+        <IFrame src={toSrc(backgroundAnim)} style={{width: '100%', height: '100%', border: 'none'}} />
       </AbsoluteFill>
     );
   }

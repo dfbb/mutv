@@ -18,7 +18,7 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
   backgroundVideo,
-  backgroundAnimHtml,
+  backgroundAnim,
   lyrics,
   lyricOffset,
   title,
@@ -32,7 +32,7 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
-        backgroundAnimHtml={backgroundAnimHtml}
+        backgroundAnim={backgroundAnim}
         fallbackGradient="linear-gradient(180deg, #0a1030 0%, #05060f 60%, #03040a 100%)"
         overlay="rgba(5, 6, 15, 0.55)"
       />

@@ -143,7 +143,7 @@ export const NeonComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
   backgroundVideo,
-  backgroundAnimHtml,
+  backgroundAnim,
   lyrics,
   lyricOffset,
 }) => {
@@ -159,7 +159,7 @@ export const NeonComposition: React.FC<MVInputProps> = ({
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
-        backgroundAnimHtml={backgroundAnimHtml}
+        backgroundAnim={backgroundAnim}
         fallbackGradient="linear-gradient(135deg, #1a0033 0%, #0a0014 60%, #05000a 100%)"
       />
 

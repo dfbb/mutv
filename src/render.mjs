@@ -365,7 +365,7 @@ function copyToPublic(srcPath, kind) {
 
 let backgroundImage = '';
 let backgroundVideo = '';
-let backgroundAnimHtml = '';
+let backgroundAnim = '';
 let backgroundAnimLabel = '';
 
 if (args['bg-image']) {
@@ -391,7 +391,14 @@ if (args['bg-image']) {
     console.error(`Available animated backgrounds: ${avail.length ? avail.join(', ') : '(none — run scripts/fetch_animbg.py)'}`);
     process.exit(1);
   }
-  backgroundAnimHtml = readFileSync(animFile, 'utf-8');
+  // Copy the effect HTML into public/ and load it via <IFrame src>. We must NOT
+  // inline the HTML as a prop: Studio writes inputProps into an inline <script>,
+  // and effect HTML containing </script> would break that script (SyntaxError).
+  const pubDir = resolve('public');
+  mkdirSync(pubDir, {recursive: true});
+  const animPublicName = `animbg-${animLabel}.html`;
+  copyFileSync(animFile, resolve(pubDir, animPublicName));
+  backgroundAnim = animPublicName;
   backgroundAnimLabel = animLabel;
   console.log(`Using animated background: ${animLabel}`);
 }
@@ -427,7 +434,7 @@ const inputProps = {
   lyricOffset: args.offset ? parseFloat(args.offset) : -0.5,
   backgroundImage,
   backgroundVideo,
-  backgroundAnimHtml,
+  backgroundAnim,
   width: resWidth,
   height: resHeight,
   fps,
@@ -453,7 +460,7 @@ if (args.html) {
   console.log(`  Lyrics: ${lyrics.length} lines`);
   if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
   if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
-  if (backgroundAnimHtml) console.log(`  Background anim: ${backgroundAnimLabel}`);
+  if (backgroundAnim) console.log(`  Background anim: ${backgroundAnimLabel}`);
   console.log('');
   console.log('  A browser tab will open at http://localhost:3000 (Composition: MusicVideo).');
   console.log('  Press Ctrl+C to stop the server.\n');
@@ -502,7 +509,7 @@ console.log(`  Output: ${output}`);
 console.log(`  Codec: ${codec}`);
 if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
 if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
-if (backgroundAnimHtml) console.log(`  Background anim: ${backgroundAnimLabel}`);
+if (backgroundAnim) console.log(`  Background anim: ${backgroundAnimLabel}`);
 if (browserExe) console.log(`  Browser: ${browserExe}`);
 if (chromeMode !== 'headless-shell') console.log(`  Chrome mode: ${chromeMode}`);
 console.log('');

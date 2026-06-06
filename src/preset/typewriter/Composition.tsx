@@ -129,7 +129,7 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
   audioFileName,
   backgroundImage,
   backgroundVideo,
-  backgroundAnimHtml,
+  backgroundAnim,
   lyrics,
   lyricOffset,
 }) => {
@@ -145,7 +145,7 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
-        backgroundAnimHtml={backgroundAnimHtml}
+        backgroundAnim={backgroundAnim}
         fallbackGradient="linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)"
       />
 
