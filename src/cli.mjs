@@ -23,11 +23,11 @@
  *   --offset      Lyric timing offset in seconds (default: -0.5)
  *   --output      Output file path (default: out/<audio_basename>.mp4)
  *   --codec       h264|h265|vp8|vp9 (default: h264)
- *   --bg-img      Background image file (mutually exclusive with --bg-video/--bganim)
+ *   --bg-image    Background image file (mutually exclusive with --bg-video/--bg-anim)
  *   --bg-video    Background video file (mutually exclusive)
- *   --bganim      Animated background effect label (see src/animbg/, mutually exclusive)
+ *   --bg-anim     Animated background effect label (see src/animbg/), or 'random' (mutually exclusive)
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
- *   --preset      Visual template under preset/<label>/ (default: orig)
+ *   --preset      Visual template under preset/<label>/ (default: orig), or 'random'
  *   --res         Output resolution WxH (default: 1920x1080)
  *   --fps         Frames per second (default: 30)
  *   --max-size    Max output size in MB; compresses video if exceeded
@@ -106,9 +106,9 @@ if (opts.lyrics) nodeArgs.push('--lyrics', resolve(opts.lyrics));
 else if (opts['lyrics-json']) nodeArgs.push('--lyrics-json', resolve(opts['lyrics-json']));
 if (opts.subtitle) nodeArgs.push('--subtitle', opts.subtitle);
 if (opts.credit) nodeArgs.push('--credit', opts.credit);
-if (opts['bg-img']) nodeArgs.push('--bg-img', resolve(opts['bg-img']));
+if (opts['bg-image']) nodeArgs.push('--bg-image', resolve(opts['bg-image']));
 if (opts['bg-video']) nodeArgs.push('--bg-video', resolve(opts['bg-video']));
-if (opts.bganim) nodeArgs.push('--bganim', opts.bganim);
+if (opts['bg-anim']) nodeArgs.push('--bg-anim', opts['bg-anim']);
 if (opts.browser) nodeArgs.push('--browser', opts.browser);
 if (opts.res) nodeArgs.push('--res', opts.res);
 if (opts.fps) nodeArgs.push('--fps', opts.fps);

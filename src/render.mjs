@@ -18,9 +18,9 @@
  *   --offset       Lyric timing offset in seconds (default: -0.5)
  *   --output       Output file path (default: out/video.mp4)
  *   --codec        Video codec: h264, h265, vp8, vp9 (default: h264)
- *   --bg-img       Background image file (mutually exclusive with --bg-video/--bganim)
+ *   --bg-image     Background image file (mutually exclusive with --bg-video/--bg-anim)
  *   --bg-video     Background video file (mutually exclusive)
- *   --bganim       Animated background effect label under animbg/<label>/ (mutually exclusive)
+ *   --bg-anim      Animated background effect label under animbg/<label>/, or 'random' (mutually exclusive)
  *   --preset       Visual template under preset/<label>/ (default: orig)
  *   --res          Output resolution WxH (default: 1920x1080)
  *   --fps          Frames per second (default: 30)
@@ -236,16 +236,24 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv);
 
-// Resolve preset: visual template under preset/<label>/. Default 'orig'.
-const presetLabel = args.preset || 'orig';
+// Resolve preset: visual template under preset/<label>/. Default 'orig'. 'random' picks one at random.
+const availablePresets = existsSync(resolve('preset'))
+  ? readdirSync(resolve('preset')).filter(d => existsSync(join(resolve('preset'), d, 'index.ts')))
+  : [];
+let presetLabel = args.preset || 'orig';
+if (presetLabel === 'random') {
+  if (availablePresets.length === 0) {
+    console.error('Error: --preset random requested but no presets found');
+    process.exit(1);
+  }
+  presetLabel = availablePresets[Math.floor(Math.random() * availablePresets.length)];
+  console.log(`Randomly selected preset: ${presetLabel}`);
+}
 const presetDir = resolve('preset', presetLabel);
 const presetEntry = join(presetDir, 'index.ts');
 if (!existsSync(presetEntry)) {
-  const available = existsSync(resolve('preset'))
-    ? readdirSync(resolve('preset')).filter(d => existsSync(join(resolve('preset'), d, 'index.ts')))
-    : [];
   console.error(`Error: preset "${presetLabel}" not found (expected ${presetEntry})`);
-  console.error(`Available presets: ${available.length ? available.join(', ') : '(none)'}`);
+  console.error(`Available presets: ${availablePresets.length ? availablePresets.join(', ') : '(none)'}`);
   process.exit(1);
 }
 
@@ -332,7 +340,7 @@ if (args.lyrics) {
 }
 
 // --- Background sources (mutually exclusive): video > image > anim ---
-const bgFlags = ['bg-video', 'bg-img', 'bganim'].filter((k) => args[k]);
+const bgFlags = ['bg-video', 'bg-image', 'bg-anim'].filter((k) => args[k]);
 if (bgFlags.length > 1) {
   console.error(`Error: choose only one background source (got: ${bgFlags.map((f) => '--' + f).join(', ')})`);
   process.exit(1);
@@ -358,23 +366,33 @@ function copyToPublic(srcPath, kind) {
 let backgroundImage = '';
 let backgroundVideo = '';
 let backgroundAnimHtml = '';
+let backgroundAnimLabel = '';
 
-if (args['bg-img']) {
-  backgroundImage = copyToPublic(args['bg-img'], 'background image');
+if (args['bg-image']) {
+  backgroundImage = copyToPublic(args['bg-image'], 'background image');
 } else if (args['bg-video']) {
   backgroundVideo = copyToPublic(args['bg-video'], 'background video');
-} else if (args.bganim) {
-  const animLabel = args.bganim;
+} else if (args['bg-anim']) {
+  const avail = existsSync(resolve('animbg'))
+    ? readdirSync(resolve('animbg')).filter((d) => existsSync(join(resolve('animbg'), d, 'index.html')))
+    : [];
+  let animLabel = args['bg-anim'];
+  if (animLabel === 'random') {
+    if (avail.length === 0) {
+      console.error('Error: --bg-anim random requested but no animated backgrounds found (run scripts/fetch_animbg.py)');
+      process.exit(1);
+    }
+    animLabel = avail[Math.floor(Math.random() * avail.length)];
+    console.log(`Randomly selected animated background: ${animLabel}`);
+  }
   const animFile = resolve('animbg', animLabel, 'index.html');
   if (!existsSync(animFile)) {
-    const avail = existsSync(resolve('animbg'))
-      ? readdirSync(resolve('animbg')).filter((d) => existsSync(join(resolve('animbg'), d, 'index.html')))
-      : [];
-    console.error(`Error: bganim "${animLabel}" not found (expected ${animFile})`);
+    console.error(`Error: bg-anim "${animLabel}" not found (expected ${animFile})`);
     console.error(`Available animated backgrounds: ${avail.length ? avail.join(', ') : '(none — run scripts/fetch_animbg.py)'}`);
     process.exit(1);
   }
   backgroundAnimHtml = readFileSync(animFile, 'utf-8');
+  backgroundAnimLabel = animLabel;
   console.log(`Using animated background: ${animLabel}`);
 }
 
@@ -435,7 +453,7 @@ if (args.html) {
   console.log(`  Lyrics: ${lyrics.length} lines`);
   if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
   if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
-  if (backgroundAnimHtml) console.log(`  Background anim: ${args.bganim}`);
+  if (backgroundAnimHtml) console.log(`  Background anim: ${backgroundAnimLabel}`);
   console.log('');
   console.log('  A browser tab will open at http://localhost:3000 (Composition: MusicVideo).');
   console.log('  Press Ctrl+C to stop the server.\n');
@@ -484,7 +502,7 @@ console.log(`  Output: ${output}`);
 console.log(`  Codec: ${codec}`);
 if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
 if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
-if (backgroundAnimHtml) console.log(`  Background anim: ${args.bganim}`);
+if (backgroundAnimHtml) console.log(`  Background anim: ${backgroundAnimLabel}`);
 if (browserExe) console.log(`  Browser: ${browserExe}`);
 if (chromeMode !== 'headless-shell') console.log(`  Chrome mode: ${chromeMode}`);
 console.log('');

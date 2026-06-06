@@ -58,7 +58,7 @@ npx remotion browser ensure
 node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --title "歌名"
 
 # 带背景图
-node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --title "歌名" --bg-img bg.jpg
+node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --title "歌名" --bg-image bg.jpg
 
 # 本地网页预览（不渲染视频，启动 Remotion Studio）
 node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --html
@@ -119,12 +119,12 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `--preset <label>` | `orig` | 视觉模板，对应 `preset/<label>/` 目录。可用：`orig`（频谱+整行字幕）、`no2`（逐词卡拉OK）、`apple`（Apple Music 风格滚动歌词）、`ktv`（经典卡拉OK逐词扫光）、`neon`（赛博朋克霓虹）、`cinema`（电影预告片）、`bounce`（彩虹弹跳）、`typewriter`（打字机）。不存在时报错并列出可用模板。 |
+| `--preset <label>` | `orig` | 视觉模板，对应 `preset/<label>/` 目录。可用模板见下方[视觉模板（preset）列表](#视觉模板preset列表)。传 `random` 随机选一个。不存在时报错并列出可用模板。 |
 | `--res <WxH>` | `1920x1080` | 输出分辨率，格式如 `1280x720`、`1080x1920`。格式非法时报错。 |
 | `--fps <N>` | `30` | 帧率，正整数。非法时报错。 |
-| `--bg-img <file>` | 无 | 背景图片文件。与 `--bg-video`/`--bganim` 互斥。自动复制到 `public/`。 |
+| `--bg-image <file>` | 无 | 背景图片文件。与 `--bg-video`/`--bg-anim` 互斥。自动复制到 `public/`。 |
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
-| `--bganim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。与其它背景源互斥。 |
+| `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
 
 ### 时间轴
 
@@ -194,3 +194,128 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 - **`localhost:3000 got no response` 渲染失败**：通常是用系统 Chrome 高并发开多标签所致。运行 `npx remotion browser ensure` 安装 `chrome-headless-shell` 即可。
 - **渲染看似卡住无进度**：`render.mjs` 缓冲了 remotion 输出，过程中不打印进度，属正常；用 `--html` 预览可实时查看。
 
+
+## 视觉模板（preset）列表
+
+用 `--preset <label>` 选择，传 `random` 随机选一个。
+
+| label | 效果简介 |
+| --- | --- |
+| `orig` | 频谱可视化 + 整行字幕，底部跳动的频率柱与径向辉光 |
+| `no2` | 逐词卡拉OK高亮，跟随圆点指示当前演唱位置 |
+| `apple` | Apple Music 风格：滚动歌词 + 逐词渐亮 + 模糊背景 |
+| `ktv` | 经典卡拉OK：多行可见 + 逐词扫光双色描边 + lead-in 箭头 |
+| `neon` | 赛博朋克霓虹：逐词出场 + RGB 色差/故障 + 扫描线 |
+| `cinema` | 电影预告片：居中超大字 + 金色辉光 + 黑边暗角 |
+| `bounce` | 彩虹弹跳：每词不同色，随机方向弹入 + 旋转 |
+| `typewriter` | 打字机：逐字符显示 + 当前词高亮 + 闪烁光标 |
+
+## 动画背景特效（bg-anim）列表
+
+用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 71 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
+
+### 3D & WebGL
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `birds` | 成群飞鸟在 3D 空间中编队游弋 | webgl |
+| `cells` | 有机细胞分裂膨胀的 3D 生物质感 | webgl |
+| `globe` | 旋转的 3D 网格地球 | webgl |
+| `halo` | 流动的光环漩涡，金属反光质感 | webgl |
+| `liquid-distortion` | 液态扭曲着色器，光影折射流动 | webgl |
+| `mirror-room` | 无限镜像房间的纵深递归 | canvas |
+| `rings` | 同心圆环在 3D 中起伏波动 | webgl |
+| `tunnel` | 高速穿越无尽隧道 | canvas |
+| `voxel-paris` | 体素风格的巴黎城市场景 | webgl |
+| `waves` | 起伏的 3D 网格波浪 | webgl |
+
+### 背景（Backgrounds）
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `ascendant-light` | 自下而上升腾的光束氛围 | canvas |
+| `aurora` | 极光在夜空中飘舞 | canvas |
+| `clouds` | 缓缓飘移的 3D 云层 | webgl |
+| `clouds2` | 云层变体，更厚重的天空质感 | webgl |
+| `fog` | 弥漫流动的雾气 | webgl |
+| `glass-orbs` | 玻璃拟态光球漂浮 | canvas |
+| `gradients` | 平滑流动的渐变色彩 | canvas |
+| `interactive-stars` | 可交互的星点闪烁 | canvas |
+| `liquid-blobs` | 液态融球变形蠕动 | canvas |
+| `meteor` | 流星雨划过夜空 | canvas |
+| `parallax-skyline` | 视差城市天际线 | canvas |
+| `ribbons` | 彩色丝带飘舞 | canvas |
+| `ripple` | 水面涟漪扩散 | webgl |
+| `rotating-spiral` | 旋转的螺旋图案 | canvas |
+| `star-genesis` | 星辰诞生的粒子聚合 | canvas |
+| `symbolic-gyre` | 符号环绕的旋涡 | canvas |
+| `urban-downpour` | 都市暴雨与闪电 | canvas |
+
+### 庆祝（Celebration）
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `bouncing-balloons` | 弹跳的 SVG 气球 | canvas |
+| `cartoon` | 卡通风格动画元素 | canvas |
+| `confetti` | 五彩纸屑喷射 | canvas |
+| `falling-confetti` | 飘落的纸屑雨 | canvas |
+| `fireworks` | 绽放的烟花 | canvas |
+| `fizzy-sparks` | 嘶嘶作响的火花气泡 | canvas |
+| `supernova` | 超新星爆发与重生 | canvas |
+| `walking-peeps` | 卡通小人横穿屏幕行走 | canvas |
+
+### 交互（Interactive）
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `click-response` | 点击响应的涟漪反馈 | canvas |
+| `data-tunnel` | 3D 透视数据隧道 | canvas |
+| `gravity-points` | 引力点吸引粒子运动 | canvas |
+| `long-shadow` | 长投影几何动画 | canvas |
+| `mouse-trails` | 磁吸鼠标拖尾 | canvas |
+
+### 粒子与系统（Particles & Systems）
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `abstract-particles` | 抽象粒子系统漂浮聚散 | canvas |
+| `cosmic` | 深空宇宙星海背景 | canvas |
+| `digital-dust` | 数字尘埃微粒飘动 | canvas |
+| `fireflies` | 发光萤火虫游弋 | canvas |
+| `neon-network` | 霓虹粒子连线网络 | canvas |
+| `net` | 节点连线的动态网格 | webgl |
+| `net-dots` | 网格点阵连线（Vanta Dots） | webgl |
+| `orbital-trails` | 轨道环绕的拖尾轨迹 | canvas |
+| `particle-collision` | 粒子碰撞反应 | canvas |
+| `particle-dots` | 点阵粒子场 | webgl |
+| `particle-field` | 自包含粒子场 | canvas |
+| `particle-flow` | 粒子流动场 | canvas |
+| `particle-swarm` | 粒子集群游动 | canvas |
+| `quantum-mesh` | 量子节点网格 | canvas |
+| `starfield-warp` | 星空曲速穿梭 | canvas |
+| `topology` | 拓扑曲面网格起伏 | webgl |
+| `trunk` | 树干分形枝杈生长 | webgl |
+
+### 复古与赛博朋克（Retro & Cyberpunk）
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `circuit-tracers` | 电路板走线追踪 | canvas |
+| `crimson-glitch` | 猩红故障数据流 | canvas |
+| `crt-boot` | CRT 显示器开机序列 | canvas |
+| `fiber-optics` | 赛博光纤数据传输 | canvas |
+| `hyperspace-corridor` | 超空间走廊穿梭 | canvas |
+| `kernel-panic` | 内核崩溃数据转储 | canvas |
+| `neon-hexagons` | 霓虹六边形图案 | canvas |
+| `pixel-flow` | 动态像素流 | canvas |
+| `synthwave-grid` | 合成波网格飞驰 | canvas |
+| `system-breach` | 系统入侵破坏特效 | canvas |
+
+### 文字与排版（Text & Typography）
+
+| label | 效果简介 | tech |
+| --- | --- | --- |
+| `financial-stream` | 金融数据流滚动 | canvas |
+| `hex-wave` | 十六进制代码波浪 | canvas |
+| `kinetic-swarm` | 动态文字集群 | canvas |
+| `liquid-metal` | 液态金属文字变形 | svg |
