@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Digital Circuit Tracers</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #050510;
+  }
+  .tracer-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+<canvas class="tracer-canvas"></canvas>
+<script>
+  const canvas = document.querySelector('.tracer-canvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let tracers = [];
+
+  function setSize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+
+  class Tracer {
+    constructor() {
+      this.reset();
+    }
+    reset(){
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.speed = 1.5 + Math.random();
+      this.angle = Math.floor(Math.random() * 4) * (Math.PI / 2);
+      this.life = 0;
+      this.maxLife = 100 + Math.random() * 200;
+      this.hue = 200 + Math.random() * 60;
+    }
+    update() {
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+      
+      this.life++;
+
+      // Turn randomly
+      if(Math.random() < 0.04) {
+          this.angle += (Math.random() < 0.5 ? 1 : -1) * Math.PI / 2;
+      }
+      
+      // Reset if out of bounds or expired
+      if(this.x < 0 || this.x > width || this.y < 0 || this.y > height || this.life > this.maxLife){
+          this.reset();
+      }
+    }
+    draw(ctx) {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 90%, 80%, 1)`;
+      ctx.fill();
+    }
+  }
+  
+  function init() {
+    setSize();
+    tracers = [];
+    for(let i=0; i<40; i++){
+        tracers.push(new Tracer());
+    }
+  }
+
+  function animate() {
+    // Fading background
+    ctx.fillStyle = 'rgba(5, 5, 16, 0.05)';
+    ctx.fillRect(0, 0, width, height);
+
+    tracers.forEach(t => {
+      t.update();
+      t.draw(ctx);
+    });
+    
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', init);
+  init();
+  animate();
+</script>
+</body>
+</html>

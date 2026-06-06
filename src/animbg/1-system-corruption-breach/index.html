@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>1. System Corruption Breach</title>
+<style>
+    :root {
+        --bg-color: #01020a;
+        --secure-color: #0088ff;
+        --corrupt-color: #ff1b1b;
+        --corrupt-glow: #ff4d4d;
+    }
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: var(--bg-color);
+        font-family: 'Courier New', Courier, monospace;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(60, 1fr);
+        width: 100vw;
+        height: 100vh;
+    }
+    .bit {
+        text-align: center;
+        font-size: 1.2em;
+        color: var(--secure-color);
+        text-shadow: 0 0 5px var(--secure-color);
+        will-change: color, text-shadow, transform;
+        transition: color 0.5s, text-shadow 0.5s;
+        animation: subtle-pulse 10s infinite linear;
+    }
+    @keyframes subtle-pulse {
+        0%, 100% { opacity: 0.9; }
+        50% { opacity: 1; }
+    }
+    /* State when corrupted */
+    .bit.corrupt {
+        color: var(--corrupt-color);
+        text-shadow: 0 0 8px var(--corrupt-glow);
+        animation: glitch 0.2s infinite steps(1, end);
+    }
+    @keyframes glitch {
+        0%, 100% { transform: translate(0, 0); opacity: 1; }
+        25% { transform: translate(-2px, 2px); }
+        50% { opacity: 0.8; }
+        75% { transform: translate(2px, -2px); }
+    }
+</style>
+</head>
+<body>
+    <div class="grid" id="grid"></div>
+<script>
+    const grid = document.getElementById('grid');
+    const bits = [];
+    const rows = 30;
+    const cols = 60;
+    const totalBits = rows * cols;
+    
+    // Create the grid of binary digits
+    for (let i = 0; i < totalBits; i++) {
+        const bit = document.createElement('div');
+        bit.className = 'bit';
+        bit.textContent = Math.round(Math.random());
+        // Store row and col for distance calculation
+        bit.dataset.row = Math.floor(i / cols);
+        bit.dataset.col = i % cols;
+        grid.appendChild(bit);
+        bits.push(bit);
+    }
+
+    // Function to start the corruption wave
+    function startBreach() {
+        // Reset all bits to secure state first for the loop
+        bits.forEach(bit => bit.classList.remove('corrupt'));
+
+        // Pick a random starting point for the breach
+        const startRow = Math.floor(Math.random() * rows);
+        const startCol = Math.floor(Math.random() * cols);
+
+        // Corrupt bits based on their distance from the starting point
+        bits.forEach(bit => {
+            const row = parseInt(bit.dataset.row);
+            const col = parseInt(bit.dataset.col);
+            const distance = Math.sqrt(Math.pow(row - startRow, 2) + Math.pow(col - startCol, 2));
+
+            // Apply corruption with a delay based on distance, creating a wave effect
+            setTimeout(() => {
+                bit.classList.add('corrupt');
+            }, distance * 80); // Adjust multiplier to change speed
+        });
+    }
+
+    // Start the initial breach
+    startBreach();
+    // Set it to loop every 10 seconds, matching the intended animation duration
+    setInterval(startBreach, 10000);
+
+</script>
+</body>
+</html>

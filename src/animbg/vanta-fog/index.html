@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vanta.js Fog</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #07080d;
+        color: #f5f7fb;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #vanta {
+        position: fixed;
+        inset: 0;
+      }
+
+    </style>
+    <script src="../vendor/three.r134.min.js"></script>
+    <script src="../vendor/p5.min.js"></script>
+    <script src="../vendor/vanta/dist/vanta.fog.min.js"></script>
+  </head>
+  <body>
+    <div id="vanta"></div>
+    <script>
+      VANTA.FOG({
+        el: "#vanta",
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        highlightColor: 0xf4d35e,
+        midtoneColor: 0xee6352,
+        lowlightColor: 0x3d5a80,
+        baseColor: 0x11151c,
+        blurFactor: 0.62,
+        speed: 1,
+        zoom: 0.85
+      });
+    </script>
+  </body>
+</html>

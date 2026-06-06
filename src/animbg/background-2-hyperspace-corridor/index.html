@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Background 2: Hyperspace Corridor</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: radial-gradient(circle, #1a082d 0%, #010008 70%);
+        overflow: hidden;
+    }
+    
+    .star-field {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2px;
+        height: 2px;
+    }
+    
+    .star {
+        position: absolute;
+        width: 100%; height: 100%;
+        background-color: #fff;
+        border-radius: 50%;
+        animation: travel 10s ease-in infinite;
+        will-change: transform, opacity;
+    }
+    
+    /* Streak effect */
+    .star::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 50%;
+        transform: translate(-50%, -100%);
+        width: 120%;
+        height: 2000%; /* Long streak */
+        border-radius: 50%;
+        background: linear-gradient(to top, rgba(255,255,255,0.5), transparent);
+    }
+    
+    @keyframes travel {
+        0% {
+            transform: rotate(var(--angle)) translateY(0) scale(0);
+            opacity: 1;
+        }
+        50% {
+            transform: rotate(var(--angle)) translateY(30vmin) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: rotate(var(--angle)) translateY(100vmin) scale(0);
+            opacity: 1;
+        }
+    }
+    
+    /* HUD Overlay */
+    .overlay {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 80vmin; height: 80vmin;
+        transform: translate(-50%, -50%);
+        border: 2px solid rgba(0, 225, 255, 0.3);
+        border-radius: 50%;
+        box-shadow: inset 0 0 20px rgba(0, 225, 255, 0.2);
+        animation: pulse 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+        from { transform: translate(-50%, -50%) scale(0.98); opacity: 0.5; }
+        to { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    }
+
+</style>
+</head>
+<body>
+
+<div id="star-container"></div>
+<div class="overlay"></div>
+
+<script>
+    const container = document.getElementById('star-container');
+    const numStars = 400;
+
+    for (let i = 0; i < numStars; i++) {
+        const starField = document.createElement('div');
+        starField.className = 'star-field';
+        
+        const angle = Math.random() * 360;
+        starField.style.setProperty('--angle', `${angle}deg`);
+        
+        const star = document.createElement('div');
+        star.className = 'star';
+
+        const delay = Math.random() * -10; // Start stars mid-flight
+        star.style.animationDelay = `${delay}s`;
+
+        const duration = Math.random() * 3 + 2; // Vary travel speed
+        star.style.animationDuration = `${duration}s`;
+
+        starField.appendChild(star);
+        container.appendChild(starField);
+    }
+</script>
+
+</body>
+</html>

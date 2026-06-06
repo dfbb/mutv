@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Background 2: Hex Code Wave</title>
+<style>
+    :root {
+        --bg-color: #0d0d12;
+        --char-color: #2a3c4b;
+        --wave-color: #f0f8ff; /* Alice Blue */
+        --wave-glow: #7ef9ff;
+    }
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: var(--bg-color);
+        color: var(--char-color);
+        font-family: 'Roboto Mono', monospace;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    #grid-container {
+        display: grid;
+        grid-template-columns: repeat(var(--cols), 1fr);
+        transform: scale(1.1);
+        width: 100%;
+        height: 100%;
+    }
+    .char {
+        text-align: center;
+        user-select: none;
+        will-change: color, text-shadow;
+        animation: wave-activate 10s linear infinite;
+    }
+
+    @keyframes wave-activate {
+        0%, 15%, 100% {
+            color: var(--char-color);
+            text-shadow: none;
+        }
+        7%, 8% {
+            color: var(--wave-color);
+            text-shadow: 0 0 10px var(--wave-glow), 0 0 20px var(--wave-glow);
+        }
+    }
+</style>
+</head>
+<body>
+    <div id="grid-container"></div>
+<script>
+    const grid = document.getElementById('grid-container');
+    const chars = '0123456789ABCDEF'.split('');
+
+    const cols = Math.floor(window.innerWidth / 16);
+    const rows = Math.floor(window.innerHeight / 16);
+    grid.style.setProperty('--cols', cols);
+
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            const charSpan = document.createElement('span');
+            charSpan.className = 'char';
+            charSpan.textContent = chars[Math.floor(Math.random() * chars.length)];
+            
+            // Calculate delay to create a diagonal wave
+            // The wave takes ~1.5s to cross. Delays range from 0 to 8.5s for the 10s loop
+            const delay = (x + y * 0.5) * 0.05; 
+            charSpan.style.animationDelay = `${delay}s`;
+
+            grid.appendChild(charSpan);
+        }
+    }
+</script>
+</body>
+</html>

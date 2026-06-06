@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Background - Particle Field</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Important to prevent scrollbars */
+            background-color: #1a1a2e; /* Dark background for contrast */
+            cursor: none; /* Hide default cursor to let particles shine */
+        }
+
+        canvas {
+            display: block; /* Remove extra space below canvas */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const numParticles = 100; // Number of particles
+        const maxRadius = 3;      // Max particle size
+        const minRadius = 1;      // Min particle size
+        const speed = 0.5;        // Particle movement speed
+        const lineColor = 'rgba(100, 180, 255, 0.1)'; // Line color (subtle blue)
+        const particleColor = 'rgba(100, 180, 255, 0.7)'; // Particle color (brighter blue)
+        const linkDistance = 150; // Max distance for particles to link
+
+        let mouse = {
+            x: undefined,
+            y: undefined
+        };
+
+        // Set canvas size to full window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Particle constructor
+        function Particle(x, y, radius, dx, dy) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.dx = dx;
+            this.dy = dy;
+
+            this.draw = function() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = particleColor;
+                ctx.fill();
+            };
+
+            this.update = function() {
+                // Bounce off walls
+                if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                    this.dx = -this.dx;
+                }
+                if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+                    this.dy = -this.dy;
+                }
+
+                this.x += this.dx;
+                this.y += this.dy;
+
+                this.draw();
+            };
+        }
+
+        // Initialize particles
+        function init() {
+            particles = [];
+            for (let i = 0; i < numParticles; i++) {
+                let radius = Math.random() * (maxRadius - minRadius) + minRadius;
+                let x = Math.random() * (canvas.width - radius * 2) + radius;
+                let y = Math.random() * (canvas.height - radius * 2) + radius;
+                let dx = (Math.random() - 0.5) * speed; // Random direction for x
+                let dy = (Math.random() - 0.5) * speed; // Random direction for y
+                particles.push(new Particle(x, y, radius, dx, dy));
+            }
+        }
+
+        // Animate loop
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+
+                // Draw lines between close particles
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dist = Math.sqrt(
+                        Math.pow(particles[i].x - particles[j].x, 2) +
+                        Math.pow(particles[i].y - particles[j].y, 2)
+                    );
+
+                    if (dist < linkDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = lineColor;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+
+                // Link to mouse position
+                if (mouse.x !== undefined && mouse.y !== undefined) {
+                    const distToMouse = Math.sqrt(
+                        Math.pow(particles[i].x - mouse.x, 2) +
+                        Math.pow(particles[i].y - mouse.y, 2)
+                    );
+                    if (distToMouse < linkDistance * 1.5) { // Slightly larger link distance for mouse
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = lineColor;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Event Listeners
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            init(); // Reinitialize particles on resize
+        });
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = undefined;
+            mouse.y = undefined;
+        });
+
+
+        // Initial setup
+        resizeCanvas();
+        init();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartoon</title>
+    <meta name="category" content="Creative">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="3840" height="2160"></canvas>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+        const CX = W / 2;
+        const CY = H / 2;
+        const DURATION = 10000; // 10 seconds for the loop
+        const TAU = Math.PI * 2;
+
+        let seed = 23456;
+        function seededRandom() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+        }
+
+        const clouds = [];
+        const numClouds = 8;
+        for (let i = 0; i < numClouds; i++) {
+            clouds.push({
+                x: seededRandom() * W * 1.5 - W * 0.25, // Start off-screen
+                y: seededRandom() * H * 0.3, // Upper third of screen
+                size: seededRandom() * 100 + 150, // 150-250px base size
+                speed: seededRandom() * 0.05 + 0.02, // Different speeds
+                offset: seededRandom() * TAU // Phase offset
+            });
+        }
+
+        const hillColors = ['#8BC34A', '#CDDC39', '#A2D786']; // Green shades
+        const hillHeights = [H * 0.6, H * 0.7, H * 0.8]; // Different base heights
+
+        function draw(time) {
+            const p = (time % DURATION) / DURATION;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, W, H);
+
+            // Sky Background
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, H * 0.7);
+            skyGradient.addColorStop(0, '#87CEEB'); // Light blue
+            skyGradient.addColorStop(1, '#B0E0E6'); // Powder blue
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, W, H);
+
+            // Draw Hills
+            hillHeights.forEach((baseHeight, index) => {
+                ctx.fillStyle = hillColors[index];
+                ctx.beginPath();
+                ctx.moveTo(0, baseHeight);
+
+                const hillWaveCount = 4;
+                const waveAmplitude = 80;
+                const waveLength = W / hillWaveCount;
+
+                for (let i = 0; i <= W; i += 10) {
+                    const waveOffset = p * TAU * 0.2 * (index + 1); // Hills move
+                    const y = baseHeight + waveAmplitude * Math.sin((i / waveLength) * TAU + waveOffset);
+                    ctx.lineTo(i, y);
+                }
+
+                ctx.lineTo(W, H);
+                ctx.lineTo(0, H);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            // Draw Clouds
+            clouds.forEach(cloud => {
+                const cloudX = (cloud.x + W * 2 * p * cloud.speed + cloud.offset) % (W + cloud.size * 2) - cloud.size;
+                const cloudY = cloud.y + 20 * Math.sin(p * TAU * 0.5 + cloud.offset); // Gentle vertical float
+
+                ctx.fillStyle = 'white';
+                ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                ctx.shadowBlur = 20;
+                ctx.shadowOffsetX = 10;
+                ctx.shadowOffsetY = 10;
+
+                ctx.beginPath();
+                ctx.arc(cloudX, cloudY, cloud.size * 0.6, 0, TAU);
+                ctx.arc(cloudX + cloud.size * 0.5, cloudY + cloud.size * 0.2, cloud.size * 0.5, 0, TAU);
+                ctx.arc(cloudX - cloud.size * 0.4, cloudY + cloud.size * 0.1, cloud.size * 0.4, 0, TAU);
+                ctx.arc(cloudX + cloud.size * 0.2, cloudY - cloud.size * 0.3, cloud.size * 0.3, 0, TAU);
+                ctx.fill();
+
+                ctx.shadowBlur = 0; // Reset shadow
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            });
+
+            // Heartbeat pixel
+            ctx.fillStyle = `rgba(255,255,255,${0.001+0.001*Math.sin(p*TAU*4)})`;
+            ctx.fillRect(0,0,1,1);
+        }
+
+        let animationFrameId;
+        function animate(time) {
+            draw(time);
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        window.nextFrame = function(time) {
+            draw(time);
+        }
+        
+        if (typeof window.isThumbnail !== 'undefined' && window.isThumbnail) {
+            window.addEventListener('DOMContentLoaded', () => draw(DURATION / 2));
+        } else {
+            animate(0);
+        }
+    </script>
+</body>
+</html>

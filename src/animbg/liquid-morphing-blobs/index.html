@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Morphing Blobs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #070710;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Noise texture - pure CSS/SVG, no external requests */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            opacity: 0.035;
+            pointer-events: none;
+            z-index: 20;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+
+        /* Dark vignette */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.65) 100%);
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .blob-scene {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .blob-stage {
+            /* Dynamic size using CSS custom properties */
+            width: min(90vw, 90vh);
+            height: min(90vw, 90vh);
+            position: relative;
+            filter: blur(clamp(25px, 4vw, 55px)) contrast(18);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.85;
+            mix-blend-mode: screen;
+            /* CSS vars for mouse offset - set cleanly by JS */
+            transform: translate(calc(var(--bx, 0px) * var(--speed, 1)),
+                    calc(var(--by, 0px) * var(--speed, 1)));
+            will-change: transform;
+        }
+
+        /* Base animations */
+        @keyframes m1 {
+
+            0%,
+            100% {
+                border-radius: 60% 40% 30% 70%/60% 30% 70% 40%;
+                margin-top: 5%;
+                margin-left: 5%;
+            }
+
+            25% {
+                border-radius: 30% 60% 70% 40%/50% 60% 30% 60%;
+                margin-top: -3%;
+                margin-left: 28%;
+            }
+
+            50% {
+                border-radius: 50% 50% 40% 60%/40% 50% 60% 50%;
+                margin-top: 15%;
+                margin-left: 12%;
+            }
+
+            75% {
+                border-radius: 40% 60% 60% 40%/60% 40% 50% 60%;
+                margin-top: 8%;
+                margin-left: -2%;
+            }
+        }
+
+        @keyframes m2 {
+
+            0%,
+            100% {
+                border-radius: 40% 60% 60% 40%/70% 30% 70% 30%;
+                margin-top: 18%;
+                margin-left: 48%;
+            }
+
+            33% {
+                border-radius: 60% 40% 40% 60%/40% 60% 40% 60%;
+                margin-top: 5%;
+                margin-left: 30%;
+            }
+
+            66% {
+                border-radius: 50% 50% 30% 70%/55% 45% 60% 40%;
+                margin-top: 25%;
+                margin-left: 15%;
+            }
+        }
+
+        @keyframes m3 {
+
+            0%,
+            100% {
+                border-radius: 50% 50% 40% 60%/40% 60% 60% 40%;
+                margin-top: 45%;
+                margin-left: 20%;
+            }
+
+            50% {
+                border-radius: 60% 40% 50% 50%/50% 50% 40% 60%;
+                margin-top: 35%;
+                margin-left: 42%;
+            }
+        }
+
+        @keyframes m4 {
+
+            0%,
+            100% {
+                border-radius: 30% 70% 70% 30%/30% 30% 70% 70%;
+                top: 50%;
+                left: 50%;
+            }
+
+            25% {
+                border-radius: 70% 30% 30% 70%/70% 70% 30% 30%;
+                top: 48%;
+                left: 52%;
+            }
+
+            50% {
+                border-radius: 50% 50% 50% 50%/50% 50% 50% 50%;
+                top: 52%;
+                left: 48%;
+            }
+
+            75% {
+                border-radius: 40% 60% 60% 40%/60% 40% 60% 40%;
+                top: 50%;
+                left: 50%;
+            }
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(0.80);
+                border-radius: 50%;
+            }
+
+            10% {
+                transform: translate(-50%, -50%) scale(0.86);
+            }
+
+            20% {
+                transform: translate(-50%, -50%) scale(0.80);
+            }
+
+            30% {
+                transform: translate(-50%, -50%) scale(0.90);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(0.80);
+            }
+        }
+
+        .blob-1 {
+            width: 62%;
+            height: 62%;
+            background: linear-gradient(135deg, #ff006e, #ff4d00);
+            animation: m1 9s ease-in-out infinite;
+            --speed: 1.0;
+        }
+
+        .blob-2 {
+            width: 52%;
+            height: 52%;
+            background: linear-gradient(135deg, #00f5ff, #0044ff);
+            animation: m2 11s ease-in-out infinite;
+            --speed: 1.5;
+        }
+
+        .blob-3 {
+            width: 70%;
+            height: 70%;
+            background: linear-gradient(135deg, #9d00ff, #ff00aa);
+            animation: m3 13s ease-in-out infinite;
+            --speed: 0.8;
+        }
+
+        .blob-4 {
+            width: 48%;
+            height: 48%;
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            animation: m4 10s ease-in-out infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            --speed: 2.0;
+        }
+
+        .blob-5 {
+            width: 34%;
+            height: 34%;
+            background: radial-gradient(circle, #ffffff 0%, #ffe066 60%, #ff6600 100%);
+            opacity: 0.6;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            animation: heartbeat 1.6s ease-in-out infinite;
+            --speed: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob-scene">
+        <div class="blob-stage" id="stage">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+            <div class="blob blob-4"></div>
+            <div class="blob blob-5"></div>
+        </div>
+    </div>
+
+    <script>
+        const stage = document.getElementById('stage');
+        const blobs = [...stage.querySelectorAll('.blob')];
+
+        // Mouse tracking — stored as center-relative, no accumulation bug
+        let targetX = 0, targetY = 0;
+        let currentX = 0, currentY = 0;
+
+        document.addEventListener('mousemove', e => {
+            targetX = (e.clientX / window.innerWidth - 0.5) * 80;
+            targetY = (e.clientY / window.innerHeight - 0.5) * 80;
+        });
+
+        function tick() {
+            // Smooth lerp toward mouse
+            currentX += (targetX - currentX) * 0.06;
+            currentY += (targetY - currentY) * 0.06;
+
+            // Apply as CSS custom properties — animation keyframes handle the rest
+            stage.style.setProperty('--bx', `${currentX}px`);
+            stage.style.setProperty('--by', `${currentY}px`);
+
+            requestAnimationFrame(tick);
+        }
+
+        tick();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Falling Confetti</title>
+    <style>
+      /*
+        Falling confetti animation
+        --------------------------
+        This page draws a shower of confetti using the HTML5 canvas.  Each
+        piece of confetti is represented by a small circle whose colour and
+        drift are chosen at random.  As the pieces fall they oscillate left
+        and right to give the impression of air resistance.  When they
+        leave the bottom of the screen they are recycled at the top.
+      */
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0c0c0c;
+        font-family: sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="confetti"></canvas>
+    <script>
+      (function() {
+        const canvas = document.getElementById('confetti');
+        const ctx    = canvas.getContext('2d');
+
+        // Resize the canvas to fill the window.
+        function resize() {
+          canvas.width  = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // List of pastel colours.  These hues are similar to those used in
+        // the original CodePen; they provide a cheerful, celebratory look.
+        const colours = [
+          '#ff5978', '#ff9b44', '#f6d743', '#54c571', '#57c7ff', '#b18fff'
+        ];
+
+        // Number of confetti pieces.  Increase for denser showers at the
+        // expense of frame rate.
+        const COUNT = 150;
+
+        // Confetti particle definition.
+        class Confetto {
+          constructor() {
+            this.reset();
+          }
+          reset() {
+            this.x     = Math.random() * canvas.width;
+            this.y     = -10 - Math.random() * canvas.height;
+            this.size  = 6 + Math.random() * 6;
+            this.speed = 1 + Math.random() * 2;
+            this.wave  = 50 + Math.random() * 50;
+            this.phase = Math.random() * Math.PI * 2;
+            this.col   = colours[Math.floor(Math.random() * colours.length)];
+          }
+          update(dt) {
+            // Vertical motion
+            this.y += this.speed * dt;
+            // Horizontal oscillation
+            this.x += Math.sin(this.phase + this.y / this.wave) * 0.5;
+            // When the piece falls past the bottom, recycle it at the top.
+            if (this.y > canvas.height + this.size) {
+              this.reset();
+              this.y = -this.size;
+            }
+          }
+          draw(ctx) {
+            ctx.fillStyle = this.col;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Create the confetti.
+        const confetti = [];
+        for (let i = 0; i < COUNT; i++) {
+          confetti.push(new Confetto());
+        }
+
+        // Track time between frames for consistent motion across
+        // different refresh rates.
+        let lastTime = null;
+        function tick(timestamp) {
+          if (!lastTime) lastTime = timestamp;
+          const dt = (timestamp - lastTime) / 16.666; // relative to ~60fps
+          lastTime = timestamp;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Draw a subtle gradient background for depth.
+          const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+          grad.addColorStop(0, '#151515');
+          grad.addColorStop(1, '#0a0a0a');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Update and render each piece of confetti.
+          for (const piece of confetti) {
+            piece.update(dt);
+            piece.draw(ctx);
+          }
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      })();
+    </script>
+  </body>
+</html>

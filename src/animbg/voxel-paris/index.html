@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxel Paris</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        canvas { display: block; }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            background: rgba(255,255,255,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+    </style>
+    <!-- Load Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="loading">Initializing Renderer...</div>
+    <script>
+        let camera, scene, renderer;
+        let towerGroup, cloudsGroup, balloonGroup;
+        let sunMesh;
+        let mouseX = 0;
+        let mouseY = 0;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        // Dynamic elements arrays
+        const cars = [];
+        const boats = [];
+        const birds = [];
+
+        const voxelSize = 2; 
+        
+        // OPTIMIZATION: Shared Geometries & Material Cache
+        const sharedBoxGeo = new THREE.BoxGeometry(voxelSize, voxelSize, voxelSize);
+        const sharedEdgesGeo = new THREE.EdgesGeometry(sharedBoxGeo);
+        const sharedLineMat = new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1, transparent: true });
+        
+        // Cache for materials to prevent WebGL context loss and ensure stability
+        const materialCache = {};
+
+        function getMaterial(color) {
+            const key = typeof color === 'number' ? color.toString(16) : color;
+            if (!materialCache[key]) {
+                materialCache[key] = new THREE.MeshLambertMaterial({ color: color });
+            }
+            return materialCache[key];
+        }
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); 
+            scene.fog = new THREE.Fog(0x87CEEB, 180, 450); 
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1500);
+            camera.position.set(0, 80, 250); 
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; 
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65); 
+            scene.add(ambientLight);
+
+            // Sun Configuration
+            const sunPosition = new THREE.Vector3(-150, 300, -900); 
+
+            const dirLight = new THREE.DirectionalLight(0xffffee, 1.2);
+            dirLight.position.copy(sunPosition).normalize().multiplyScalar(300);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048; 
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.bias = -0.0005; 
+            const d = 400;
+            dirLight.shadow.camera.left = -d;
+            dirLight.shadow.camera.right = d;
+            dirLight.shadow.camera.top = d;
+            dirLight.shadow.camera.bottom = -d;
+            scene.add(dirLight);
+            
+            // Visual Sun
+            const sunGeo = new THREE.BoxGeometry(80, 80, 80); 
+            const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, fog: false }); 
+            sunMesh = new THREE.Mesh(sunGeo, sunMat);
+            sunMesh.position.copy(sunPosition);
+            scene.add(sunMesh);
+
+            // World Generation
+            createVoxelTower();
+            createMassiveCity();
+            createClouds();
+            createHotAirBalloon();
+            
+            // Dynamic Spawners
+            spawnTraffic();
+            spawnBoats();
+            spawnBirds();
+
+            // Hide loading
+            document.getElementById('loading').style.opacity = 0;
+
+            // Events
+            document.addEventListener('mousemove', onDocumentMouseMove);
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function createVoxel(x, y, z, color, group) {
+            const material = getMaterial(color);
+            const mesh = new THREE.Mesh(sharedBoxGeo, material);
+            mesh.position.set(x * voxelSize, y * voxelSize, z * voxelSize);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            
+            const line = new THREE.LineSegments(sharedEdgesGeo, sharedLineMat);
+            mesh.add(line);
+            
+            if (group) group.add(mesh);
+            return mesh;
+        }
+
+        function createVoxelTower() {
+            towerGroup = new THREE.Group();
+            
+            const cDark = 0x5a4a3a;   
+            const cMain = 0x807060;   
+            const cLight = 0xa09080;  
+            const cGold = 0xc5a059;   
+
+            function addSym(x, y, z, color) {
+                createVoxel(x, y, z, color, towerGroup);
+                createVoxel(-x, y, z, color, towerGroup);
+                createVoxel(x, y, -z, color, towerGroup);
+                createVoxel(-x, y, -z, color, towerGroup);
+            }
+
+            for (let y = 0; y < 22; y++) {
+                let spread = 14 * Math.exp(-0.04 * y);
+                let xOut = Math.round(spread);
+                let xIn = Math.round(spread - 2); 
+
+                addSym(xOut, y, xOut, cMain);
+                addSym(xOut, y, xOut-1, cDark);
+                addSym(xOut-1, y, xOut, cDark);
+
+                if (y % 2 === 0) {
+                    addSym(xIn, y, xIn, cDark);
+                    addSym(xIn, y, xOut, cMain);
+                    addSym(xOut, y, xIn, cMain);
+                }
+
+                if (y < 12) {
+                    for (let k = -xIn + 1; k < xIn; k++) {
+                        let h = 11 - (0.09 * k * k); 
+                        if (Math.abs(y - h) < 1) { 
+                            createVoxel(k, y, xOut, cGold, towerGroup); 
+                            createVoxel(k, y, -xOut, cGold, towerGroup);
+                            createVoxel(xOut, y, k, cGold, towerGroup); 
+                            createVoxel(-xOut, y, k, cGold, towerGroup);
+                        }
+                    }
+                }
+            }
+
+            const p1Rad = 10;
+            for (let x = -p1Rad; x <= p1Rad; x++) {
+                for (let z = -p1Rad; z <= p1Rad; z++) {
+                    let d = Math.max(Math.abs(x), Math.abs(z));
+                    if (d === p1Rad) {
+                        createVoxel(x, 23, z, cGold, towerGroup); 
+                        createVoxel(x, 22, z, cMain, towerGroup); 
+                    } else if (d > 3) { 
+                         if((x+z)%2===0) createVoxel(x, 22, z, cDark, towerGroup); 
+                    }
+                }
+            }
+
+            for (let y = 24; y < 46; y++) {
+                let spread = 6 - ((y-24)/22) * 3;
+                let xPos = Math.round(spread);
+                
+                addSym(xPos, y, xPos, cMain);
+                
+                let cycle = (y - 24) % 5;
+                if (cycle === 0 || cycle === 4) {
+                    addSym(xPos, y, xPos-1, cLight);
+                    addSym(xPos-1, y, xPos, cLight);
+                }
+                
+                if (y % 2 !== 0) {
+                     addSym(xPos, y, xPos-1, cDark);
+                     addSym(xPos-1, y, xPos, cDark);
+                }
+            }
+
+            const p2Rad = 5;
+            for (let x = -p2Rad; x <= p2Rad; x++) {
+                for (let z = -p2Rad; z <= p2Rad; z++) {
+                    let d = Math.max(Math.abs(x), Math.abs(z));
+                    if (d === p2Rad) {
+                        createVoxel(x, 47, z, cGold, towerGroup); 
+                        createVoxel(x, 46, z, cMain, towerGroup);
+                    } else {
+                        createVoxel(x, 46, z, cDark, towerGroup);
+                    }
+                }
+            }
+
+            for (let y = 48; y < 80; y++) {
+                let xPos = (y < 65) ? 2 : 1;
+                
+                addSym(xPos, y, xPos, cMain);
+                
+                if (y % 2 === 0) {
+                    createVoxel(xPos, y, 0, cDark, towerGroup);
+                    createVoxel(-xPos, y, 0, cDark, towerGroup);
+                    createVoxel(0, y, xPos, cDark, towerGroup);
+                    createVoxel(0, y, -xPos, cDark, towerGroup);
+                }
+            }
+
+            for (let x = -2; x <= 2; x++) {
+                for (let z = -2; z <= 2; z++) {
+                    createVoxel(x, 80, z, cMain, towerGroup); 
+                }
+            }
+            addSym(1, 81, 1, 0x223344); 
+            addSym(1, 82, 1, 0x223344);
+
+            for (let y = 84; y < 96; y++) {
+                createVoxel(0, y, 0, cLight, towerGroup);
+            }
+            createVoxel(0, 96, 0, 0xffffff, towerGroup);
+
+            towerGroup.position.y = -20; 
+            scene.add(towerGroup);
+        }
+
+        function createMassiveCity() {
+            const groundGeo = new THREE.PlaneGeometry(600, 600);
+            const groundMat = new THREE.MeshLambertMaterial({ color: 0x5c8a3c }); 
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -21.1; 
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            const mats = {
+                stone: getMaterial(0xdcd0b6), 
+                roof: getMaterial(0x6a6a75),  
+                window: getMaterial(0x223344),
+                water: getMaterial(0x367295), 
+                leaf: getMaterial(0x3a5f0b), 
+                leafLight: getMaterial(0x5a7f2b), 
+                trunk: getMaterial(0x4a3c31), 
+                road: getMaterial(0x333333),
+                marker: getMaterial(0xcccccc), 
+                sidewalk: getMaterial(0x999999),
+                person: getMaterial(0xaa4444) 
+            };
+
+            const instances = {
+                stone: [], roof: [], window: [], water: [], 
+                leaf: [], leafLight: [], trunk: [], road: [], marker: [], sidewalk: [], person: []
+            };
+
+            const dummy = new THREE.Object3D();
+
+            function add(type, x, y, z, sx=1, sy=1, sz=1) {
+                dummy.position.set(x * voxelSize, y * voxelSize, z * voxelSize);
+                dummy.scale.set(sx, sy, sz);
+                dummy.updateMatrix();
+                instances[type].push(dummy.matrix.clone());
+            }
+
+            const range = 140; 
+            const parkRadius = 30;
+            const bridgeCenterZ = 40;  
+            const groundGridY = -10.9; 
+            const bridgeGridY = -6;    
+            const flatLength = 10;     
+            const rampLength = 22;     
+
+            for (let x = -range; x <= range; x++) {
+                for (let z = -range; z <= range; z++) {
+                    const riverCenter = Math.sin(x * 0.08) * 12 + 40; 
+                    const riverWidth = 7;
+                    const isRiver = Math.abs(z - riverCenter) < riverWidth;
+                    
+                    if (Math.abs(x) <= 2) {
+                        const distZ = Math.abs(z - bridgeCenterZ);
+                        let elevation = groundGridY;
+                        
+                        if (distZ < flatLength) {
+                            elevation = bridgeGridY; 
+                        } else if (distZ < flatLength + rampLength) {
+                            const t = (distZ - flatLength) / rampLength;
+                            elevation = bridgeGridY * (1-t) + groundGridY * t;
+                        } else {
+                            elevation = groundGridY; 
+                        }
+
+                        const isElevated = elevation > groundGridY + 0.5;
+
+                        if (x === 0) {
+                            add('road', x, elevation, z);
+                            if (z % 2 === 0) add('marker', x, elevation + 0.05, z, 0.2, 0.05, 0.6);
+                        } else if (Math.abs(x) === 1) {
+                            add('sidewalk', x, elevation, z);
+                        } else if (Math.abs(x) === 2) {
+                            add('stone', x, elevation + 0.4, z, 0.5, 1, 1);
+                        }
+                        if (isElevated && z % 4 === 0 && Math.abs(x) < 2 && !isRiver) {
+                            const bottomLimit = -11; 
+                            const height = elevation - bottomLimit;
+                            if (height > 0) {
+                                add('stone', x, bottomLimit + height/2 - 0.5, z, 1, height, 1);
+                            }
+                        }
+                        continue; 
+                    }
+
+                    if (isRiver) {
+                        add('water', x, -11, z);
+                        continue;
+                    }
+                    
+                    if (Math.abs(z - riverCenter) < riverWidth + 8) {
+                        const isRoad = x % 14 === 0 || z % 14 === 0;
+                        if (!isRoad) {
+                            if (Math.abs(z - riverCenter) < riverWidth + 3) {
+                                add('sidewalk', x, -10.5, z);
+                            } else {
+                                if (Math.random() > 0.98) {
+                                    add('trunk', x, -10, z);
+                                    add('leaf', x, -9, z);
+                                }
+                            }
+                            continue;
+                        }
+                    }
+
+                    if (Math.sqrt(x*x + z*z) < parkRadius) {
+                        if (Math.abs(x) < 3 || Math.abs(z) < 3) {
+                            add('sidewalk', x, -10.9, z);
+                        } else {
+                            if (Math.random() > 0.92) {
+                                add('trunk', x, -10, z);
+                                add('leaf', x, -9, z, 2, 1, 2);
+                            }
+                        }
+                        continue;
+                    }
+
+                    const isStreetX = x % 14 === 0;
+                    const isStreetZ = z % 14 === 0;
+
+                    if (isStreetX || isStreetZ) {
+                        add('road', x, -10.9, z);
+                        continue; 
+                    }
+                    
+                    if (x % 14 === 1 || x % 14 === 13 || z % 14 === 1 || z % 14 === 13) {
+                         add('sidewalk', x, -10.8, z);
+                         continue;
+                    }
+
+                    if (Math.random() > 0.75) {
+                        const height = Math.floor(Math.random() * 5) + 3; 
+                        for (let h = 0; h < height; h++) {
+                            const yPos = -10 + h;
+                            const type = (h === 0 || h === height-1 || (x+z+h)%2 !== 0) ? 'stone' : 'window';
+                            add(type, x, yPos, z);
+                        }
+                        add('roof', x, -10 + height, z, 1.1, 0.5, 1.1); 
+                    } else if (Math.random() > 0.9) {
+                        add('trunk', x, -10, z);
+                        add('leaf', x, -9, z, 1.5, 1, 1.5);
+                    }
+                }
+            }
+
+            Object.keys(instances).forEach(key => {
+                if (instances[key].length > 0) {
+                    const mesh = new THREE.InstancedMesh(sharedBoxGeo, mats[key], instances[key].length);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    for (let i = 0; i < instances[key].length; i++) {
+                        mesh.setMatrixAt(i, instances[key][i]);
+                    }
+                    scene.add(mesh);
+                }
+            });
+        }
+
+        function spawnBoats() {
+            const bargeCargoColors = [0xcc3333, 0x33cc33, 0x3333cc, 0xcccc33];
+            
+            function createBoatModel(type) {
+                const boatGeo = new THREE.Group();
+                
+                if (type === 'tour') {
+                    const length = 8; 
+                    const width = 2;
+                    for(let x=-length; x<=length; x++) {
+                        for(let z=-width; z<=width; z++) {
+                            if ((Math.abs(x) === length && Math.abs(z) === width)) continue;
+                            createVoxel(x, 0, z, 0x222222, boatGeo); 
+                            createVoxel(x, 1, z, 0x8b4513, boatGeo); 
+                            if (Math.abs(x) < length-1 && Math.abs(z) === width) {
+                                if (x % 3 === 0) {
+                                    createVoxel(x, 2, z, 0xeeeeee, boatGeo); 
+                                    createVoxel(x, 3, z, 0xeeeeee, boatGeo);
+                                } else {
+                                    createVoxel(x, 2, z, 0x88ccff, boatGeo); 
+                                }
+                            }
+                            if (Math.abs(x) < length-1 && Math.abs(z) <= width) {
+                                 createVoxel(x, 3, z, 0x88ccff, boatGeo); 
+                            }
+                        }
+                    }
+                } else if (type === 'barge') {
+                    const length = 10;
+                    const width = 2;
+                    for(let x=-length; x<=length; x++) {
+                        for(let z=-width; z<=width; z++) {
+                             createVoxel(x, 0, z, 0x333333, boatGeo); 
+                             createVoxel(x, 1, z, 0x555555, boatGeo); 
+                        }
+                    }
+                    // Deterministic crate colors to prevent "color changing" flickering
+                    for (let i=0; i<3; i++) {
+                        let cx = (i - 1) * 6; 
+                        let cColor = bargeCargoColors[(i + Math.floor(Math.random() * 4)) % bargeCargoColors.length];
+                        for(let bx=cx-2; bx<=cx+2; bx++) {
+                            for(let bz=-1; bz<=1; bz++) {
+                                createVoxel(bx, 2, bz, cColor, boatGeo);
+                                createVoxel(bx, 3, bz, cColor, boatGeo);
+                            }
+                        }
+                    }
+                    for(let x=-length; x<=-length+2; x++) {
+                        for(let z=-1; z<=1; z++) {
+                            createVoxel(x, 2, z, 0xffffff, boatGeo);
+                            createVoxel(x, 3, z, 0xffffff, boatGeo);
+                        }
+                    }
+                } else if (type === 'speedboat') {
+                    const length = 4;
+                    const width = 1;
+                    for(let x=-length; x<=length; x++) {
+                        for(let z=-width; z<=width; z++) {
+                             if (Math.abs(x)===length && Math.abs(z)===width) continue;
+                             createVoxel(x, 0, z, 0xffffff, boatGeo); 
+                        }
+                    }
+                    createVoxel(1, 2, 0, 0x88ccff, boatGeo);
+                }
+                return boatGeo;
+            }
+
+            const lane1Count = 4;
+            const lane2Count = 4;
+            const spacing = 110; 
+            const types = ['tour', 'barge', 'speedboat', 'tour'];
+
+            for (let i = 0; i < lane1Count; i++) {
+                const type = types[i % types.length];
+                const boat = createBoatModel(type);
+                boat.position.x = (-180 + (i * spacing)) * voxelSize;
+                boat.position.y = -21.5; 
+                boat.userData = { speed: 0.15, dir: 1, laneOffset: 5 * voxelSize, limit: 350 };
+                scene.add(boat);
+                boats.push(boat);
+            }
+
+            for (let i = 0; i < lane2Count; i++) {
+                const type = types[i % types.length];
+                const boat = createBoatModel(type);
+                boat.position.x = (180 - (i * spacing)) * voxelSize;
+                boat.position.y = -21.5; 
+                boat.userData = { speed: 0.15, dir: -1, laneOffset: -5 * voxelSize, limit: 350 };
+                scene.add(boat);
+                boats.push(boat);
+            }
+        }
+
+        function createHotAirBalloon() {
+             balloonGroup = new THREE.Group();
+             const radius = 5;
+             for(let y=-radius; y<=radius+2; y++) {
+                 for(let x=-radius; x<=radius; x++) {
+                     for(let z=-radius; z<=radius; z++) {
+                         if(x*x + z*z + (y-1)*(y-1)*0.8 < radius*radius) {
+                             let color = (Math.abs(x) < 2) ? 0xff4444 : ((Math.abs(z) < 2) ? 0x4444ff : 0xffffff);
+                             createVoxel(x, y + 10, z, color, balloonGroup);
+                         }
+                     }
+                 }
+             }
+             for(let x=-1; x<=1; x++) {
+                 for(let z=-1; z<=1; z++) {
+                     createVoxel(x, 0, z, 0x8b4513, balloonGroup); 
+                     if(x===-1||x===1||z===-1||z===1) createVoxel(x, 1, z, 0x8b4513, balloonGroup); 
+                 }
+             }
+             balloonGroup.position.set(-200, 120, -100);
+             scene.add(balloonGroup);
+        }
+
+        function createClouds() {
+            const geo = new THREE.BoxGeometry(1, 1, 1);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+            const cloudCount = 60;
+            cloudsGroup = new THREE.Group();
+            for(let i=0; i<cloudCount; i++) {
+                const cloud = new THREE.Group();
+                const puffs = Math.random() * 5 + 3;
+                for(let j=0; j<puffs; j++) {
+                    const puff = new THREE.Mesh(geo, mat);
+                    puff.position.set((Math.random()-0.5)*15, (Math.random()-0.5)*5, (Math.random()-0.5)*15);
+                    puff.scale.set(Math.random()*10 + 5, Math.random()*5 + 3, Math.random()*8 + 5);
+                    cloud.add(puff);
+                }
+                cloud.position.set((Math.random()-0.5)*800, 120 + Math.random()*60, (Math.random()-0.5)*800);
+                cloudsGroup.add(cloud);
+            }
+            scene.add(cloudsGroup);
+        }
+
+        function spawnTraffic() {
+            const carGeo = new THREE.BoxGeometry(voxelSize*0.8, voxelSize*0.6, voxelSize*1.2);
+            const colors = [0xff0000, 0xeeeeee, 0x111111, 0xffcc00, 0x3333cc];
+            
+            for (let i = -10; i <= 10; i++) {
+                let roadZ = i * 14; 
+                if (roadZ < 20 || roadZ > 65) createCarLane(roadZ, true, -20.6); 
+                let roadX = i * 14;
+                if (Math.abs(roadX) < 2) createCarLane(roadX, false, -20.6);
+            }
+
+            function createCarLane(coord, isXAxis, yPos) {
+                const count = Math.floor(Math.random() * 5) + 2; 
+                let speed = (Math.random() * 0.3 + 0.1) * (Math.random() > 0.5 ? 1 : -1);
+                for(let k=0; k<count; k++) {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const mat = getMaterial(color);
+                    const car = new THREE.Mesh(carGeo, mat);
+                    const offset = (Math.random() - 0.5) * 300;
+                    if (isXAxis) {
+                        car.position.set(offset * voxelSize, yPos, coord * voxelSize);
+                        car.rotation.y = speed > 0 ? Math.PI/2 : -Math.PI/2;
+                    } else {
+                        car.position.set(coord * voxelSize, yPos, offset * voxelSize);
+                        car.rotation.y = speed > 0 ? 0 : Math.PI;
+                    }
+                    car.userData = { speed: speed, axis: isXAxis ? 'x' : 'z', limit: 300 };
+                    scene.add(car);
+                    cars.push(car);
+                }
+            }
+        }
+
+        function spawnBirds() {
+            const birdGeo = new THREE.BoxGeometry(voxelSize*0.3, voxelSize*0.1, voxelSize*0.3);
+            const birdMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            for(let i=0; i<40; i++) {
+                const bird = new THREE.Mesh(birdGeo, birdMat);
+                const wing = new THREE.Mesh(new THREE.BoxGeometry(voxelSize*0.8, voxelSize*0.05, voxelSize*0.1), birdMat);
+                bird.add(wing);
+                bird.position.y = 50 + Math.random() * 40;
+                bird.userData = { angle: Math.random() * Math.PI * 2, radius: 40 + Math.random() * 60, speed: 0.01 + Math.random() * 0.01, yBase: bird.position.y };
+                scene.add(bird);
+                birds.push(bird);
+            }
+        }
+
+        function onDocumentMouseMove(event) {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        }
+
+        function onWindowResize() {
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = Date.now() * 0.001;
+
+            if (cloudsGroup) cloudsGroup.rotation.y = time * 0.01;
+
+            if (balloonGroup) {
+                balloonGroup.position.x += 0.05; 
+                balloonGroup.position.y += Math.sin(time) * 0.05; 
+                if (balloonGroup.position.x > 300) balloonGroup.position.x = -300;
+            }
+
+            cars.forEach(car => {
+                if (car.userData.axis === 'x') {
+                    car.position.x += car.userData.speed * 2;
+                    if (car.position.x > car.userData.limit) car.position.x = -car.userData.limit;
+                    if (car.position.x < -car.userData.limit) car.position.x = car.userData.limit;
+                } else {
+                    car.position.z += car.userData.speed * 2;
+                    if (car.position.z > car.userData.limit) car.position.z = -car.userData.limit;
+                    if (car.position.z < -car.userData.limit) car.position.z = car.userData.limit;
+
+                    const carZ = car.position.z;
+                    const bridgeCenterZ = 80;  
+                    const flatDist = 20;       
+                    const rampDist = 44;       
+                    const highY = -11.6;       
+                    const lowY = -20.6;        
+
+                    const dist = Math.abs(carZ - bridgeCenterZ);
+                    let targetY = lowY;
+                    let slopeRot = 0;
+
+                    if (dist < flatDist) {
+                        targetY = highY;
+                    } else if (dist < flatDist + rampDist) {
+                        const t = (dist - flatDist) / rampDist;
+                        targetY = highY * (1-t) + lowY * t;
+                        const approaching = (Math.sign(car.userData.speed) * Math.sign(carZ - bridgeCenterZ)) < 0;
+                        slopeRot = approaching ? -0.2 : 0.2;
+                    }
+                    car.position.y = targetY;
+                    car.rotation.x = slopeRot;
+                }
+            });
+
+            boats.forEach(boat => {
+                boat.position.x += boat.userData.speed * boat.userData.dir * 2;
+                if (boat.position.x > 300) boat.position.x = -300;
+                if (boat.position.x < -300) boat.position.x = 300;
+                const gridX = boat.position.x / voxelSize;
+                const riverCenterZ = (Math.sin(gridX * 0.08) * 12 + 40) * voxelSize;
+                boat.position.z = riverCenterZ + boat.userData.laneOffset;
+                const slope = 0.96 * Math.cos(gridX * 0.08);
+                const angle = Math.atan(slope);
+                boat.rotation.y = boat.userData.dir > 0 ? -angle : -angle + Math.PI; 
+                boat.rotation.z = Math.sin(time * 2 + boat.position.x) * 0.03;
+            });
+
+            birds.forEach(bird => {
+                bird.userData.angle += bird.userData.speed;
+                bird.position.x = Math.cos(bird.userData.angle) * bird.userData.radius;
+                bird.position.z = Math.sin(bird.userData.angle) * bird.userData.radius;
+                bird.position.y = bird.userData.yBase + Math.sin(time * 3 + bird.userData.radius) * 2;
+                bird.rotation.y = -bird.userData.angle; 
+            });
+
+            const targetX = THREE.MathUtils.clamp(mouseX * 0.4, -120, 120); 
+            const targetY = THREE.MathUtils.clamp(-mouseY * 0.4 + 100, 50, 180);
+
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (targetY - camera.position.y) * 0.05;
+            camera.position.z = 250 - (camera.position.y * 0.3); 
+            camera.lookAt(new THREE.Vector3(0, 40, 0));
+
+            renderer.render(scene, camera);
+        }
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            init();
+        } else {
+            window.addEventListener('DOMContentLoaded', init);
+        }
+    </script>
+</body>
+</html>
