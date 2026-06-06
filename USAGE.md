@@ -20,6 +20,11 @@ src/                     项目代码根目录
       index.ts / Root.tsx / Composition.tsx / Lyrics.tsx
     ktv/               视觉模板 "ktv"（经典卡拉OK：多行可见 + 逐词扫光双色描边 + lead-in 箭头）
       index.ts / Root.tsx / Composition.tsx / Lyrics.tsx
+    neon/              视觉模板 "neon"（赛博朋克霓虹：逐词出场 + RGB 色差/故障 + 扫描线）
+    cinema/            视觉模板 "cinema"（电影预告片：居中超大字 + 金色辉光 + 黑边暗角）
+    bounce/            视觉模板 "bounce"（彩虹弹跳：每词不同色，随机方向弹入 + 旋转）
+    typewriter/        视觉模板 "typewriter"（打字机：逐字符显示 + 当前词高亮 + 闪烁光标）
+    lyricsToData.ts    neon/cinema/bounce/typewriter 共用：行级歌词→逐词时间合成
   out/                 渲染输出目录
   public/              运行时复制的音频/背景（自动生成）
 ```
@@ -111,7 +116,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `--preset <label>` | `orig` | 视觉模板，对应 `preset/<label>/` 目录。可用：`orig`（频谱+整行字幕）、`no2`（逐词卡拉OK）、`apple`（Apple Music 风格滚动歌词）、`ktv`（经典卡拉OK逐词扫光）。不存在时报错并列出可用模板。 |
+| `--preset <label>` | `orig` | 视觉模板，对应 `preset/<label>/` 目录。可用：`orig`（频谱+整行字幕）、`no2`（逐词卡拉OK）、`apple`（Apple Music 风格滚动歌词）、`ktv`（经典卡拉OK逐词扫光）、`neon`（赛博朋克霓虹）、`cinema`（电影预告片）、`bounce`（彩虹弹跳）、`typewriter`（打字机）。不存在时报错并列出可用模板。 |
 | `--res <WxH>` | `1920x1080` | 输出分辨率，格式如 `1280x720`、`1080x1920`。格式非法时报错。 |
 | `--fps <N>` | `30` | 帧率，正整数。非法时报错。 |
 | `--background <file>` | 无 | 背景图片路径。省略时使用动态渐变背景。自动复制到 `public/`。 |
