@@ -1,0 +1,59 @@
+import React from 'react';
+import {AbsoluteFill, Img, IFrame, OffthreadVideo, staticFile} from 'remotion';
+
+/**
+ * Shared background layer for all presets. Renders exactly one source by
+ * priority: video > image > animated-html > fallback gradient.
+ *
+ * - backgroundVideo:    looping OffthreadVideo, cover
+ * - backgroundImage:    Img, cover (+ optional dark overlay)
+ * - backgroundAnimHtml: full self-contained HTML in an <IFrame srcDoc>
+ * - fallbackGradient:   CSS background value supplied by each preset so its
+ *                       own visual style is preserved when no source is given
+ */
+export const BackgroundLayer: React.FC<{
+  backgroundVideo?: string;
+  backgroundImage?: string;
+  backgroundAnimHtml?: string;
+  fallbackGradient: string;
+  /** Optional dark overlay over video/image for text readability (e.g. 'rgba(0,0,0,0.45)'). */
+  overlay?: string;
+}> = ({backgroundVideo, backgroundImage, backgroundAnimHtml, fallbackGradient, overlay}) => {
+  const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
+
+  if (backgroundVideo) {
+    return (
+      <>
+        <AbsoluteFill>
+          <OffthreadVideo
+            src={toSrc(backgroundVideo)}
+            muted
+            style={{width: '100%', height: '100%', objectFit: 'cover'}}
+          />
+        </AbsoluteFill>
+        {overlay ? <AbsoluteFill style={{background: overlay}} /> : null}
+      </>
+    );
+  }
+
+  if (backgroundImage) {
+    return (
+      <>
+        <AbsoluteFill>
+          <Img src={toSrc(backgroundImage)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+        </AbsoluteFill>
+        {overlay ? <AbsoluteFill style={{background: overlay}} /> : null}
+      </>
+    );
+  }
+
+  if (backgroundAnimHtml) {
+    return (
+      <AbsoluteFill>
+        <IFrame srcDoc={backgroundAnimHtml} style={{width: '100%', height: '100%', border: 'none'}} />
+      </AbsoluteFill>
+    );
+  }
+
+  return <AbsoluteFill style={{background: fallbackGradient}} />;
+};
