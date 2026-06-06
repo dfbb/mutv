@@ -21,6 +21,12 @@ export interface MVInputProps extends Record<string, unknown> {
   lyricOffset: number;
   /** Background image filename (relative to public/ or absolute URL). If empty, uses animated gradient. */
   backgroundImage: string;
+  /** Output width in pixels (set via CLI --res) */
+  width: number;
+  /** Output height in pixels (set via CLI --res) */
+  height: number;
+  /** Frames per second (set via CLI --fps) */
+  fps: number;
 }
 
 export const defaultProps: MVInputProps = {
@@ -32,4 +38,7 @@ export const defaultProps: MVInputProps = {
   durationInSeconds: 150,
   lyricOffset: -0.5,
   backgroundImage: '',
+  width: 1920,
+  height: 1080,
+  fps: 30,
 };

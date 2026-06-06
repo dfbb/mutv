@@ -10,7 +10,7 @@ out/
 *.mp4
 
 # Runtime-copied assets in public/ (regenerated from source on each run)
-scripts/public/
+src/public/
 
 # Media assets (large / source material)
 *.mp3

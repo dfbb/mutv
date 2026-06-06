@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "remotion preview",
-    "build": "remotion render MusicVideo out/video.mp4",
-    "render": "node render.mjs",
+    "start": "remotion studio preset/orig/index.ts",
+    "build": "remotion render preset/orig/index.ts MusicVideo out/video.mp4",
+    "render": "node cli.mjs",
     "upgrade": "remotion upgrade"
   },
   "keywords": [],

@@ -10,7 +10,7 @@ import {
   staticFile,
 } from 'remotion';
 import {useAudioData, visualizeAudio} from '@remotion/media-utils';
-import {MVInputProps} from './types';
+import {MVInputProps} from '../../types';
 
 export const AudioVisualization: React.FC<MVInputProps> = ({
   audioFileName,

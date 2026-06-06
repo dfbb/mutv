@@ -19,6 +19,10 @@
  *   --output       Output file path (default: out/video.mp4)
  *   --codec        Video codec: h264, h265, vp8, vp9 (default: h264)
  *   --background   Background image file path (if omitted, uses animated gradient)
+ *   --preset       Visual template under preset/<label>/ (default: orig)
+ *   --res          Output resolution WxH (default: 1920x1080)
+ *   --fps          Frames per second (default: 30)
+ *   --html         Launch local Remotion Studio preview instead of rendering
  */
 
 import {execSync, spawn} from 'child_process';
@@ -230,6 +234,40 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv);
 
+// Resolve preset: visual template under preset/<label>/. Default 'orig'.
+const presetLabel = args.preset || 'orig';
+const presetDir = resolve('preset', presetLabel);
+const presetEntry = join(presetDir, 'index.ts');
+if (!existsSync(presetEntry)) {
+  const available = existsSync(resolve('preset'))
+    ? readdirSync(resolve('preset')).filter(d => existsSync(join(resolve('preset'), d, 'index.ts')))
+    : [];
+  console.error(`Error: preset "${presetLabel}" not found (expected ${presetEntry})`);
+  console.error(`Available presets: ${available.length ? available.join(', ') : '(none)'}`);
+  process.exit(1);
+}
+
+// Resolution (--res WxH) and fps (--fps N). Defaults match the previous hardcoded 1920x1080/30.
+let resWidth = 1920;
+let resHeight = 1080;
+if (args.res) {
+  const m = String(args.res).match(/^(\d+)x(\d+)$/i);
+  if (!m) {
+    console.error(`Error: --res must be in WxH format (e.g. 1920x1080), got: ${args.res}`);
+    process.exit(1);
+  }
+  resWidth = parseInt(m[1], 10);
+  resHeight = parseInt(m[2], 10);
+}
+let fps = 30;
+if (args.fps) {
+  fps = parseInt(args.fps, 10);
+  if (!Number.isFinite(fps) || fps <= 0) {
+    console.error(`Error: --fps must be a positive integer, got: ${args.fps}`);
+    process.exit(1);
+  }
+}
+
 // Validate required args
 if (!args.audio) {
   console.error('Error: --audio is required');
@@ -340,6 +378,9 @@ const inputProps = {
   durationInSeconds: duration,
   lyricOffset: args.offset ? parseFloat(args.offset) : -0.5,
   backgroundImage,
+  width: resWidth,
+  height: resHeight,
+  fps,
 };
 
 const output = args.output ? resolveFilePath(args.output) : 'out/video.mp4';
@@ -354,9 +395,11 @@ writeFileSync(propsFile, JSON.stringify(inputProps));
 // The props file is kept on disk so Studio can load it; Studio is a long-running server.
 if (args.html) {
   console.log(`\nStarting local web preview (Remotion Studio)...`);
+  console.log(`  Preset: ${presetLabel}`);
   console.log(`  Audio: ${args.audio}`);
   console.log(`  Title: ${inputProps.title}`);
   console.log(`  Duration: ${duration.toFixed(1)}s`);
+  console.log(`  Resolution: ${resWidth}x${resHeight} @ ${fps}fps`);
   console.log(`  Lyrics: ${lyrics.length} lines`);
   if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
   console.log('');
@@ -366,7 +409,7 @@ if (args.html) {
   // Inherit stdio so Studio's "Server ready - Local: http://localhost:3000" line is shown live.
   const studio = spawn(
     'npx',
-    ['remotion', 'studio', 'src/index.ts', `--props=${propsFile}`],
+    ['remotion', 'studio', presetEntry, `--props=${propsFile}`],
     {stdio: 'inherit'}
   );
   studio.on('exit', (code) => process.exit(code ?? 0));
@@ -386,6 +429,7 @@ if (!browserExe) {
 
 const cmd = [
   'npx remotion render',
+  `"${presetEntry}"`,
   'MusicVideo',
   `"${output}"`,
   `--props="${propsFile}"`,
@@ -396,9 +440,11 @@ const cmd = [
 ].filter(Boolean).join(' ');
 
 console.log(`\nRendering video...`);
+console.log(`  Preset: ${presetLabel}`);
 console.log(`  Audio: ${args.audio}`);
 console.log(`  Title: ${inputProps.title}`);
 console.log(`  Duration: ${duration.toFixed(1)}s`);
+console.log(`  Resolution: ${resWidth}x${resHeight} @ ${fps}fps`);
 console.log(`  Lyrics: ${lyrics.length} lines`);
 console.log(`  Output: ${output}`);
 console.log(`  Codec: ${codec}`);
