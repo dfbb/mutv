@@ -1,5 +1,11 @@
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate} from 'remotion';
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  interpolateColors,
+} from 'remotion';
 import {LyricLine} from '../../types';
 
 // KTV color scheme (referencing karaoke-gen's ASS defaults):
@@ -49,26 +55,29 @@ const outlineShadow =
 
 // PLACEHOLDER_COMPONENT
 
-// One word: sweeps from unsung(blue) to sung(white) across its [start,end].
+// One word: each character lights up at its own time (no2-style per-character
+// reveal). Solid fill (not background-clip) so the blue outline stays sharp.
 const WordSpan: React.FC<{word: Word; time: number}> = ({word, time}) => {
-  const p = interpolate(time, [word.start, word.end], [0, 100], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  // Left part (sung) white, right part (unsung) blue — a hard karaoke wipe.
+  const chars = Array.from(word.text);
+  const span = Math.max(word.end - word.start, 0.001);
+  const per = span / chars.length;
   return (
-    <span
-      style={{
-        whiteSpace: 'pre-wrap',
-        backgroundImage: `linear-gradient(90deg, ${SUNG} ${p}%, ${UNSUNG} ${p}%)`,
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        color: 'transparent',
-        WebkitTextFillColor: 'transparent',
-      }}
-    >
-      {word.text}
-    </span>
+    <>
+      {chars.map((ch, i) => {
+        const cStart = word.start + i * per;
+        const cEnd = cStart + per;
+        const t = interpolate(time, [cStart, cEnd], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        });
+        const color = interpolateColors(t, [0, 1], [UNSUNG, SUNG]);
+        return (
+          <span key={i} style={{whiteSpace: 'pre-wrap', color}}>
+            {ch}
+          </span>
+        );
+      })}
+    </>
   );
 };
 
