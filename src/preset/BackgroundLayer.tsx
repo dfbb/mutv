@@ -1,11 +1,11 @@
 import React from 'react';
-import {AbsoluteFill, Img, IFrame, OffthreadVideo, staticFile} from 'remotion';
+import {AbsoluteFill, Img, IFrame, Video, staticFile} from 'remotion';
 
 /**
  * Shared background layer for all presets. Renders exactly one source by
  * priority: video > image > animated-html > fallback gradient.
  *
- * - backgroundVideo:    looping OffthreadVideo, cover
+ * - backgroundVideo:    looping Video, cover
  * - backgroundImage:    Img, cover (+ optional dark overlay)
  * - backgroundAnimHtml: full self-contained HTML in an <IFrame srcDoc>
  * - fallbackGradient:   CSS background value supplied by each preset so its
@@ -25,9 +25,10 @@ export const BackgroundLayer: React.FC<{
     return (
       <>
         <AbsoluteFill>
-          <OffthreadVideo
+          <Video
             src={toSrc(backgroundVideo)}
             muted
+            loop
             style={{width: '100%', height: '100%', objectFit: 'cover'}}
           />
         </AbsoluteFill>
