@@ -25,6 +25,9 @@ src/                     项目代码根目录
     bounce/            视觉模板 "bounce"（彩虹弹跳：每词不同色，随机方向弹入 + 旋转）
     typewriter/        视觉模板 "typewriter"（打字机：逐字符显示 + 当前词高亮 + 闪烁光标）
     lyricsToData.ts    neon/cinema/bounce/typewriter 共用：行级歌词→逐词时间合成
+    BackgroundLayer.tsx  所有 preset 共用：按优先级渲染 video/img/anim/渐变背景
+  animbg/              抓取的全屏动画特效（<label>/index.html + manifest.json）
+  scripts/             fetch_animbg.py 抓取脚本 + requirements.txt
   out/                 渲染输出目录
   public/              运行时复制的音频/背景（自动生成）
 ```
@@ -55,7 +58,7 @@ npx remotion browser ensure
 node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --title "歌名"
 
 # 带背景图
-node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --title "歌名" --background bg.jpg
+node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --title "歌名" --bg-img bg.jpg
 
 # 本地网页预览（不渲染视频，启动 Remotion Studio）
 node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --html
@@ -119,7 +122,9 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--preset <label>` | `orig` | 视觉模板，对应 `preset/<label>/` 目录。可用：`orig`（频谱+整行字幕）、`no2`（逐词卡拉OK）、`apple`（Apple Music 风格滚动歌词）、`ktv`（经典卡拉OK逐词扫光）、`neon`（赛博朋克霓虹）、`cinema`（电影预告片）、`bounce`（彩虹弹跳）、`typewriter`（打字机）。不存在时报错并列出可用模板。 |
 | `--res <WxH>` | `1920x1080` | 输出分辨率，格式如 `1280x720`、`1080x1920`。格式非法时报错。 |
 | `--fps <N>` | `30` | 帧率，正整数。非法时报错。 |
-| `--background <file>` | 无 | 背景图片路径。省略时使用动态渐变背景。自动复制到 `public/`。 |
+| `--bg-img <file>` | 无 | 背景图片文件。与 `--bg-video`/`--bganim` 互斥。自动复制到 `public/`。 |
+| `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
+| `--bganim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。与其它背景源互斥。 |
 
 ### 时间轴
 
