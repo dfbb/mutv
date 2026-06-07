@@ -15,6 +15,7 @@ type Levels = {bass: number; mid: number; treb: number};
 type FrameData = {levels: Levels; virtualTimeMs: number};
 type Cache = {
   state: ReturnType<typeof createBeatState>;
+  // frames 存全帧(非仅最后状态):Remotion 同进程可能乱序请求帧,存全帧才能正确回看;内存换确定性。
   frames: FrameData[];
   vtMs: number;
 };
@@ -25,6 +26,7 @@ function getFrameData(
   frame: number,
   fps: number
 ): FrameData {
+  // 渲染期写模块缓存:Remotion 逐帧渲染,这等价于按 (resultId, frame) 记忆化,幂等,可接受。
   let cache = caches.get(audioData.resultId);
   if (!cache) {
     cache = {state: createBeatState(fps), frames: [], vtMs: 0};
