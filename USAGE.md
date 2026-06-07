@@ -120,8 +120,8 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
 | `--preset <label>` | `orig` | 视觉模板，对应 `preset/<label>/` 目录。可用模板见下方[视觉模板（preset）列表](#视觉模板preset列表)。传 `random` 随机选一个。不存在时报错并列出可用模板。 |
-| `--res <WxH>` | `1920x1080` | 输出分辨率，格式如 `1280x720`、`1080x1920`。格式非法时报错。 |
-| `--fps <N>` | `30` | 帧率，正整数。非法时报错。 |
+| `--res <WxH>` | `1080x720` | 输出分辨率，格式如 `1280x720`、`1080x1920`。格式非法时报错。 |
+| `--fps <N>` | `24` | 帧率，正整数。非法时报错。 |
 | `--bg-image <file>` | 无 | 背景图片文件。与 `--bg-video`/`--bg-anim` 互斥。自动复制到 `public/`。 |
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |

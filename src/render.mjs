@@ -22,8 +22,8 @@
  *   --bg-video     Background video file (mutually exclusive)
  *   --bg-anim      Animated background effect label under animbg/<label>/, or 'random' (mutually exclusive)
  *   --preset       Visual template under preset/<label>/ (default: orig)
- *   --res          Output resolution WxH (default: 1920x1080)
- *   --fps          Frames per second (default: 30)
+ *   --res          Output resolution WxH (default: 1080x720)
+ *   --fps          Frames per second (default: 24)
  *   --html         Launch local Remotion Studio preview instead of rendering
  */
 
@@ -258,9 +258,9 @@ if (!existsSync(presetEntry)) {
   process.exit(1);
 }
 
-// Resolution (--res WxH) and fps (--fps N). Defaults match the previous hardcoded 1920x1080/30.
-let resWidth = 1920;
-let resHeight = 1080;
+// Resolution (--res WxH) and fps (--fps N). Defaults: 1080x720 @ 24fps.
+let resWidth = 1080;
+let resHeight = 720;
 if (args.res) {
   const m = String(args.res).match(/^(\d+)x(\d+)$/i);
   if (!m) {
@@ -270,7 +270,7 @@ if (args.res) {
   resWidth = parseInt(m[1], 10);
   resHeight = parseInt(m[2], 10);
 }
-let fps = 30;
+let fps = 24;
 if (args.fps) {
   fps = parseInt(args.fps, 10);
   if (!Number.isFinite(fps) || fps <= 0) {

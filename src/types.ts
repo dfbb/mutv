@@ -44,7 +44,7 @@ export const defaultProps: MVInputProps = {
   backgroundImage: '',
   backgroundVideo: '',
   backgroundAnim: '',
-  width: 1920,
-  height: 1080,
-  fps: 30,
+  width: 1080,
+  height: 720,
+  fps: 24,
 };

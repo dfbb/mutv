@@ -28,8 +28,8 @@
  *   --bg-anim     Animated background effect label (see src/animbg/), or 'random' (mutually exclusive)
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
  *   --preset      Visual template under preset/<label>/ (default: orig), or 'random'
- *   --res         Output resolution WxH (default: 1920x1080)
- *   --fps         Frames per second (default: 30)
+ *   --res         Output resolution WxH (default: 1080x720)
+ *   --fps         Frames per second (default: 24)
  *   --max-size    Max output size in MB; compresses video if exceeded
  *   --html        Start a local web preview (Remotion Studio) instead of rendering
  *
