@@ -561,7 +561,9 @@ const cmd = [
   '--log=error',
   browserExe ? `--browser-executable="${browserExe}"` : '',
   chromeMode !== 'headless-shell' ? `--chrome-mode=${chromeMode}` : '',
-  backgroundCarousel ? '--gl=angle' : '',
+  // Carousel uses WebGL (regl); headless chrome needs an explicit GL backend.
+  // angle works on macOS/Windows; swangle (software) is safer on Linux CI.
+  backgroundCarousel ? (process.platform === 'linux' ? '--gl=swangle' : '--gl=angle') : '',
 ].filter(Boolean).join(' ');
 
 console.log(`\nRendering video...`);
