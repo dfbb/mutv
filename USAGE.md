@@ -127,6 +127,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-image-trans <组>` | `soft` | 轮播转场风格组：`soft`（柔和淡入淡出/滑动/缩放）、`cool`（翻页/扭曲/炫彩）、`hard`（故障/像素化/燃烧）。 |
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
+| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。 |
 
 ### 背景图轮播与缩放规则
 
@@ -225,6 +226,8 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `typewriter` | 打字机：逐字符显示 + 当前词高亮 + 闪烁光标 |
 
 ## 动画背景特效（bg-anim）列表
+
+> 默认所有 bg-anim 均带节拍反应（随音乐起伏）。如需静态背景，加 `--no-bg-anim-beat`。
 
 用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 71 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
 
