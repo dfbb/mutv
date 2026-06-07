@@ -3,9 +3,10 @@ import {AbsoluteFill, Img, IFrame, Video, staticFile} from 'remotion';
 
 /**
  * Shared background layer for all presets. Renders exactly one source by
- * priority: video > image > animated-html > fallback gradient.
+ * priority: video > carousel > image > anim > fallback gradient.
  *
  * - backgroundVideo:    looping Video, cover
+ * - backgroundCarousel: carousel HTML slideshow (filename in public/) in an <IFrame src>
  * - backgroundImage:    Img, cover (+ optional dark overlay)
  * - backgroundAnim:     animated HTML effect (filename in public/) in an <IFrame src>
  * - fallbackGradient:   CSS background value supplied by each preset so its
@@ -13,12 +14,13 @@ import {AbsoluteFill, Img, IFrame, Video, staticFile} from 'remotion';
  */
 export const BackgroundLayer: React.FC<{
   backgroundVideo?: string;
+  backgroundCarousel?: string;
   backgroundImage?: string;
   backgroundAnim?: string;
   fallbackGradient: string;
   /** Optional dark overlay over video/image for text readability (e.g. 'rgba(0,0,0,0.45)'). */
   overlay?: string;
-}> = ({backgroundVideo, backgroundImage, backgroundAnim, fallbackGradient, overlay}) => {
+}> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, fallbackGradient, overlay}) => {
   const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
 
   if (backgroundVideo) {
@@ -34,6 +36,14 @@ export const BackgroundLayer: React.FC<{
         </AbsoluteFill>
         {overlay ? <AbsoluteFill style={{background: overlay}} /> : null}
       </>
+    );
+  }
+
+  if (backgroundCarousel) {
+    return (
+      <AbsoluteFill>
+        <IFrame src={toSrc(backgroundCarousel)} style={{width: '100%', height: '100%', border: 'none'}} />
+      </AbsoluteFill>
     );
   }
 

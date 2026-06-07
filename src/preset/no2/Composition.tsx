@@ -10,6 +10,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	backgroundImage,
 	backgroundVideo,
 	backgroundAnim,
+	backgroundCarousel,
 	lyrics,
 	lyricOffset,
 	title,
@@ -31,6 +32,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 				backgroundVideo={backgroundVideo}
 				backgroundImage={backgroundImage}
 				backgroundAnim={backgroundAnim}
+				backgroundCarousel={backgroundCarousel}
 				fallbackGradient="black"
 			/>
 			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} />

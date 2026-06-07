@@ -25,6 +25,8 @@ export interface MVInputProps extends Record<string, unknown> {
   backgroundVideo: string;
   /** Animated background HTML filename in public/ (copied from animbg/<label>/index.html). Loaded via IFrame src. */
   backgroundAnim: string;
+  /** Carousel HTML filename in public/ (multi-image dir slideshow). Loaded via IFrame src. */
+  backgroundCarousel: string;
   /** Output width in pixels (set via CLI --res) */
   width: number;
   /** Output height in pixels (set via CLI --res) */
@@ -44,6 +46,7 @@ export const defaultProps: MVInputProps = {
   backgroundImage: '',
   backgroundVideo: '',
   backgroundAnim: '',
+  backgroundCarousel: '',
   width: 1080,
   height: 720,
   fps: 24,

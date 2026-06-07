@@ -109,6 +109,7 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
   backgroundImage,
   backgroundVideo,
   backgroundAnim,
+  backgroundCarousel,
   lyrics,
   lyricOffset,
 }) => {
@@ -125,6 +126,7 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
         backgroundAnim={backgroundAnim}
+        backgroundCarousel={backgroundCarousel}
         fallbackGradient="radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)"
       />
 

@@ -144,6 +144,7 @@ export const NeonComposition: React.FC<MVInputProps> = ({
   backgroundImage,
   backgroundVideo,
   backgroundAnim,
+  backgroundCarousel,
   lyrics,
   lyricOffset,
 }) => {
@@ -160,6 +161,7 @@ export const NeonComposition: React.FC<MVInputProps> = ({
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
         backgroundAnim={backgroundAnim}
+        backgroundCarousel={backgroundCarousel}
         fallbackGradient="linear-gradient(135deg, #1a0033 0%, #0a0014 60%, #05000a 100%)"
       />
 

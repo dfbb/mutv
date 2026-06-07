@@ -111,6 +111,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
   backgroundImage,
   backgroundVideo,
   backgroundAnim,
+  backgroundCarousel,
   lyrics,
   lyricOffset,
 }) => {
@@ -127,6 +128,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
         backgroundAnim={backgroundAnim}
+        backgroundCarousel={backgroundCarousel}
         fallbackGradient="linear-gradient(135deg, #2b1055 0%, #7597de 100%)"
       />
 
