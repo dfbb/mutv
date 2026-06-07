@@ -20,3 +20,6 @@ src/public/
 
 # OS
 .DS_Store
+
+# Brainstorming visual companion
+.superpowers/
