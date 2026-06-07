@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Img, IFrame, Video, staticFile} from 'remotion';
+import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 
 /**
  * Shared background layer for all presets. Renders exactly one source by
@@ -22,6 +22,8 @@ export const BackgroundLayer: React.FC<{
   overlay?: string;
 }> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, fallbackGradient, overlay}) => {
   const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
 
   if (backgroundVideo) {
     return (
@@ -40,9 +42,14 @@ export const BackgroundLayer: React.FC<{
   }
 
   if (backgroundCarousel) {
+    // Pass the exact frame time to the carousel via URL hash. The carousel reads
+    // this for deterministic per-frame rendering (Date.now()/RAF time isn't
+    // reliably frame-synced inside an IFrame during Remotion renders).
+    const timeMs = (frame / fps) * 1000;
+    const src = toSrc(backgroundCarousel) + '#t=' + timeMs.toFixed(3);
     return (
       <AbsoluteFill>
-        <IFrame src={toSrc(backgroundCarousel)} style={{width: '100%', height: '100%', border: 'none'}} />
+        <IFrame src={src} style={{width: '100%', height: '100%', border: 'none'}} />
       </AbsoluteFill>
     );
   }

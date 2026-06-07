@@ -407,14 +407,15 @@ if (args['bg-image']) {
       }
       const pubDir = resolve('public');
       mkdirSync(pubDir, {recursive: true});
-      // copy images with index-prefixed unique names
-      const publicNames = imgs.map((name, i) => {
+      // Copy images to public/ and pass their public-relative filenames to buildCarousel.
+      // Images are served from localhost (same-origin as the IFrame), so no CORS issues.
+      const imageUrls = imgs.map((name, i) => {
         const dest = `bgimg-${String(i).padStart(3, '0')}-${name}`;
         copyFileSync(join(resolvedBg, name), resolve(pubDir, dest));
         return dest;
       });
       const html = buildCarousel({
-        images: publicNames,
+        imageUrls,
         intvl,
         transDur: 1,
         group,
@@ -424,7 +425,7 @@ if (args['bg-image']) {
       });
       writeFileSync(resolve(pubDir, 'bgimage-carousel.html'), html);
       backgroundCarousel = 'bgimage-carousel.html';
-      console.log(`Using image carousel: ${publicNames.length} images, ${intvl}s interval, ${group} transitions`);
+      console.log(`Using image carousel: ${imageUrls.length} images, ${intvl}s interval, ${group} transitions`);
     }
   }
 } else if (args['bg-video']) {

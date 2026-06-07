@@ -1,20 +1,21 @@
-/* Carousel browser runtime. Expects global CAROUSEL_CONFIG:
- * {
- *   images: [url, ...],
- *   intvl: seconds per slide (hold),
- *   transDur: seconds per transition,
- *   width, height,
- *   transitions: [fragSource, ...]   // pool, randomly picked per transition
- *   passthrough: fragSource,
- *   vert: vertexShaderSource,
- *   kenBurns: (imgAR, screenAR) => config,
- *   seed: number                      // deterministic randomness
- * }
- * Drives via requestAnimationFrame + performance.now (Remotion hijacks both
- * during render, so motion is deterministic per frame).
+/* Carousel browser runtime. Expects global CAROUSEL_CONFIG, createREGL, and
+ * pre-loaded <img id="ci0">, <img id="ci1">, ... elements in the HTML body.
+ *
+ * Images are <img> tags in the HTML, so the IFrame load event (which Remotion
+ * waits for before screenshotting) only fires once all images are decoded.
+ * That means this script can read them synchronously — no async load race.
+ *
+ * Config shape:
+ *   images: [url, ...]  (used only for count)
+ *   intvl, transDur, width, height, seed,
+ *   transitions: [fragSource, ...], passthrough: fragSource, vert,
+ *   kenBurns: (imgAR, screenAR) => config
+ *
+ * Timing: Date.now() is the absolute timeline. Remotion patches Date.now() to
+ * frame/fps*1000 during render, making each frame deterministic.
  */
 /* global CAROUSEL_CONFIG, createREGL */
-(function () {
+window.addEventListener('load', function () {
   var C = CAROUSEL_CONFIG;
   var canvas = document.getElementById('cv');
   canvas.width = C.width; canvas.height = C.height;
@@ -30,45 +31,38 @@
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  // --- load all images as regl textures ---
-  var slides = [];     // {tex, ar}
-  var loaded = 0;
-  C.images.forEach(function (url, i) {
-    var img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function () {
-      slides[i] = {tex: regl.texture({data: img, flipY: true}), ar: img.width / img.height};
-      loaded++;
-    };
-    img.onerror = function () {
-      console.warn('carousel: failed to load image', url, '— skipping');
-      slides[i] = null;
-      loaded++;
-    };
-    img.src = url;
-  });
+  // --- build textures synchronously from pre-loaded <img> elements ---
+  var total = C.images.length;
+  var slides = [];
+  for (var i = 0; i < total; i++) {
+    var img = document.getElementById('ci' + i);
+    if (img && img.naturalWidth > 0) {
+      slides.push({tex: regl.texture({data: img, flipY: true}),
+                   ar: img.naturalWidth / img.naturalHeight});
+    } else {
+      slides.push(null);
+    }
+  }
 
-  // per-slide Ken Burns config (computed lazily once ar known)
+  // --- Ken Burns helpers ---
   function kb(i) { return C.kenBurns(slides[i].ar, screenAR); }
   function lerp(a, b, t) { return a + (b - a) * t; }
-  // pan offset on the cover sampling window, eased by t in [0,1]
   function panVec(cfg, t) {
-    var amt = cfg.panAmount * (t - 0.5); // center-crossing pan
-    if (cfg.panAxis === 'x') return [amt, 0];
-    if (cfg.panAxis === 'y') return [0, amt];
-    return [0, 0];
+    var amt = cfg.panAmount * (t - 0.5);
+    return cfg.panAxis === 'x' ? [amt, 0] : cfg.panAxis === 'y' ? [0, amt] : [0, 0];
   }
   function zoomAt(cfg, t) { return lerp(cfg.zoomFrom, cfg.zoomTo, t); }
   function modeNum(cfg) { return cfg.mode === 'blur-contain' ? 5 : 0; }
 
-  // compiled regl draw commands cached by frag source
+  // --- regl draw command cache ---
+  // Passthrough is compiled eagerly and reused as a fallback: any transition shader
+  // that fails to compile in this WebGL context degrades to a hard cut (passthrough)
+  // instead of a black frame.
   var cmdCache = {};
-  function getCmd(frag) {
-    if (cmdCache[frag]) return cmdCache[frag];
-    var cmd = regl({
-      frag: frag,
-      vert: C.vert,
-      attributes: {_p: [[-1, -1], [3, -1], [-1, 3]]},
+  function compile(frag) {
+    return regl({
+      frag: frag, vert: C.vert,
+      attributes: {_p: [[-1,-1],[3,-1],[-1,3]]},
       uniforms: {
         progress: regl.prop('progress'), ratio: screenAR,
         from: regl.prop('from'), to: regl.prop('to'),
@@ -79,54 +73,55 @@
       },
       count: 3,
     });
-    cmdCache[frag] = cmd;
-    return cmd;
+  }
+  var passthroughCmd = compile(C.passthrough);
+  cmdCache[C.passthrough] = passthroughCmd;
+  function getCmd(frag) {
+    if (cmdCache[frag] === undefined) {
+      try { cmdCache[frag] = compile(frag); }
+      catch (e) { cmdCache[frag] = passthroughCmd; } // fall back to hard cut
+    }
+    return cmdCache[frag];
   }
 
-  // assign a random transition frag to each slide boundary, deterministically
-  var perBoundaryFrag = [];
-  function fragForBoundary(b) {
-    if (perBoundaryFrag[b] === undefined) {
-      perBoundaryFrag[b] = C.transitions[Math.floor(rand() * C.transitions.length)];
-    }
-    return perBoundaryFrag[b];
+  // --- per-boundary transition ---
+  var boundaryFrags = {};
+  function fragFor(step) {
+    if (!boundaryFrags[step])
+      boundaryFrags[step] = C.transitions[Math.floor(rand() * C.transitions.length)];
+    return boundaryFrags[step];
   }
 
-  var n = C.images.length;
-  var cycle = C.intvl + C.transDur; // seconds per slide step
-  var start = (window.performance && performance.now) ? performance.now() : Date.now();
+  // --- render loop ---
+  var n = total;
+  var cycle = C.intvl + C.transDur;
 
-  function frame() {
-    if (loaded < n) { requestAnimationFrame(frame); return; }
-    // skip if any required slide failed to load
-    if (slides.some(function(s){ return !s; })) {
-      console.warn('carousel: some images failed to load, rendering skipped');
-      return;
-    }
-    var nowMs = (window.performance && performance.now) ? performance.now() : Date.now();
-    var elapsed = (nowMs - start) / 1000;
-    var step = Math.floor(elapsed / cycle);     // which slide step
-    var inStep = elapsed - step * cycle;         // time within step
+  function draw() {
+    for (var k = 0; k < n; k++) { if (!slides[k] || !slides[k].tex) return; }
+    // Frame time is passed by the parent via the URL hash (#t=<ms>). This is
+    // deterministic per frame; Date.now()/RAF time aren't frame-synced in an IFrame.
+    var hashMatch = /[#&]t=([0-9.]+)/.exec(window.location.hash);
+    var elapsed = (hashMatch ? parseFloat(hashMatch[1]) : 0) / 1000;
+    var step = Math.floor(elapsed / cycle);
+    var inStep = elapsed - step * cycle;
     var cur = ((step % n) + n) % n;
     var nxt = (cur + 1) % n;
-    regl.clear({color: [0, 0, 0, 1], depth: 1});
-
+    regl.clear({color: [0, 0, 0, 1]});
     if (inStep < C.intvl) {
-      // hold: draw current with Ken Burns progressing over hold duration
       var th = inStep / C.intvl;
       var c = kb(cur);
       getCmd(C.passthrough)({
-        progress: 0, from: slides[cur].tex, to: slides[cur].tex,
+        progress: 0,
+        from: slides[cur].tex, to: slides[cur].tex,
         fromR: slides[cur].ar, toR: slides[cur].ar,
         fromMode: modeNum(c), toMode: modeNum(c),
         fromZoom: zoomAt(c, th), toZoom: zoomAt(c, th),
         fromPan: panVec(c, th), toPan: panVec(c, th),
       });
     } else {
-      // transition: progress 0..1 across transDur
       var p = (inStep - C.intvl) / C.transDur;
       var cc = kb(cur), cn = kb(nxt);
-      getCmd(fragForBoundary(step))({
+      getCmd(fragFor(step))({
         progress: p,
         from: slides[cur].tex, to: slides[nxt].tex,
         fromR: slides[cur].ar, toR: slides[nxt].ar,
@@ -135,7 +130,13 @@
         fromPan: panVec(cc, 1), toPan: panVec(cn, 0),
       });
     }
-    requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
-})();
+
+  // Draw synchronously based on the current hash time. We deliberately avoid a
+  // persistent requestAnimationFrame loop: during Remotion renders a RAF tick fires
+  // after the synchronous draw and re-clears the canvas to black before the
+  // screenshot. The parent updates the URL hash (#t=<ms>) every frame, so a
+  // hashchange listener covers both still renders and Player preview playback.
+  draw();
+  window.addEventListener('hashchange', draw);
+});

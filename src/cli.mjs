@@ -23,7 +23,9 @@
  *   --offset      Lyric timing offset in seconds (default: -0.5)
  *   --output      Output file path (default: out/<audio_basename>.mp4)
  *   --codec       h264|h265|vp8|vp9 (default: h264)
- *   --bg-image    Background image file (mutually exclusive with --bg-video/--bg-anim)
+ *   --bg-image    Background image file OR directory (multi-image = transition slideshow)
+ *   --bg-image-intvl  Seconds each carousel image holds (default 5)
+ *   --bg-image-trans  Carousel transition group: soft|cool|hard (default soft)
  *   --bg-video    Background video file (mutually exclusive)
  *   --bg-anim     Animated background effect label (see src/animbg/), or 'random' (mutually exclusive)
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
@@ -107,6 +109,8 @@ else if (opts['lyrics-json']) nodeArgs.push('--lyrics-json', resolve(opts['lyric
 if (opts.subtitle) nodeArgs.push('--subtitle', opts.subtitle);
 if (opts.credit) nodeArgs.push('--credit', opts.credit);
 if (opts['bg-image']) nodeArgs.push('--bg-image', resolve(opts['bg-image']));
+if (opts['bg-image-intvl']) nodeArgs.push('--bg-image-intvl', String(opts['bg-image-intvl']));
+if (opts['bg-image-trans']) nodeArgs.push('--bg-image-trans', opts['bg-image-trans']);
 if (opts['bg-video']) nodeArgs.push('--bg-video', resolve(opts['bg-video']));
 if (opts['bg-anim']) nodeArgs.push('--bg-anim', opts['bg-anim']);
 if (opts.browser) nodeArgs.push('--browser', opts.browser);

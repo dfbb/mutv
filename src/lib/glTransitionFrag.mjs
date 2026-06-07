@@ -25,9 +25,9 @@ bool inBounds(vec2 p){ return p.x>=0.0 && p.x<=1.0 && p.y>=0.0 && p.y<=1.0; }
 vec4 blurCover(sampler2D tex, vec2 uv, float r){
   vec4 sum = vec4(0.0);
   float o = 0.012;
-  for(int i=-2;i<=2;i++){
-    for(int j=-2;j<=2;j++){
-      vec2 d = vec2(float(i),float(j))*o;
+  for(int i=0;i<5;i++){
+    for(int j=0;j<5;j++){
+      vec2 d = vec2(float(i)-2.0, float(j)-2.0)*o;
       sum += texture2D(tex, clamp(coverUV(uv+d, r, 1.0, vec2(0.0)),0.0,1.0));
     }
   }
@@ -48,13 +48,44 @@ vec4 getFromColor(vec2 uv){ return sampleSlide(from, uv, fromR, fromMode, fromZo
 vec4 getToColor(vec2 uv){ return sampleSlide(to, uv, toR, toMode, toZoom, toPan); }
 `;
 
+/**
+ * gl-transitions 把可调参数写成带默认值注释的 uniform，例如：
+ *   uniform float reflection; // = 0.4
+ *   uniform vec3 color /* = vec3(0.9,0.4,0.2) *\/;
+ * 我们不暴露这些参数，故把它们就地转成 const 并填入默认值，否则 regl 会因
+ * 缺少 uniform 值而无法构建 draw command（表现为转场帧黑屏/报错）。
+ *
+ * GLSL 的 const 要求字面量类型匹配（如 const float a = 4.0 而非 4），故对裸
+ * 整数字面量补 .0。
+ */
+function inlineParamUniforms(glsl) {
+  // 形式一：行尾 // = 默认值
+  let out = glsl.replace(
+    /uniform\s+(\w+)\s+(\w+)\s*;\s*\/\/\s*=\s*(.+?)\s*$/gm,
+    (_m, type, name, def) => `const ${type} ${name} = ${coerceFloatLiteral(type, def)};`
+  );
+  // 形式二：块注释 /* = 默认值 */ 在分号前
+  out = out.replace(
+    /uniform\s+(\w+)\s+(\w+)\s*\/\*\s*=\s*(.+?)\s*\*\/\s*;/g,
+    (_m, type, name, def) => `const ${type} ${name} = ${coerceFloatLiteral(type, def)};`
+  );
+  return out;
+}
+
+// 对 float 类型的裸整数默认值补小数点（const float 要求浮点字面量）。
+function coerceFloatLiteral(type, def) {
+  const d = def.trim();
+  if (type === 'float' && /^[+-]?\d+$/.test(d)) return d + '.0';
+  return d;
+}
+
 /** 转场 fragment：注入某个 gl-transition 的 glsl（含 transition(uv) 函数）。 */
 export function buildFragSource(transitionGlsl) {
   return `precision highp float;
 varying vec2 _uv;
 uniform float progress;
 ${SAMPLE_CHUNK}
-${transitionGlsl}
+${inlineParamUniforms(transitionGlsl)}
 void main(){ gl_FragColor = transition(_uv); }`;
 }
 
