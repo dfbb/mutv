@@ -61,6 +61,11 @@
     }
 
     // --- build all layers ONCE ---
+    // Reuse the ALREADY-DECODED preloaded <img id="ci{i}"> elements instead of
+    // creating fresh <img> nodes. Freshly created <img> (even with a cached src)
+    // need a layout+paint pass before they show pixels, which caused a one-frame
+    // flash on first load. Moving the decoded preload elements into the layers means
+    // the very first rendered frame already has pixels — no flicker.
     var ars = [];
     var kbCfg = [];
     var layers = [];   // outer .layer (carries animate.css animation)
@@ -77,14 +82,21 @@
       inner.className = 'kb';
       var cfg = kbCfg[i];
       if (cfg.mode === 'blur-contain') {
-        var bg = document.createElement('img');
-        bg.src = C.images[i];
+        // blurred cover backdrop behind the contained sharp image. Clone the decoded
+        // element so the bitmap comes straight from cache.
+        var bg = im ? im.cloneNode(false) : document.createElement('img');
+        if (!im) bg.src = C.images[i];
+        bg.removeAttribute('id');
         bg.className = 'pic blurbg';
+        bg.style.display = 'block';
         inner.appendChild(bg);
       }
-      var img = document.createElement('img');
-      img.src = C.images[i];
+      // foreground sharp image: reuse the preloaded, decoded element itself.
+      var img = im || document.createElement('img');
+      if (!im) img.src = C.images[i];
+      img.removeAttribute('id');
       img.className = 'pic' + (cfg.mode === 'blur-contain' ? ' contain' : '');
+      img.style.display = 'block';
       inner.appendChild(img);
       layer.appendChild(inner);
       stage.appendChild(layer);
