@@ -40,6 +40,11 @@
       slides[i] = {tex: regl.texture({data: img, flipY: true}), ar: img.width / img.height};
       loaded++;
     };
+    img.onerror = function () {
+      console.warn('carousel: failed to load image', url, '— skipping');
+      slides[i] = null;
+      loaded++;
+    };
     img.src = url;
   });
 
@@ -93,6 +98,11 @@
 
   function frame() {
     if (loaded < n) { requestAnimationFrame(frame); return; }
+    // skip if any required slide failed to load
+    if (slides.some(function(s){ return !s; })) {
+      console.warn('carousel: some images failed to load, rendering skipped');
+      return;
+    }
     var nowMs = (window.performance && performance.now) ? performance.now() : Date.now();
     var elapsed = (nowMs - start) / 1000;
     var step = Math.floor(elapsed / cycle);     // which slide step
