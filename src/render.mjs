@@ -32,7 +32,7 @@
 import {execSync, spawn} from 'child_process';
 import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
-import {injectVirtualMouse, needsVirtualMouse} from './animbgInject.mjs';
+import {injectVirtualMouse, needsVirtualMouse, injectBeatClock} from './animbgInject.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
 import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
 import {homedir} from 'os';
@@ -222,7 +222,7 @@ function getAudioDuration(filePath) {
 
 function parseArgs(argv) {
   // Flags that take no value (presence = true)
-  const booleanFlags = new Set(['html']);
+  const booleanFlags = new Set(['html', 'no-bg-anim-beat']);
   const args = {};
   for (let i = 2; i < argv.length; i++) {
     const key = argv[i];
@@ -240,6 +240,11 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv);
+
+// 节拍反应默认开;--no-bg-anim-beat 关闭;--bg-anim-beat=false 也关闭。
+const beatReactive =
+  !args['no-bg-anim-beat'] &&
+  String(args['bg-anim-beat'] ?? 'true').toLowerCase() !== 'false';
 
 // Resolve preset: visual template under preset/<label>/. Default 'orig'. 'random' picks one at random.
 const availablePresets = existsSync(resolve('preset'))
@@ -462,6 +467,10 @@ if (args['bg-image']) {
     animHtml = injectVirtualMouse(animHtml);
     console.log('Injected virtual mouse (effect reacts to cursor movement)');
   }
+  if (beatReactive) {
+    animHtml = injectBeatClock(animHtml);
+    console.log('Injected beat clock (animation reacts to music beat)');
+  }
   writeFileSync(resolve(pubDir, animPublicName), animHtml);
   backgroundAnim = animPublicName;
   backgroundAnimLabel = animLabel;
@@ -501,6 +510,7 @@ const inputProps = {
   backgroundVideo,
   backgroundAnim,
   backgroundCarousel,
+  backgroundAnimBeat: beatReactive,
   width: resWidth,
   height: resHeight,
   fps,
