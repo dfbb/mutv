@@ -26,7 +26,7 @@ function loadTransitions() {
  * @returns {string} 自包含 HTML
  */
 export function buildCarousel(opts) {
-  const {imageUrls, intvl, transDur = 1, group, width, height, seed = 1} = opts;
+  const {imageUrls, intvl, transDur = 1, group, width, height, seed = 1, onlyTransition} = opts;
   const all = loadTransitions();
   const names = all.map((t) => t.name);
   const chosen = new Set(groupTransitions(group, names));
@@ -34,7 +34,7 @@ export function buildCarousel(opts) {
   // they need an external texture map we don't supply, so they'd render broken frames.
   const needsExtraTexture = (glsl) => /uniform\s+sampler2D\s+(?!from\b|to\b)\w+/.test(glsl);
   const transFrags = all
-    .filter((t) => chosen.has(t.name) && !needsExtraTexture(t.glsl))
+    .filter((t) => (onlyTransition ? t.name === onlyTransition : (chosen.has(t.name) && !needsExtraTexture(t.glsl))))
     .map((t) => buildFragSource(t.glsl));
   const passthrough = buildPassthroughFragSource();
 

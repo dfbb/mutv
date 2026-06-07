@@ -9,6 +9,10 @@ out/
 .render-props.json
 *.mp4
 
+# Generated POC artifacts (regenerated from scripts/poc-grid.mjs, ~3MB each)
+poc-grid-*.html
+carousel-poc.html
+
 # Runtime-copied assets in public/ (regenerated from source on each run)
 src/public/
 
