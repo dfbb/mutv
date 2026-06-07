@@ -2,13 +2,16 @@
  * stylesheet, and pre-loaded <img id="ci0">, <img id="ci1">, ... elements.
  *
  * Design (pure CSS, no WebGL):
- *   - A stack of layers inside #stage. The CURRENT image is the base layer, always
- *     fully opaque with a Ken Burns transform — so the screen is NEVER black.
- *   - During a transition the NEXT image sits on top and plays an animate.css "In"
- *     keyframe (fadeIn/zoomIn/flipInX/…). We freeze that keyframe at the exact
- *     progress p via: animation-name + animation-duration + animation-delay:-(p*dur)
- *     + animation-play-state:paused. Every frame is a static DOM snapshot, so
- *     Remotion screenshots it reliably.
+ *   - One persistent layer per image, built ONCE at startup. The CURRENT image is
+ *     shown as an opaque Ken Burns base layer (so the screen is NEVER black).
+ *   - During a transition the NEXT image's layer is shown on top and plays an
+ *     animate.css "In" keyframe (fadeIn/zoomIn/flipInX/…), frozen at the exact
+ *     progress p via animation-delay:-(p*dur)s + animation-play-state:paused.
+ *   - Per frame we ONLY mutate styles (which layer is visible, z-order, transform,
+ *     animation). We never rebuild the DOM or recreate <img> elements — recreating
+ *     nodes every frame caused a flash/flicker at transitions. Reusing the same
+ *     already-decoded <img> nodes makes every frame a clean static snapshot, so
+ *     Remotion screenshots are deterministic AND there is no flicker on playback.
  *
  * Config shape:
  *   images: [url, ...], intvl, transDur, width, height, seed,
@@ -27,8 +30,7 @@
     var n = C.images.length;
     var cycle = C.intvl + C.transDur;
 
-    // deterministic PRNG (mulberry32) — same as the old runtime, so transition
-    // choice per boundary is stable across re-renders.
+    // deterministic PRNG (mulberry32) — stable transition choice per boundary.
     var seed = C.seed >>> 0;
     function rand() {
       seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -42,51 +44,59 @@
       return boundaryAnim[step];
     }
 
-    // image aspect ratios from the decoded <img> elements
-    var ars = [];
-    for (var i = 0; i < n; i++) {
-      var im = document.getElementById('ci' + i);
-      ars.push(im && im.naturalWidth > 0 ? im.naturalWidth / im.naturalHeight : screenAR);
-    }
     function kb(i) { return C.kenBurns(ars[i], screenAR); }
     function lerp(a, b, t) { return a + (b - a) * t; }
 
     var stage = document.getElementById('stage');
 
-    // Build one Ken Burns transform string for image i at local progress t in [0,1].
-    // cover: scale to fill + optional pan along the slack axis. We size the inner
-    // <img> with object-fit:cover so it always fills; transform adds zoom + pan.
+    // Ken Burns transform for image i at local progress t in [0,1].
     function kbTransform(i, t) {
-      var cfg = kb(i);
+      var cfg = kbCfg[i];
       var zoom = lerp(cfg.zoomFrom, cfg.zoomTo, t);
       var panX = 0, panY = 0;
       var amt = cfg.panAmount * (t - 0.5);
-      if (cfg.panAxis === 'x') panX = amt * 100; // percent of element
+      if (cfg.panAxis === 'x') panX = amt * 100;
       else if (cfg.panAxis === 'y') panY = amt * 100;
       return 'scale(' + zoom.toFixed(4) + ') translate(' + panX.toFixed(3) + '%,' + panY.toFixed(3) + '%)';
     }
 
-    // Create a layer (absolute-positioned full-stage) holding image i.
-    // The outer div carries the animate.css animation; the inner img carries Ken Burns.
-    function makeLayer(i) {
+    // --- build all layers ONCE ---
+    var ars = [];
+    var kbCfg = [];
+    var layers = [];   // outer .layer (carries animate.css animation)
+    var inners = [];   // inner .kb (carries Ken Burns transform)
+    for (var i = 0; i < n; i++) {
+      var im = document.getElementById('ci' + i);
+      ars.push(im && im.naturalWidth > 0 ? im.naturalWidth / im.naturalHeight : screenAR);
+      kbCfg.push(C.kenBurns(ars[i], screenAR));
+
       var layer = document.createElement('div');
       layer.className = 'layer';
+      layer.style.display = 'none';
       var inner = document.createElement('div');
       inner.className = 'kb';
-      var img = document.createElement('img');
-      img.src = C.images[i];
-      var cfg = kb(i);
-      img.className = 'pic' + (cfg.mode === 'blur-contain' ? ' contain' : '');
-      // blur-contain: a blurred cover copy behind a contained sharp copy
+      var cfg = kbCfg[i];
       if (cfg.mode === 'blur-contain') {
         var bg = document.createElement('img');
         bg.src = C.images[i];
         bg.className = 'pic blurbg';
         inner.appendChild(bg);
       }
+      var img = document.createElement('img');
+      img.src = C.images[i];
+      img.className = 'pic' + (cfg.mode === 'blur-contain' ? ' contain' : '');
       inner.appendChild(img);
       layer.appendChild(inner);
-      return {layer: layer, inner: inner};
+      stage.appendChild(layer);
+      layers.push(layer);
+      inners.push(inner);
+    }
+
+    // Reset a layer to hidden + no animation.
+    function hide(i) {
+      var l = layers[i];
+      if (l.style.display !== 'none') l.style.display = 'none';
+      if (l.style.animationName !== 'none') l.style.animationName = 'none';
     }
 
     function render() {
@@ -96,33 +106,34 @@
       var inStep = elapsed - step * cycle;
       var cur = ((step % n) + n) % n;
       var nxt = (cur + 1) % n;
-
-      stage.textContent = '';
-
       var inTransition = inStep >= C.intvl;
-      // local Ken Burns progress for the holding image: advance smoothly across the
-      // whole hold+transition window so motion feels continuous.
+      // Ken Burns progress for the holding image: advance across the whole window.
       var holdT = Math.min(inStep / cycle, 1);
 
-      // base layer = current image (always opaque → never black)
-      var base = makeLayer(cur);
-      base.inner.style.transform = kbTransform(cur, inTransition ? 1 : holdT);
-      stage.appendChild(base.layer);
-
-      if (inTransition) {
-        var p = (inStep - C.intvl) / C.transDur; // 0..1
-        var anim = animFor(step);
-        var top = makeLayer(nxt);
-        top.inner.style.transform = kbTransform(nxt, p);
-        // Freeze the animate.css keyframe at progress p:
-        var dur = C.transDur;
-        top.layer.style.animationName = anim;
-        top.layer.style.animationDuration = dur + 's';
-        top.layer.style.animationTimingFunction = 'linear';
-        top.layer.style.animationFillMode = 'both';
-        top.layer.style.animationPlayState = 'paused';
-        top.layer.style.animationDelay = (-(p * dur)).toFixed(4) + 's';
-        stage.appendChild(top.layer);
+      for (var i = 0; i < n; i++) {
+        if (i === cur) {
+          var base = layers[i];
+          base.style.display = 'block';
+          base.style.zIndex = '1';
+          base.style.opacity = '1';
+          if (base.style.animationName !== 'none') base.style.animationName = 'none';
+          inners[i].style.transform = kbTransform(i, inTransition ? 1 : holdT);
+        } else if (inTransition && i === nxt) {
+          var p = (inStep - C.intvl) / C.transDur; // 0..1
+          var dur = C.transDur;
+          var top = layers[i];
+          top.style.display = 'block';
+          top.style.zIndex = '2';
+          top.style.animationName = animFor(step);
+          top.style.animationDuration = dur + 's';
+          top.style.animationTimingFunction = 'linear';
+          top.style.animationFillMode = 'both';
+          top.style.animationPlayState = 'paused';
+          top.style.animationDelay = (-(p * dur)).toFixed(4) + 's';
+          inners[i].style.transform = kbTransform(i, p);
+        } else {
+          hide(i);
+        }
       }
     }
 
