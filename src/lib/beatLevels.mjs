@@ -16,17 +16,25 @@ export const BANDS = [
 /**
  * 对线性频谱(spectrum[i] 为第 i 个 bin 的幅度,频率 0..nyquist 线性分布)
  * 按 Hz 频段求和。返回 [bassSum, midSum, trebSum]。
+ *
+ * 复刻 butterchurn:先用 4 个 Hz 边界点(20/320/2800/11025)各算一个 bin 索引
+ * (Math.round 后 clamp 到 [0, length]),再串成 3 个相邻互斥区间
+ * [e0,e1) / [e1,e2) / [e2,e3) —— 前段 stop === 后段 start,边界 bin 只计入一段。
  */
 export function bandSums(spectrum, sampleRate) {
   const nyquist = sampleRate / 2;
   const binHz = nyquist / spectrum.length;
-  return BANDS.map(([lo, hi]) => {
-    const start = Math.max(0, Math.floor(lo / binHz));
-    const stop = Math.min(spectrum.length, Math.ceil(hi / binHz));
+  const len = spectrum.length;
+  const edges = [20, 320, 2800, 11025].map((hz) =>
+    Math.max(0, Math.min(len, Math.round(hz / binHz)))
+  );
+  const out = [0, 0, 0];
+  for (let b = 0; b < 3; b++) {
     let sum = 0;
-    for (let i = start; i < stop; i++) sum += spectrum[i];
-    return sum;
-  });
+    for (let i = edges[b]; i < edges[b + 1]; i++) sum += spectrum[i];
+    out[b] = sum;
+  }
+  return out;
 }
 
 // butterchurn: rate ** (baseFPS / FPS),把 30fps 调成的 EMA 速率适配到当前 fps。
@@ -68,7 +76,7 @@ export function createBeatState(fps) {
  * clamp 到 [0,2] 防极端帧炸裂。系数保守(见设计文档)。
  */
 export function beatStyle({bass, mid, treb}) {
-  const c = (x) => Math.max(0, Math.min(2, x - 1));
+  const c = (x) => Math.max(0, Math.min(2, x - 1)); // 把相对偏移 (level-1) clamp 到 [0,2]
   return {
     scale: 1 + 0.04 * c(bass), // 低频缩放脉冲
     brightness: 1 + 0.06 * c(mid), // 亮度闪动

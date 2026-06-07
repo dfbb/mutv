@@ -23,6 +23,24 @@ test('bandSums: 高频能量落入 treb', () => {
   assert.ok(treb > 0);
 });
 
+test('bandSums: 相邻段边界不重叠(边界 bin 只计入一段)', () => {
+  // binHz ≈ 43.07;边界 bin:round(320/binHz)=7(bass|mid),round(2800/binHz)=65(mid|treb)
+  // 在 bass/mid 边界 bin 7 放能量,应只计入 mid(bass 区间 [0,7) 不含 7)
+  const sBassMid = new Array(512).fill(0);
+  sBassMid[7] = 1;
+  const r1 = bandSums(sBassMid, 44100);
+  assert.equal(r1[0], 0, 'bass 不应含边界 bin 7');
+  assert.equal(r1[1], 1, 'mid 应含边界 bin 7');
+  assert.equal(r1[2], 0);
+  // 在 mid/treb 边界 bin 65 放能量,应只计入 treb(mid 区间 [7,65) 不含 65)
+  const sMidTreb = new Array(512).fill(0);
+  sMidTreb[65] = 1;
+  const r2 = bandSums(sMidTreb, 44100);
+  assert.equal(r2[0], 0);
+  assert.equal(r2[1], 0, 'mid 不应含边界 bin 65');
+  assert.equal(r2[2], 1, 'treb 应含边界 bin 65');
+});
+
 test('createBeatState: 恒定输入收敛到 ~1.0', () => {
   const s = createBeatState(24);
   let last;
