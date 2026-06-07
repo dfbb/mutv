@@ -13,18 +13,18 @@
 export function kenBurnsConfig(imgAR, screenAR) {
   const R = imgAR / screenAR;
   if (R < 0.55) {
-    // ⑤ 极窄：背景模糊 cover + 前景 contain
+    // ⑤ 极窄：背景模糊 cover + 前景 contain (panAmount=0: contain layer is fixed, no panning)
     return {bucket: 5, mode: 'blur-contain', zoomFrom: 1.0, zoomTo: 1.04, panAxis: 'none', panAmount: 0};
   }
   if (R < 0.8) {
     // ③ 明显窄：cover + 轻微放大 + 上下平移
     return {bucket: 3, mode: 'cover', zoomFrom: 1.05, zoomTo: 1.05, panAxis: 'y', panAmount: 0.18};
   }
-  if (R <= 1.25) {
+  if (R < 1.25) {
     // ① 接近：cover 居中 + 轻微放大
     return {bucket: 1, mode: 'cover', zoomFrom: 1.0, zoomTo: 1.08, panAxis: 'none', panAmount: 0};
   }
-  if (R <= 1.8) {
+  if (R < 1.8) {
     // ② 明显宽：cover + 轻微放大 + 左右平移
     return {bucket: 2, mode: 'cover', zoomFrom: 1.05, zoomTo: 1.05, panAxis: 'x', panAmount: 0.18};
   }
