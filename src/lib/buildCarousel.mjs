@@ -1,78 +1,74 @@
 import {readFileSync} from 'fs';
 import {resolve, dirname} from 'path';
 import {fileURLToPath} from 'url';
-import {execSync} from 'child_process';
-import {buildFragSource, buildPassthroughFragSource, VERT} from './glTransitionFrag.mjs';
-import {groupTransitions} from './transitionGroups.mjs';
+import {GROUPS, groupTransitions} from './transitionGroups.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-/** 读取全部 gl-transitions 解析结果。 */
-function loadTransitions() {
-  const script = resolve(HERE, 'gl-transitions/gl-transition-transform.js');
-  const dir = resolve(HERE, 'gl-transitions/transitions');
-  const json = execSync(`node "${script}" -d "${dir}"`, {encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024});
-  return JSON.parse(json);
-}
-
 /**
+ * 构建纯 CSS 背景图轮播 HTML（animate.css 入场动画 + Ken Burns），自包含，置于 <IFrame>。
+ *
+ * 时间由父级通过 URL hash (#t=<ms>) 驱动，每帧静态渲染，Remotion 截图可靠。
+ * 当前图始终满不透明铺底（绝不露黑），下一张图在转场区间用 animate.css 的入场动画，
+ * 通过 animation-delay + paused 冻结在该帧进度。
+ *
  * @param {object} opts
- *   imageUrls: string[]  图片的 URL（相对于 IFrame，即 public/ 下的文件名，由调用方复制）
+ *   imageUrls: string[]  图片 URL（public/ 下文件名，由调用方复制）
  *   intvl: number        每张停留秒数
  *   transDur: number     转场秒数（默认 1）
  *   group: 'soft'|'cool'|'hard'
  *   width, height: number
  *   seed: number
+ *   onlyTransition?: string  仅用某个动画名（调试/验证用）
  * @returns {string} 自包含 HTML
  */
 export function buildCarousel(opts) {
   const {imageUrls, intvl, transDur = 1, group, width, height, seed = 1, onlyTransition} = opts;
-  const all = loadTransitions();
-  const names = all.map((t) => t.name);
-  const chosen = new Set(groupTransitions(group, names));
-  // Exclude transitions that declare an extra sampler2D (e.g. displacement/luma):
-  // they need an external texture map we don't supply, so they'd render broken frames.
-  const needsExtraTexture = (glsl) => /uniform\s+sampler2D\s+(?!from\b|to\b)\w+/.test(glsl);
-  const transFrags = all
-    .filter((t) => (onlyTransition ? t.name === onlyTransition : (chosen.has(t.name) && !needsExtraTexture(t.glsl))))
-    .map((t) => buildFragSource(t.glsl));
-  const passthrough = buildPassthroughFragSource();
 
-  const reglSrc = readFileSync(resolve(HERE, 'regl/regl.min.js'), 'utf-8');
-  const kbSrc = readFileSync(resolve(HERE, 'kenBurns.mjs'), 'utf-8');
-  const runtimeSrc = readFileSync(resolve(HERE, 'carouselRuntime.js'), 'utf-8');
+  // 候选动画名：onlyTransition 优先，否则按组取 animate.css 入场动画
+  const allNames = [...new Set(Object.values(GROUPS).flat())];
+  const transitions = onlyTransition
+    ? [onlyTransition]
+    : groupTransitions(group, allNames);
 
-  const kbInline = kbSrc.replace(/export\s+function/g, 'function');
+  const animateCss = readFileSync(resolve(HERE, 'vendor/animate.min.css'), 'utf-8');
+  const kbSrc = readFileSync(resolve(HERE, 'kenBurns.mjs'), 'utf-8').replace(/export\s+function/g, 'function');
+  const runtimeSrc = readFileSync(resolve(HERE, 'cssCarouselRuntime.js'), 'utf-8');
 
   const config = {
-    images: imageUrls,   // relative URLs served from public/
+    images: imageUrls,
     intvl,
     transDur,
     width,
     height,
     seed,
-    vert: VERT,
-    transitions: transFrags,
-    passthrough,
+    transitions,
   };
 
-  // Embed images as hidden <img> tags. The IFrame's load event — which Remotion
-  // waits on before screenshotting — only fires after all <img> elements finish
-  // loading. So by the time our script runs, the images are fully decoded and
-  // ready for regl.texture(). No crossorigin (same-origin assets aren't tainted).
+  // 隐藏 <img> 预加载：IFrame 的 load 事件（Remotion 截图前会等待）在所有 <img> 解码后才触发，
+  // 故运行时读取尺寸时图片已就绪。同源资源不会污染。
   const imgTags = imageUrls.map((url, i) =>
     `<img id="ci${i}" src="${url}" style="display:none" />`
   ).join('\n');
 
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><style>
+<html><head><meta charset="utf-8">
+<style>${animateCss}</style>
+<style>
   html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000}
-  #cv{display:block;width:100vw;height:100vh}
-</style></head><body>
-<canvas id="cv"></canvas>
+  #stage{position:absolute;inset:0;width:100vw;height:100vh;overflow:hidden;background:#000}
+  .layer{position:absolute;inset:0;overflow:hidden;will-change:transform,opacity}
+  .kb{position:absolute;inset:0;will-change:transform}
+  .pic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .pic.contain{object-fit:contain}
+  .pic.blurbg{filter:blur(24px) brightness(0.7);transform:scale(1.15)}
+  /* animate.css 默认时长由内联 style 覆盖；这里只保证动画基类生效 */
+  .layer{animation-fill-mode:both}
+</style>
+</head><body>
+<div id="stage"></div>
 ${imgTags}
-<script>${reglSrc}</script>
-<script>${kbInline}</script>
+<script>${kbSrc}</script>
 <script>
   var CAROUSEL_CONFIG = ${JSON.stringify(config)};
   CAROUSEL_CONFIG.kenBurns = kenBurnsConfig;
