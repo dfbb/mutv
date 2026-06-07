@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender} from 'remotion';
 
 /**
  * Shared background layer for all presets. Renders exactly one source by
@@ -22,8 +22,6 @@ export const BackgroundLayer: React.FC<{
   overlay?: string;
 }> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, fallbackGradient, overlay}) => {
   const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
 
   if (backgroundVideo) {
     return (
@@ -42,16 +40,7 @@ export const BackgroundLayer: React.FC<{
   }
 
   if (backgroundCarousel) {
-    // Pass the exact frame time to the carousel via URL hash. The carousel reads
-    // this for deterministic per-frame rendering (Date.now()/RAF time isn't
-    // reliably frame-synced inside an IFrame during Remotion renders).
-    const timeMs = (frame / fps) * 1000;
-    const src = toSrc(backgroundCarousel) + '#t=' + timeMs.toFixed(3);
-    return (
-      <AbsoluteFill>
-        <IFrame src={src} style={{width: '100%', height: '100%', border: 'none'}} />
-      </AbsoluteFill>
-    );
+    return <CarouselBackground src={toSrc(backgroundCarousel)} />;
   }
 
   if (backgroundImage) {
@@ -74,4 +63,66 @@ export const BackgroundLayer: React.FC<{
   }
 
   return <AbsoluteFill style={{background: fallbackGradient}} />;
+};
+
+/**
+ * Carousel background driven by a self-contained CSS slideshow inside an iframe.
+ *
+ * Why a controlled iframe + delayRender instead of <IFrame src=...#t=ms>:
+ * Remotion's <IFrame> only waits for the iframe's `load` event. But our runtime
+ * builds its layers and paints on `load` too, so a screenshot could race the very
+ * first paint → black flash. Here we instead:
+ *   1. Load the iframe ONCE (src has no hash; we don't reload it per frame).
+ *   2. Per frame, block that frame with delayRender until the iframe reports
+ *      __carouselReady, then call __carouselRenderAt(timeMs) to draw the exact
+ *      frame synchronously, then continueRender. "Load first, then record."
+ */
+const CarouselBackground: React.FC<{src: string}> = ({src}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const timeMs = (frame / fps) * 1000;
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  // One delayRender handle per frame: released only after the carousel has drawn
+  // this frame's content, so Remotion never screenshots an unpainted iframe.
+  React.useEffect(() => {
+    const handle = delayRender(`carousel frame ${frame}`);
+    let cancelled = false;
+    let raf = 0;
+
+    const tick = () => {
+      if (cancelled) return;
+      const win = iframeRef.current?.contentWindow as
+        | (Window & {__carouselReady?: boolean; __carouselRenderAt?: (ms: number) => void})
+        | undefined;
+      if (win && win.__carouselReady && typeof win.__carouselRenderAt === 'function') {
+        win.__carouselRenderAt(timeMs);
+        // wait one frame so the style/layout change is painted before screenshot
+        raf = requestAnimationFrame(() => {
+          if (!cancelled) continueRender(handle);
+        });
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+      continueRender(handle);
+    };
+  }, [frame, timeMs]);
+
+  return (
+    <AbsoluteFill>
+      <iframe
+        ref={iframeRef}
+        src={src}
+        style={{width: '100%', height: '100%', border: 'none'}}
+        // include the start time in the hash too, so a fresh load paints the right
+        // frame immediately even before __carouselRenderAt is called.
+      />
+    </AbsoluteFill>
+  );
 };

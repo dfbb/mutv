@@ -111,9 +111,14 @@
       if (l.style.animationName !== 'none') l.style.animationName = 'none';
     }
 
-    function render() {
-      var hashMatch = /[#&]t=([0-9.]+)/.exec(window.location.hash);
-      var elapsed = (hashMatch ? parseFloat(hashMatch[1]) : 0) / 1000;
+    function render(msOverride) {
+      var elapsed;
+      if (typeof msOverride === 'number') {
+        elapsed = msOverride / 1000;
+      } else {
+        var hashMatch = /[#&]t=([0-9.]+)/.exec(window.location.hash);
+        elapsed = (hashMatch ? parseFloat(hashMatch[1]) : 0) / 1000;
+      }
       var step = Math.floor(elapsed / cycle);
       var inStep = elapsed - step * cycle;
       var cur = ((step % n) + n) % n;
@@ -149,8 +154,16 @@
       }
     }
 
+    // Expose a synchronous render entry so the Remotion parent can drive the exact
+    // frame time and KNOW the draw has completed before screenshotting (instead of
+    // relying on the async hashchange event, which can race the screenshot → black).
+    window.__carouselRenderAt = function (ms) { render(ms); };
+
+    // Initial paint, then mark ready. The parent waits for __carouselReady (via
+    // delayRender/continueRender) so no frame is captured before the first paint.
     render();
-    window.addEventListener('hashchange', render);
+    window.addEventListener('hashchange', function () { render(); });
+    window.__carouselReady = true;
   }
 
   if (document.readyState === 'complete') start();
