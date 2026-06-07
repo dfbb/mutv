@@ -71,3 +71,45 @@ export function injectVirtualMouse(html) {
   if (idx !== -1) return html.slice(0, idx) + SNIPPET + html.slice(idx);
   return html + SNIPPET;
 }
+
+const BEAT_MARK = 'beat-clock (auto-injected)';
+export {BEAT_MARK};
+
+// 注入脚本:覆盖 iframe 内的 performance.now/Date.now 返回节拍虚拟时间。
+// React 父窗每帧调用 window.__beatTick(vtMs) 设置当前虚拟时间;未设置时
+// (__beatVirtualTimeMs===null)透传原始时钟,保证模板初始化阶段正常。
+// 全程 try/catch:任何环境覆盖失败都不影响模板原本运行。
+const BEAT_SNIPPET = `
+<script>
+/* ${BEAT_MARK}: 把 performance.now/Date.now 替换为父窗喂入的节拍虚拟时间,
+   使基于时间积分的动画(rAF/VANTA/p5)在鼓点时加速。基于帧计数的动画不受影响。 */
+(function(){
+  try {
+    window.__beatVirtualTimeMs = null;
+    window.__beatTick = function(vtMs){ window.__beatVirtualTimeMs = vtMs; };
+    var realPerfNow = (window.performance && performance.now)
+      ? performance.now.bind(performance) : null;
+    if (realPerfNow) {
+      performance.now = function(){
+        var v = window.__beatVirtualTimeMs;
+        return (v === null || v === undefined) ? realPerfNow() : v;
+      };
+    }
+    var realDateNow = Date.now.bind(Date);
+    var epoch0 = realDateNow();
+    Date.now = function(){
+      var v = window.__beatVirtualTimeMs;
+      return (v === null || v === undefined) ? realDateNow() : (epoch0 + v);
+    };
+  } catch (e) { /* 覆盖失败则放弃时钟通道,不影响模板 */ }
+})();
+</script>
+`;
+
+/** 把节拍时钟脚本注入 html(幂等)。 */
+export function injectBeatClock(html) {
+  if (html.indexOf(BEAT_MARK) !== -1) return html;
+  const idx = html.toLowerCase().lastIndexOf('</body>');
+  if (idx !== -1) return html.slice(0, idx) + BEAT_SNIPPET + html.slice(idx);
+  return html + BEAT_SNIPPET;
+}
