@@ -18,7 +18,9 @@
  *   --offset       Lyric timing offset in seconds (default: -0.5)
  *   --output       Output file path (default: out/video.mp4)
  *   --codec        Video codec: h264, h265, vp8, vp9 (default: h264)
- *   --bg-image     Background image file (mutually exclusive with --bg-video/--bg-anim)
+ *   --bg-image     Background image file OR directory (multi-image = transition slideshow)
+ *   --bg-image-intvl   Seconds each carousel image holds (default 5)
+ *   --bg-image-trans   Carousel transition group: soft|cool|hard (default soft)
  *   --bg-video     Background video file (mutually exclusive)
  *   --bg-anim      Animated background effect label under animbg/<label>/, or 'random' (mutually exclusive)
  *   --preset       Visual template under preset/<label>/ (default: orig)
@@ -28,9 +30,11 @@
  */
 
 import {execSync, spawn} from 'child_process';
-import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync} from 'fs';
+import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
 import {injectVirtualMouse, needsVirtualMouse} from './animbgInject.mjs';
+import {buildCarousel} from './lib/buildCarousel.mjs';
+import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
 import {homedir} from 'os';
 
 /**
@@ -367,10 +371,62 @@ function copyToPublic(srcPath, kind) {
 let backgroundImage = '';
 let backgroundVideo = '';
 let backgroundAnim = '';
+let backgroundCarousel = '';
 let backgroundAnimLabel = '';
 
 if (args['bg-image']) {
-  backgroundImage = copyToPublic(args['bg-image'], 'background image');
+  const resolvedBg = resolveFilePath(args['bg-image']);
+  if (!existsSync(resolvedBg)) {
+    console.error(`Error: background path not found: ${resolvedBg}`);
+    process.exit(1);
+  }
+  const isDir = statSync(resolvedBg).isDirectory();
+  if (!isDir) {
+    backgroundImage = copyToPublic(args['bg-image'], 'background image');
+  } else {
+    // Directory: scan images, sort by name
+    const IMG_RE = /\.(jpe?g|png|webp|gif)$/i;
+    const imgs = readdirSync(resolvedBg).filter((f) => IMG_RE.test(f)).sort();
+    if (imgs.length === 0) {
+      console.error(`Error: no images (jpg/jpeg/png/webp/gif) found in directory: ${resolvedBg}`);
+      process.exit(1);
+    }
+    if (imgs.length === 1) {
+      backgroundImage = copyToPublic(join(resolvedBg, imgs[0]), 'background image');
+    } else {
+      // carousel
+      const group = args['bg-image-trans'] || 'soft';
+      if (!isValidGroup(group)) {
+        console.error(`Error: --bg-image-trans must be one of ${VALID_GROUPS.join('|')}, got: ${group}`);
+        process.exit(1);
+      }
+      const intvl = args['bg-image-intvl'] ? parseFloat(args['bg-image-intvl']) : 5;
+      if (!(intvl > 0)) {
+        console.error(`Error: --bg-image-intvl must be a positive number, got: ${args['bg-image-intvl']}`);
+        process.exit(1);
+      }
+      const pubDir = resolve('public');
+      mkdirSync(pubDir, {recursive: true});
+      // copy images with index-prefixed unique names
+      const publicNames = imgs.map((name, i) => {
+        const dest = `bgimg-${String(i).padStart(3, '0')}-${name}`;
+        copyFileSync(join(resolvedBg, name), resolve(pubDir, dest));
+        return dest;
+      });
+      const html = buildCarousel({
+        images: publicNames,
+        intvl,
+        transDur: 1,
+        group,
+        width: resWidth,
+        height: resHeight,
+        seed: Math.floor(Math.random() * 0xffffffff),
+      });
+      writeFileSync(resolve(pubDir, 'bgimage-carousel.html'), html);
+      backgroundCarousel = 'bgimage-carousel.html';
+      console.log(`Using image carousel: ${publicNames.length} images, ${intvl}s interval, ${group} transitions`);
+    }
+  }
 } else if (args['bg-video']) {
   backgroundVideo = copyToPublic(args['bg-video'], 'background video');
 } else if (args['bg-anim']) {
@@ -443,6 +499,7 @@ const inputProps = {
   backgroundImage,
   backgroundVideo,
   backgroundAnim,
+  backgroundCarousel,
   width: resWidth,
   height: resHeight,
   fps,
@@ -468,6 +525,7 @@ if (args.html) {
   if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
   if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
   if (backgroundAnim) console.log(`  Background anim: ${backgroundAnimLabel}`);
+  if (backgroundCarousel) console.log(`  Background carousel: ${backgroundCarousel}`);
   console.log('');
   console.log('  A browser tab will open at http://localhost:3000 (Composition: MusicVideo).');
   console.log('  Press Ctrl+C to stop the server.\n');
@@ -503,6 +561,7 @@ const cmd = [
   '--log=error',
   browserExe ? `--browser-executable="${browserExe}"` : '',
   chromeMode !== 'headless-shell' ? `--chrome-mode=${chromeMode}` : '',
+  backgroundCarousel ? '--gl=angle' : '',
 ].filter(Boolean).join(' ');
 
 console.log(`\nRendering video...`);
@@ -517,6 +576,7 @@ console.log(`  Codec: ${codec}`);
 if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
 if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
 if (backgroundAnim) console.log(`  Background anim: ${backgroundAnimLabel}`);
+if (backgroundCarousel) console.log(`  Background carousel: ${backgroundCarousel}`);
 if (browserExe) console.log(`  Browser: ${browserExe}`);
 if (chromeMode !== 'headless-shell') console.log(`  Chrome mode: ${chromeMode}`);
 console.log('');
