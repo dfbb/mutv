@@ -4,7 +4,7 @@
  */
 export const GROUPS = {
   soft: [
-    'fade', 'fadecolor', 'fadegrayscale', 'dissolve', 'crossfade',
+    'fade', 'fadecolor', 'fadegrayscale', 'dissolve',
     'wind', 'wipeLeft', 'wipeRight', 'wipeUp', 'wipeDown',
     'directionalwipe', 'Directional', 'SimpleZoom', 'ZoomInCircles',
     'circleopen', 'CircleCrop', 'circle', 'Radial', 'angular',
@@ -13,7 +13,7 @@ export const GROUPS = {
     'doorway', 'Mosaic', 'SimpleFlip', 'Slides',
   ],
   cool: [
-    'cube', 'BookFlip', 'swap', 'perspective',
+    'cube', 'BookFlip', 'swap',
     'flyeye', 'ButterflyWaveScrawler', 'polar_function',
     'rotate_scale_fade', 'rotateTransition', 'StereoViewer', 'kaleidoscope',
     'ripple', 'WaterDrop', 'undulatingBurnOut',
