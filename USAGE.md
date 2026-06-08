@@ -233,6 +233,8 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 > 部分特效原本依赖鼠标移动才会动（如 `mouse-trails`、`gravity-points`）。渲染时检测到这类特效会自动注入一个“虚拟鼠标”脚本，按随机平滑曲线轨迹模拟光标移动，无需真实鼠标即可让特效动起来。
 
+> **WINAMP 分类**：100 个移植自 butterchurn（Milkdrop）的经典音乐可视化 preset，用 `--bg-anim <两词名>` 选择（如 `--bg-anim royal-mashup`）。它们由当前歌曲音频实时驱动（离线 FFT 注入），无需 `--bg-anim-beat`（本身即音频反应）。完整 label 见 `src/animbg/manifest.json` 中 category=WINAMP 的条目。
+
 ### 3D & WebGL
 
 | label | 效果简介 | tech |
