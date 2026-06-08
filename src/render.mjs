@@ -378,6 +378,7 @@ let backgroundVideo = '';
 let backgroundAnim = '';
 let backgroundCarousel = '';
 let backgroundAnimLabel = '';
+let backgroundAnimKind = '';
 
 if (args['bg-image']) {
   const resolvedBg = resolveFilePath(args['bg-image']);
@@ -481,6 +482,15 @@ if (args['bg-image']) {
   writeFileSync(resolve(animDir, animPublicName), animHtml);
   backgroundAnim = `animbg/${animPublicName}`;
   backgroundAnimLabel = animLabel;
+  // WINAMP(butterchurn)preset 走专用播放器组件;查 manifest 的 category。
+  try {
+    const manifestPath = resolve('animbg', 'manifest.json');
+    if (existsSync(manifestPath)) {
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+      const entry = manifest.find((e) => e.label === animLabel);
+      if (entry && entry.category === 'WINAMP') backgroundAnimKind = 'winamp';
+    }
+  } catch {}
   // Some effects (Vanta/p5/three) load shared libraries via "../vendor/...".
   // From public/animbg/<file>.html that URL resolves to /public/vendor/, so the
   // vendor tree must exist under public/. Copy it once when the effect needs it.
@@ -530,6 +540,7 @@ const inputProps = {
   backgroundAnim,
   backgroundCarousel,
   backgroundAnimBeat: beatReactive,
+  backgroundAnimKind,
   width: resWidth,
   height: resHeight,
   fps,

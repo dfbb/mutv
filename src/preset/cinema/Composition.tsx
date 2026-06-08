@@ -111,6 +111,7 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
   backgroundAnim,
   backgroundCarousel,
   backgroundAnimBeat,
+  backgroundAnimKind,
   lyrics,
   lyricOffset,
 }) => {
@@ -130,6 +131,7 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
         backgroundCarousel={backgroundCarousel}
         audioFileName={audioFileName}
         beatReactive={backgroundAnimBeat}
+        animKind={backgroundAnimKind}
         fallbackGradient="radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)"
       />
 

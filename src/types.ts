@@ -29,6 +29,8 @@ export interface MVInputProps extends Record<string, unknown> {
   backgroundCarousel: string;
   /** Whether the animated background reacts to the music beat (butterchurn-style). */
   backgroundAnimBeat: boolean;
+  /** Animated background kind: 'winamp' uses the butterchurn player, '' is a normal HTML effect. */
+  backgroundAnimKind: string;
   /** Output width in pixels (set via CLI --res) */
   width: number;
   /** Output height in pixels (set via CLI --res) */
@@ -50,6 +52,7 @@ export const defaultProps: MVInputProps = {
   backgroundAnim: '',
   backgroundCarousel: '',
   backgroundAnimBeat: true,
+  backgroundAnimKind: '',
   width: 1080,
   height: 720,
   fps: 24,

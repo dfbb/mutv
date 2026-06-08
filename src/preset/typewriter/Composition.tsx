@@ -132,6 +132,7 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
   backgroundAnim,
   backgroundCarousel,
   backgroundAnimBeat,
+  backgroundAnimKind,
   lyrics,
   lyricOffset,
 }) => {
@@ -151,6 +152,7 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
         backgroundCarousel={backgroundCarousel}
         audioFileName={audioFileName}
         beatReactive={backgroundAnimBeat}
+        animKind={backgroundAnimKind}
         fallbackGradient="linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)"
       />
 
