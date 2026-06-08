@@ -566,5 +566,705 @@
     "tech": "webgl",
     "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-waves",
     "fetchedAt": "2026-06-06T17:08:13.321769+00:00"
+  },
+  {
+    "label": "royal-mashup",
+    "name": "Royal Mashup",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "$$$ Royal - Mashup (197)"
+  },
+  {
+    "label": "royal-mashup-2",
+    "name": "Royal Mashup 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "$$$ Royal - Mashup (220)"
+  },
+  {
+    "label": "royal-mashup-3",
+    "name": "Royal Mashup 3",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "$$$ Royal - Mashup (431)"
+  },
+  {
+    "label": "aderrasi-wanderer",
+    "name": "Aderrasi Wanderer",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Aderrasi - Wanderer in Curved Space - mash0000 - faclempt kibitzing meshuggana schmaltz (Geiss color mix)"
+  },
+  {
+    "label": "geiss-artifact",
+    "name": "Geiss Artifact",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Geiss - Artifact 01"
+  },
+  {
+    "label": "geiss-desert",
+    "name": "Geiss Desert",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Geiss - Desert Rose 2"
+  },
+  {
+    "label": "geiss-untitled",
+    "name": "Geiss Untitled",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Geiss - untitled"
+  },
+  {
+    "label": "mig-fx",
+    "name": "Mig Fx",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Mig_049"
+  },
+  {
+    "label": "mig-fx-2",
+    "name": "Mig Fx 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Mig_085"
+  },
+  {
+    "label": "rovastar-geiss",
+    "name": "Rovastar Geiss",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "_Rovastar + Geiss - Hurricane Nightmare (Posterize Mix)"
+  },
+  {
+    "label": "aderrasi-geiss",
+    "name": "Aderrasi Geiss",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Aderrasi + Geiss - Airhandler (Kali Mix) - Canvas Mix"
+  },
+  {
+    "label": "aderrasi-potion",
+    "name": "Aderrasi Potion",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Aderrasi - Potion of Spirits"
+  },
+  {
+    "label": "aderrasi-songflower",
+    "name": "Aderrasi Songflower",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Aderrasi - Songflower (Moss Posy)"
+  },
+  {
+    "label": "aderrasi-storm",
+    "name": "Aderrasi Storm",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Aderrasi - Storm of the Eye (Thunder) - mash0000 - quasi pseudo meta concentrics"
+  },
+  {
+    "label": "an-adamfx",
+    "name": "An Adamfx",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "An AdamFX n Martin Infusion 2 flexi - Why The Sky Looks Diffrent Today - AdamFx n Martin Infusion - Tack Tile Disfunction B"
+  },
+  {
+    "label": "cope-martin",
+    "name": "Cope Martin",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "cope + martin - mother-of-pearl"
+  },
+  {
+    "label": "cope-the",
+    "name": "Cope The",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Cope - The Neverending Explosion of Red Liquid Fire"
+  },
+  {
+    "label": "eo-s",
+    "name": "Eo S",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Eo.S. + Phat - cubetrace - v2"
+  },
+  {
+    "label": "eo-s-2",
+    "name": "Eo S 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Eo.S. + Zylot - skylight (Stained Glass Majesty mix)"
+  },
+  {
+    "label": "eo-s-3",
+    "name": "Eo S 3",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Eo.S. - glowsticks v2 05 and proton lights (+Krash′s beat code) _Phat_remix02b"
+  },
+  {
+    "label": "fishbrain-flexi",
+    "name": "Fishbrain Flexi",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "fiShbRaiN + Flexi - witchcraft 2.0"
+  },
+  {
+    "label": "flexi-amandio",
+    "name": "Flexi Amandio",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi + amandio c - organic [random mashup]"
+  },
+  {
+    "label": "flexi-amandio-2",
+    "name": "Flexi Amandio 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi + amandio c - organic12-3d-2.milk"
+  },
+  {
+    "label": "flexi-amandio-3",
+    "name": "Flexi Amandio 3",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi + amandio c - piercing 05 - Kopie (2) - Kopie"
+  },
+  {
+    "label": "flexi-fishbrain",
+    "name": "Flexi Fishbrain",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi + fishbrain - neon mindblob grafitti"
+  },
+  {
+    "label": "flexi-geiss",
+    "name": "Flexi Geiss",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi + geiss - pogo cubes vs. tokamak vs. game of life [stahls jelly 4.5 finish]"
+  },
+  {
+    "label": "flexi-martin",
+    "name": "Flexi Martin",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi + Martin - astral projection"
+  },
+  {
+    "label": "flexi-martin-2",
+    "name": "Flexi Martin 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi + Martin - cascading decay swing"
+  },
+  {
+    "label": "flexi-stahlregen",
+    "name": "Flexi Stahlregen",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi + stahlregen - jelly showoff parade"
+  },
+  {
+    "label": "flexi-alien",
+    "name": "Flexi Alien",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - alien fish pond"
+  },
+  {
+    "label": "flexi-area",
+    "name": "Flexi Area",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - area 51"
+  },
+  {
+    "label": "flexi-bouncing",
+    "name": "Flexi Bouncing",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi - bouncing balls [double mindblob neon mix]"
+  },
+  {
+    "label": "flexi-infused",
+    "name": "Flexi Infused",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - infused with the spiral"
+  },
+  {
+    "label": "flexi-mindblob",
+    "name": "Flexi Mindblob",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - mindblob [shiny mix]"
+  },
+  {
+    "label": "flexi-mindblob-2",
+    "name": "Flexi Mindblob 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - mindblob mix"
+  },
+  {
+    "label": "flexi-mom",
+    "name": "Flexi Mom",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi - mom, why the sky looks different today"
+  },
+  {
+    "label": "flexi-patternton",
+    "name": "Flexi Patternton",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi - patternton, district of media, capitol of the united abstractions of fractopia"
+  },
+  {
+    "label": "flexi-predator",
+    "name": "Flexi Predator",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - predator-prey-spirals"
+  },
+  {
+    "label": "flexi-smashing",
+    "name": "Flexi Smashing",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - smashing fractals [acid etching mix]"
+  },
+  {
+    "label": "flexi-swing",
+    "name": "Flexi Swing",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi - swing out on the spiral"
+  },
+  {
+    "label": "flexi-truly",
+    "name": "Flexi Truly",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi - truly soft piece of software - this is generic texturing (Jelly) "
+  },
+  {
+    "label": "flexi-what",
+    "name": "Flexi What",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "flexi - what is the matrix"
+  },
+  {
+    "label": "flexi-fishbrain-2",
+    "name": "Flexi Fishbrain 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi, fishbrain, Geiss + Martin - tokamak witchery"
+  },
+  {
+    "label": "flexi-martin-3",
+    "name": "Flexi Martin 3",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Flexi, martin + geiss - dedicated to the sherwin maxawow"
+  },
+  {
+    "label": "fumbling-foo",
+    "name": "Fumbling Foo",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Fumbling_Foo & Flexi, Martin, Orb, Unchained - Star Nova v7b"
+  },
+  {
+    "label": "geiss-flexi",
+    "name": "Geiss Flexi",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Geiss + Flexi + Martin - disconnected"
+  },
+  {
+    "label": "geiss-cauldron",
+    "name": "Geiss Cauldron",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Geiss - Cauldron - painterly 2 (saturation remix)"
+  },
+  {
+    "label": "geiss-reaction",
+    "name": "Geiss Reaction",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Geiss - Reaction Diffusion 2"
+  },
+  {
+    "label": "geiss-spiral",
+    "name": "Geiss Spiral",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Geiss - Spiral Artifact"
+  },
+  {
+    "label": "geiss-thumb",
+    "name": "Geiss Thumb",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Geiss - Thumb Drum"
+  },
+  {
+    "label": "geiss-flexi-2",
+    "name": "Geiss Flexi 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Geiss, Flexi + Stahlregen - Thumbdrum Tokamak [crossfiring aftermath jelly mashup]"
+  },
+  {
+    "label": "goody-the",
+    "name": "Goody The",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Goody - The Wild Vort"
+  },
+  {
+    "label": "high-altitude",
+    "name": "High Altitude",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "high-altitude basket unraveling - singh grooves nitrogen argon nz+"
+  },
+  {
+    "label": "idiot-star",
+    "name": "Idiot Star",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Idiot - Star Of Annon"
+  },
+  {
+    "label": "krash-illusion",
+    "name": "Krash Illusion",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Krash + Illusion - Spiral Movement"
+  },
+  {
+    "label": "martin-flexi",
+    "name": "Martin Flexi",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin + flexi - diamond cutter [prismaticvortex.com] - camille - i wish i wish i wish i was constrained"
+  },
+  {
+    "label": "martin-acid",
+    "name": "Martin Acid",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Martin - acid wiring"
+  },
+  {
+    "label": "martin-angel",
+    "name": "Martin Angel",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - angel flight"
+  },
+  {
+    "label": "martin-another",
+    "name": "Martin Another",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - another kind of groove"
+  },
+  {
+    "label": "martin-bombyx",
+    "name": "Martin Bombyx",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - bombyx mori"
+  },
+  {
+    "label": "martin-castle",
+    "name": "Martin Castle",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - castle in the air"
+  },
+  {
+    "label": "martin-chain",
+    "name": "Martin Chain",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - chain breaker"
+  },
+  {
+    "label": "martin-charisma",
+    "name": "Martin Charisma",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Martin - charisma"
+  },
+  {
+    "label": "martin-disco",
+    "name": "Martin Disco",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - disco mix 4"
+  },
+  {
+    "label": "martin-extreme",
+    "name": "Martin Extreme",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - extreme heat"
+  },
+  {
+    "label": "martin-frosty",
+    "name": "Martin Frosty",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - frosty caves 2"
+  },
+  {
+    "label": "martin-fruit",
+    "name": "Martin Fruit",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - fruit machine"
+  },
+  {
+    "label": "martin-ghost",
+    "name": "Martin Ghost",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - ghost city"
+  },
+  {
+    "label": "martin-glass",
+    "name": "Martin Glass",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - glass corridor"
+  },
+  {
+    "label": "martin-infinity",
+    "name": "Martin Infinity",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - infinity (2010 update)"
+  },
+  {
+    "label": "martin-liquid",
+    "name": "Martin Liquid",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Martin - liquid arrows"
+  },
+  {
+    "label": "martin-mandelbox",
+    "name": "Martin Mandelbox",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - mandelbox explorer - high speed demo version"
+  },
+  {
+    "label": "martin-mucus",
+    "name": "Martin Mucus",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - mucus cervix"
+  },
+  {
+    "label": "martin-qbikal",
+    "name": "Martin Qbikal",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Martin - QBikal - Surface Turbulence IIb"
+  },
+  {
+    "label": "martin-reflections",
+    "name": "Martin Reflections",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - reflections on black tiles"
+  },
+  {
+    "label": "martin-stormy",
+    "name": "Martin Stormy",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - stormy sea (2010 update)"
+  },
+  {
+    "label": "martin-the",
+    "name": "Martin The",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - The Bridge of Khazad-Dum"
+  },
+  {
+    "label": "martin-witchcraft",
+    "name": "Martin Witchcraft",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin - witchcraft reloaded"
+  },
+  {
+    "label": "martin-shadow",
+    "name": "Martin Shadow",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin [shadow harlequins shape code] - fata morgana"
+  },
+  {
+    "label": "martin-flexi-2",
+    "name": "Martin Flexi 2",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "martin, flexi, fishbrain + sto - enterstate [random mashup]"
+  },
+  {
+    "label": "milk-artist",
+    "name": "Milk Artist",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Milk Artist At our Best - FED - SlowFast Ft AdamFX n Martin - HD CosmoFX"
+  },
+  {
+    "label": "orb-waaa",
+    "name": "Orb Waaa",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "ORB - Waaa"
+  },
+  {
+    "label": "phat-fishbrain",
+    "name": "Phat Fishbrain",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Phat+fiShbRaiN+Eo.S_Mandala_Chasers_remix"
+  },
+  {
+    "label": "rovastar-loadus",
+    "name": "Rovastar Loadus",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Rovastar + Loadus + Geiss - FractalDrop (Triple Mix)"
+  },
+  {
+    "label": "rovastar-oozing",
+    "name": "Rovastar Oozing",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Rovastar - Oozing Resistance"
+  },
+  {
+    "label": "sawtooth-grin",
+    "name": "Sawtooth Grin",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "sawtooth grin roam"
+  },
+  {
+    "label": "shifter-dark",
+    "name": "Shifter Dark",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "shifter - dark tides bdrv mix 2"
+  },
+  {
+    "label": "suksma-heretical",
+    "name": "Suksma Heretical",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "suksma - heretical crosscut playpen"
+  },
+  {
+    "label": "suksma-rovastar",
+    "name": "Suksma Rovastar",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "suksma - Rovastar - Sunflower Passion (Enlightment Mix)_Phat_edit + flexi und martin shaders - circumflex in character classes in regular expression"
+  },
+  {
+    "label": "suksma-uninitialized",
+    "name": "Suksma Uninitialized",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "suksma - uninitialized variabowl (hydroponic chronic)"
+  },
+  {
+    "label": "suksma-vector",
+    "name": "Suksma Vector",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "suksma - vector exp 1 - couldn′t not"
+  },
+  {
+    "label": "tonymilkdrop-leonardo",
+    "name": "Tonymilkdrop Leonardo",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "TonyMilkdrop - Leonardo Da Vinci's Balloon [Flexi - merry-go-round + techstyle]"
+  },
+  {
+    "label": "tonymilkdrop-magellan",
+    "name": "Tonymilkdrop Magellan",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "TonyMilkdrop - Magellan's Nebula [Flexi - you enter first + multiverse]"
+  },
+  {
+    "label": "unchained-rovastar",
+    "name": "Unchained Rovastar",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Unchained & Rovastar - Wormhole Pillars (Hall of Shadows mix)"
+  },
+  {
+    "label": "unchained-rewop",
+    "name": "Unchained Rewop",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Unchained - Rewop"
+  },
+  {
+    "label": "unchained-unified",
+    "name": "Unchained Unified",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Unchained - Unified Drag 2"
+  },
+  {
+    "label": "yin-temporal",
+    "name": "Yin Temporal",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "yin - 191 - Temporal singularities"
+  },
+  {
+    "label": "zylot-paint",
+    "name": "Zylot Paint",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Zylot - Paint Spill (Music Reactive Paint Mix)"
+  },
+  {
+    "label": "zylot-star",
+    "name": "Zylot Star",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Zylot - Star Ornament"
+  },
+  {
+    "label": "zylot-true",
+    "name": "Zylot True",
+    "category": "WINAMP",
+    "tech": "webgl",
+    "presetKey": "Zylot - True Visionary (Final Mix)"
   }
 ]
