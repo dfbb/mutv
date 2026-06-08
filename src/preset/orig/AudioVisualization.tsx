@@ -23,6 +23,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   backgroundVideo,
   backgroundAnim,
   backgroundCarousel,
+  backgroundAnimBeat,
 }) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames} = useVideoConfig();
@@ -84,6 +85,8 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
         backgroundImage={backgroundImage}
         backgroundAnim={backgroundAnim}
         backgroundCarousel={backgroundCarousel}
+        audioFileName={audioFileName}
+        beatReactive={backgroundAnimBeat}
         fallbackGradient={`linear-gradient(135deg, hsl(${hue}, 80%, 12%) 0%, hsl(${hue + 80}, 70%, 8%) 100%)`}
         overlay="rgba(0, 0, 0, 0.45)"
       />

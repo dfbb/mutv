@@ -1,5 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender} from 'remotion';
+import {BeatReactiveAnim} from './BeatReactiveAnim';
 
 /**
  * Shared background layer for all presets. Renders exactly one source by
@@ -17,10 +18,14 @@ export const BackgroundLayer: React.FC<{
   backgroundCarousel?: string;
   backgroundImage?: string;
   backgroundAnim?: string;
+  /** Audio filename in public/ (or http URL), needed for beat-reactive anim. */
+  audioFileName?: string;
+  /** When true and backgroundAnim is set, drive it with the music beat. */
+  beatReactive?: boolean;
   fallbackGradient: string;
   /** Optional dark overlay over video/image for text readability (e.g. 'rgba(0,0,0,0.45)'). */
   overlay?: string;
-}> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, fallbackGradient, overlay}) => {
+}> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, audioFileName, beatReactive, fallbackGradient, overlay}) => {
   const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
 
   if (backgroundVideo) {
@@ -55,6 +60,12 @@ export const BackgroundLayer: React.FC<{
   }
 
   if (backgroundAnim) {
+    if (beatReactive && audioFileName) {
+      const audioSrc = audioFileName.startsWith('http')
+        ? audioFileName
+        : staticFile(audioFileName);
+      return <BeatReactiveAnim src={toSrc(backgroundAnim)} audioSrc={audioSrc} />;
+    }
     return (
       <AbsoluteFill>
         <IFrame src={toSrc(backgroundAnim)} style={{width: '100%', height: '100%', border: 'none'}} />

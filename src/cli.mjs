@@ -28,6 +28,7 @@
  *   --bg-image-trans  Carousel transition group: soft|cool|hard (default soft)
  *   --bg-video    Background video file (mutually exclusive)
  *   --bg-anim     Animated background effect label (see src/animbg/), or 'random' (mutually exclusive)
+ *   --no-bg-anim-beat  Disable beat-reactive animation for --bg-anim (default: enabled)
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
  *   --preset      Visual template under preset/<label>/ (default: orig), or 'random'
  *   --res         Output resolution WxH (default: 1080x720)
@@ -49,7 +50,7 @@ const RENDER_DIR = dirname(fileURLToPath(import.meta.url));
 // PLACEHOLDER_REST
 
 // --- Parse args (value flags + boolean flags) ---
-const booleanFlags = new Set(['html']);
+const booleanFlags = new Set(['html', 'no-bg-anim-beat']);
 const opts = {};
 const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i++) {
@@ -113,6 +114,7 @@ if (opts['bg-image-intvl']) nodeArgs.push('--bg-image-intvl', String(opts['bg-im
 if (opts['bg-image-trans']) nodeArgs.push('--bg-image-trans', opts['bg-image-trans']);
 if (opts['bg-video']) nodeArgs.push('--bg-video', resolve(opts['bg-video']));
 if (opts['bg-anim']) nodeArgs.push('--bg-anim', opts['bg-anim']);
+if (opts['no-bg-anim-beat']) nodeArgs.push('--no-bg-anim-beat');
 if (opts.browser) nodeArgs.push('--browser', opts.browser);
 if (opts.res) nodeArgs.push('--res', opts.res);
 if (opts.fps) nodeArgs.push('--fps', opts.fps);

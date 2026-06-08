@@ -71,3 +71,43 @@ export function injectVirtualMouse(html) {
   if (idx !== -1) return html.slice(0, idx) + SNIPPET + html.slice(idx);
   return html + SNIPPET;
 }
+
+const BEAT_MARK = 'beat-clock (auto-injected)';
+export {BEAT_MARK};
+
+// 注入脚本:覆盖 iframe 内的 performance.now/Date.now,使其全程运行在一条
+// 从 0 起步的「节拍虚拟时间轴」上。__beatVirtualTimeMs 初值为 0(而非 null):
+// 加载第一刻起,performance.now()/Date.now() 就返回基于这条虚拟时间轴的值。
+// 父窗每帧调用 window.__beatTick(vtMs) 只是推进这条时间轴(随鼓点加速),
+// 不存在 null→虚拟值的切换点,从而避免模板缓存时间基线后跨切换得到负/巨大
+// dt 造成的动画跳变。全程 try/catch:任何环境覆盖失败都不影响模板原本运行。
+const BEAT_SNIPPET = `
+<script>
+/* ${BEAT_MARK}: 把 performance.now/Date.now 替换为父窗喂入的节拍虚拟时间,
+   使基于时间积分的动画(rAF/VANTA/p5)在鼓点时加速。基于帧计数的动画不受影响。
+   全程运行在从 0 起的虚拟时间轴上,避免 null→虚拟值切换造成的时钟跳变。 */
+(function(){
+  function installBeatClock(win){
+    try {
+      win.__beatVirtualTimeMs = 0;
+      win.__beatTick = function(vtMs){ win.__beatVirtualTimeMs = vtMs; };
+      // 在注入时取一次真实 epoch,作为 Date.now 虚拟时间轴的基准。
+      var epoch0 = win.Date.now();
+      if (win.performance && win.performance.now) {
+        win.performance.now = function(){ return win.__beatVirtualTimeMs; };
+      }
+      win.Date.now = function(){ return epoch0 + win.__beatVirtualTimeMs; };
+    } catch (e) { /* 覆盖失败则放弃时钟通道,不影响模板 */ }
+  }
+  installBeatClock(window);
+})();
+</script>
+`;
+
+/** 把节拍时钟脚本注入 html(幂等)。 */
+export function injectBeatClock(html) {
+  if (html.indexOf(BEAT_MARK) !== -1) return html;
+  const idx = html.toLowerCase().lastIndexOf('</body>');
+  if (idx !== -1) return html.slice(0, idx) + BEAT_SNIPPET + html.slice(idx);
+  return html + BEAT_SNIPPET;
+}
