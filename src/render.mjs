@@ -30,7 +30,7 @@
  */
 
 import {execSync, spawn} from 'child_process';
-import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync, statSync} from 'fs';
+import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, cpSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
 import {injectVirtualMouse, needsVirtualMouse, injectBeatClock} from './animbgInject.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
@@ -460,7 +460,14 @@ if (args['bg-image']) {
   // Effects that react to a moving cursor get a virtual-mouse script injected so
   // they animate without a real user.
   const pubDir = resolve('public');
-  mkdirSync(pubDir, {recursive: true});
+  // Write the effect HTML one directory deep (public/animbg/) so that a
+  // relative "../vendor/..." reference inside the effect resolves to
+  // /public/vendor/ — i.e. back to the staticFile root, where we copy the
+  // shared libraries below. (staticFile('animbg/x.html') → /public/animbg/x.html;
+  // "../vendor" → /public/vendor.) Writing it flat in public/ would make
+  // "../vendor" climb above the staticFile root and 404.
+  const animDir = resolve(pubDir, 'animbg');
+  mkdirSync(animDir, {recursive: true});
   const animPublicName = `animbg-${animLabel}.html`;
   let animHtml = readFileSync(animFile, 'utf-8');
   if (needsVirtualMouse(animHtml)) {
@@ -471,9 +478,21 @@ if (args['bg-image']) {
     animHtml = injectBeatClock(animHtml);
     console.log('Injected beat clock (animation reacts to music beat)');
   }
-  writeFileSync(resolve(pubDir, animPublicName), animHtml);
-  backgroundAnim = animPublicName;
+  writeFileSync(resolve(animDir, animPublicName), animHtml);
+  backgroundAnim = `animbg/${animPublicName}`;
   backgroundAnimLabel = animLabel;
+  // Some effects (Vanta/p5/three) load shared libraries via "../vendor/...".
+  // From public/animbg/<file>.html that URL resolves to /public/vendor/, so the
+  // vendor tree must exist under public/. Copy it once when the effect needs it.
+  if (animHtml.includes('vendor/')) {
+    const vendorSrc = resolve('animbg', 'vendor');
+    if (existsSync(vendorSrc)) {
+      cpSync(vendorSrc, resolve(pubDir, 'vendor'), {recursive: true});
+      console.log('Copied vendor libraries to public/vendor');
+    } else {
+      console.warn(`Warning: effect "${animLabel}" references ../vendor/ but animbg/vendor is missing`);
+    }
+  }
   console.log(`Using animated background: ${animLabel}`);
 }
 
@@ -570,6 +589,9 @@ const cmd = [
   `--props="${propsFile}"`,
   `--codec=${codec}`,
   '--log=error',
+  // WebGL-based anim effects (Vanta/three) need a real GL backend; the default
+  // headless context fails to create one. ANGLE provides software WebGL.
+  backgroundAnim ? '--gl=angle' : '',
   browserExe ? `--browser-executable="${browserExe}"` : '',
   chromeMode !== 'headless-shell' ? `--chrome-mode=${chromeMode}` : '',
 ].filter(Boolean).join(' ');
