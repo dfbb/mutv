@@ -21,6 +21,7 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
   backgroundAnim,
   backgroundCarousel,
   backgroundAnimBeat,
+  backgroundAnimKind,
   lyrics,
   lyricOffset,
   title,
@@ -38,6 +39,7 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
         backgroundCarousel={backgroundCarousel}
         audioFileName={audioFileName}
         beatReactive={backgroundAnimBeat}
+        animKind={backgroundAnimKind}
         fallbackGradient="linear-gradient(180deg, #0a1030 0%, #05060f 60%, #03040a 100%)"
         overlay="rgba(5, 6, 15, 0.55)"
       />

@@ -1,6 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender} from 'remotion';
 import {BeatReactiveAnim} from './BeatReactiveAnim';
+import {ButterchurnAnim} from './ButterchurnAnim';
 
 /**
  * Shared background layer for all presets. Renders exactly one source by
@@ -22,10 +23,12 @@ export const BackgroundLayer: React.FC<{
   audioFileName?: string;
   /** When true and backgroundAnim is set, drive it with the music beat. */
   beatReactive?: boolean;
+  /** 'winamp' → butterchurn player; otherwise normal HTML effect. */
+  animKind?: string;
   fallbackGradient: string;
   /** Optional dark overlay over video/image for text readability (e.g. 'rgba(0,0,0,0.45)'). */
   overlay?: string;
-}> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, audioFileName, beatReactive, fallbackGradient, overlay}) => {
+}> = ({backgroundVideo, backgroundCarousel, backgroundImage, backgroundAnim, audioFileName, beatReactive, animKind, fallbackGradient, overlay}) => {
   const toSrc = (s: string) => (s.startsWith('http') ? s : staticFile(s));
 
   if (backgroundVideo) {
@@ -60,10 +63,13 @@ export const BackgroundLayer: React.FC<{
   }
 
   if (backgroundAnim) {
+    const audioSrc = audioFileName
+      ? (audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName))
+      : '';
+    if (animKind === 'winamp' && audioSrc) {
+      return <ButterchurnAnim src={toSrc(backgroundAnim)} audioSrc={audioSrc} />;
+    }
     if (beatReactive && audioFileName) {
-      const audioSrc = audioFileName.startsWith('http')
-        ? audioFileName
-        : staticFile(audioFileName);
       return <BeatReactiveAnim src={toSrc(backgroundAnim)} audioSrc={audioSrc} />;
     }
     return (
