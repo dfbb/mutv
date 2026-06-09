@@ -129,7 +129,7 @@ export const Lyrics: React.FC<{
                 left: 0,
                 right: 0,
                 color: 'white',
-                fontSize: 72,
+                fontSize: 58,
                 fontWeight: 700,
                 lineHeight: 1.15,
                 transformOrigin: 'left center',
