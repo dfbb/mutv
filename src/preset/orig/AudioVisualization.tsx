@@ -281,7 +281,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
             opacity: 0.8,
             textAlign: 'center',
             textShadow: `0 0 20px hsla(${hue}, 100%, 70%, 0.6), 0 2px 10px rgba(0,0,0,0.7)`,
-            fontFamily: '"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif',
+            fontFamily: ff('"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif'),
           }}
         >
           {creditText}

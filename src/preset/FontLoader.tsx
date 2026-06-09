@@ -21,7 +21,11 @@ export const FontLoader: React.FC<{fontFamily?: string; fontFile?: string}> = ({
     face
       .load()
       .then((loaded) => {
-        if (cancelled) return;
+        // 即便已卸载也要 continueRender，否则会卡住 Remotion 渲染（Studio 热更边界）。
+        if (cancelled) {
+          continueRender(handle);
+          return;
+        }
         // document.fonts.add 在当前 TS DOM lib 类型里缺失，运行时存在，故断言。
         (document.fonts as unknown as {add: (f: FontFace) => void}).add(loaded);
         continueRender(handle);
