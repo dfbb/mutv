@@ -4,6 +4,7 @@ import {fontSize} from './Dots';
 import {Subtitles} from './Subtitles';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 
 export const MyComposition: React.FC<MVInputProps> = ({
 	audioFileName,
@@ -40,6 +41,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 				animKind={backgroundAnimKind}
 				fallbackGradient="black"
 			/>
+			<StudioControlBar />
 			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} />
 			<Audio src={audioSrc} />
 			<Bottom audioSrc={audioSrc} title={title} />
