@@ -33,6 +33,7 @@ import {execSync, spawn} from 'child_process';
 import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, cpSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
 import {injectVirtualMouse, needsVirtualMouse, injectBeatClock} from './animbgInject.mjs';
+import {prepareAnim} from './animbgPrepare.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
 import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
 import {homedir} from 'os';
@@ -455,54 +456,11 @@ if (args['bg-image']) {
     console.error(`Available animated backgrounds: ${avail.length ? avail.join(', ') : '(none — run scripts/fetch_animbg.py)'}`);
     process.exit(1);
   }
-  // Copy the effect HTML into public/ and load it via <IFrame src>. We must NOT
-  // inline the HTML as a prop: Studio writes inputProps into an inline <script>,
-  // and effect HTML containing </script> would break that script (SyntaxError).
-  // Effects that react to a moving cursor get a virtual-mouse script injected so
-  // they animate without a real user.
-  const pubDir = resolve('public');
-  // Write the effect HTML one directory deep (public/animbg/) so that a
-  // relative "../vendor/..." reference inside the effect resolves to
-  // /public/vendor/ — i.e. back to the staticFile root, where we copy the
-  // shared libraries below. (staticFile('animbg/x.html') → /public/animbg/x.html;
-  // "../vendor" → /public/vendor.) Writing it flat in public/ would make
-  // "../vendor" climb above the staticFile root and 404.
-  const animDir = resolve(pubDir, 'animbg');
-  mkdirSync(animDir, {recursive: true});
-  const animPublicName = `animbg-${animLabel}.html`;
-  let animHtml = readFileSync(animFile, 'utf-8');
-  if (needsVirtualMouse(animHtml)) {
-    animHtml = injectVirtualMouse(animHtml);
-    console.log('Injected virtual mouse (effect reacts to cursor movement)');
-  }
-  if (beatReactive) {
-    animHtml = injectBeatClock(animHtml);
-    console.log('Injected beat clock (animation reacts to music beat)');
-  }
-  writeFileSync(resolve(animDir, animPublicName), animHtml);
-  backgroundAnim = `animbg/${animPublicName}`;
+  // 拷贝逻辑已抽到 animbgPrepare.mjs（与 --debug-bg-anim 的「下一个」共用）。
+  const {backgroundAnim: _ba, backgroundAnimKind: _bak} = prepareAnim({label: animLabel, beatReactive});
+  backgroundAnim = _ba;
   backgroundAnimLabel = animLabel;
-  // WINAMP(butterchurn)preset 走专用播放器组件;查 manifest 的 category。
-  try {
-    const manifestPath = resolve('animbg', 'manifest.json');
-    if (existsSync(manifestPath)) {
-      const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-      const entry = manifest.find((e) => e.label === animLabel);
-      if (entry && entry.category === 'WINAMP') backgroundAnimKind = 'winamp';
-    }
-  } catch {}
-  // Some effects (Vanta/p5/three) load shared libraries via "../vendor/...".
-  // From public/animbg/<file>.html that URL resolves to /public/vendor/, so the
-  // vendor tree must exist under public/. Copy it once when the effect needs it.
-  if (animHtml.includes('vendor/')) {
-    const vendorSrc = resolve('animbg', 'vendor');
-    if (existsSync(vendorSrc)) {
-      cpSync(vendorSrc, resolve(pubDir, 'vendor'), {recursive: true});
-      console.log('Copied vendor libraries to public/vendor');
-    } else {
-      console.warn(`Warning: effect "${animLabel}" references ../vendor/ but animbg/vendor is missing`);
-    }
-  }
+  backgroundAnimKind = _bak;
   console.log(`Using animated background: ${animLabel}`);
 }
 
