@@ -143,7 +143,7 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
     throw e;
   });
 
-  server.listen(CONTROL_PORT, () => {
+  server.listen(CONTROL_PORT, '127.0.0.1', () => {
     console.log(`bg-anim 调试控制服务: http://localhost:${CONTROL_PORT}`);
     spawnStudio();
   });
