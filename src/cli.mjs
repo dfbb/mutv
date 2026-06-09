@@ -35,6 +35,7 @@
  *   --fps         Frames per second (default: 24)
  *   --max-size    Max output size in MB; compresses video if exceeded
  *   --html        Start a local web preview (Remotion Studio) instead of rendering
+ *   --debug-bg-anim   与 --html 配合：在预览画面叠加 bg-anim 调试控制条（下一个/标记）
  *
  * Environment variables:
  *   BROWSER_EXECUTABLE  Path to browser executable (overrides auto-detection)
@@ -50,7 +51,7 @@ const RENDER_DIR = dirname(fileURLToPath(import.meta.url));
 // PLACEHOLDER_REST
 
 // --- Parse args (value flags + boolean flags) ---
-const booleanFlags = new Set(['html', 'no-bg-anim-beat']);
+const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim']);
 const opts = {};
 const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i++) {
@@ -119,6 +120,7 @@ if (opts.browser) nodeArgs.push('--browser', opts.browser);
 if (opts.res) nodeArgs.push('--res', opts.res);
 if (opts.fps) nodeArgs.push('--fps', opts.fps);
 if (opts.html) nodeArgs.push('--html');
+if (opts['debug-bg-anim']) nodeArgs.push('--debug-bg-anim');
 
 // PLACEHOLDER_FONTS
 
