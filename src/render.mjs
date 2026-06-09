@@ -30,9 +30,8 @@
  */
 
 import {execSync, spawn} from 'child_process';
-import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, cpSync, mkdirSync, statSync} from 'fs';
+import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
-import {injectVirtualMouse, needsVirtualMouse, injectBeatClock} from './animbgInject.mjs';
 import {prepareAnim} from './animbgPrepare.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
 import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
@@ -457,10 +456,8 @@ if (args['bg-image']) {
     process.exit(1);
   }
   // 拷贝逻辑已抽到 animbgPrepare.mjs（与 --debug-bg-anim 的「下一个」共用）。
-  const {backgroundAnim: _ba, backgroundAnimKind: _bak} = prepareAnim({label: animLabel, beatReactive});
-  backgroundAnim = _ba;
+  ({backgroundAnim, backgroundAnimKind} = prepareAnim({label: animLabel, beatReactive}));
   backgroundAnimLabel = animLabel;
-  backgroundAnimKind = _bak;
   console.log(`Using animated background: ${animLabel}`);
 }
 
