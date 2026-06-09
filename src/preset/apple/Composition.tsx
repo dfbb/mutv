@@ -10,6 +10,7 @@ import {
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 import {Lyrics} from './Lyrics';
 
 /**
@@ -32,9 +33,12 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
   lyricOffset,
   title,
   subtitle,
+  fontFamily,
+  fontFile,
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -55,10 +59,11 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
         overlay="radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.6) 100%)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       <Audio src={audioSrc} />
 
-      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} fps={fps} />
+      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} fps={fps} fontFamily={fontFamily} />
 
       {/* Song header: top-left, fades in at the start (Apple Music style) */}
       {(title || subtitle) && (
@@ -70,8 +75,9 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
             opacity: interpolate(frame, [0, 20], [0, 1], {
               extrapolateRight: 'clamp',
             }),
-            fontFamily:
-              '"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, sans-serif',
+            fontFamily: ff(
+              '"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, sans-serif'
+            ),
             textShadow: '0 2px 20px rgba(0,0,0,0.6)',
           }}
         >

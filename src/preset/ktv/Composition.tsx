@@ -3,6 +3,7 @@ import {AbsoluteFill, Audio, staticFile} from 'remotion';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 import {Lyrics} from './Lyrics';
 
 /**
@@ -26,6 +27,8 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
   lyrics,
   lyricOffset,
   title,
+  fontFamily,
+  fontFile,
 }) => {
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -45,10 +48,11 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
         overlay="rgba(5, 6, 15, 0.55)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       <Audio src={audioSrc} />
 
-      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} title={title} />
+      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} title={title} fontFamily={fontFamily} />
     </AbsoluteFill>
   );
 };

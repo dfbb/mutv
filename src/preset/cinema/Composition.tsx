@@ -12,6 +12,7 @@ import {
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Cinematic / movie-trailer lyric overlay (ported from ai-music-video-maker's
@@ -115,16 +116,19 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
   backgroundAnimKind,
   lyrics,
   lyricOffset,
+  fontFamily,
+  fontFile,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const data = lyricsToData(lyrics, lyricOffset);
   const fontSize = Math.round(height * 0.083);
+  const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
 
   return (
-    <AbsoluteFill style={{fontFamily: '"Bebas Neue", "Anton", Impact, sans-serif', backgroundColor: '#000'}}>
+    <AbsoluteFill style={{fontFamily: ff('"Bebas Neue", "Anton", Impact, sans-serif'), backgroundColor: '#000'}}>
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
@@ -136,6 +140,7 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
         fallbackGradient="radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       <Audio src={audioSrc} />
 

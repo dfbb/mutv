@@ -34,6 +34,7 @@ import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdi
 import {resolve, basename, isAbsolute, join} from 'path';
 import {prepareAnim} from './animbgPrepare.mjs';
 import {startStudioControl} from './studioControl.mjs';
+import {detectLang} from './langDetect.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
 import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
 import {homedir} from 'os';
@@ -484,6 +485,45 @@ if (!duration) {
   process.exit(1);
 }
 
+// --font: 按歌词语言选字库目录，挑字体(指定名/random)，拷进 public/fonts/ 并经 @font-face 用上。
+let fontFamily = '';
+let fontFile = '';
+if (args.font) {
+  const text = lyrics.map((l) => l.text).join(' ');
+  const detected = detectLang(text);
+  const fontBase = resolve('..', 'font');
+  // 检测语言无对应目录时回退 en。
+  let lang = detected;
+  if (!existsSync(join(fontBase, lang))) lang = 'en';
+  const fontDir = join(fontBase, lang);
+  if (!existsSync(fontDir)) {
+    console.error(`Error: 字库目录不存在（本地 font/ 缺失?）：${fontDir}`);
+    process.exit(1);
+  }
+  const avail = readdirSync(fontDir).filter((f) => f.endsWith('.woff2'));
+  if (avail.length === 0) {
+    console.error(`Error: font/${lang} 下没有 woff2 字体`);
+    process.exit(1);
+  }
+  let file;
+  if (args.font === 'random') {
+    file = avail[Math.floor(Math.random() * avail.length)];
+    console.log(`检测语言 ${detected}${lang !== detected ? `(回退 ${lang})` : ''}，随机字体: ${file}`);
+  } else {
+    file = args.font.endsWith('.woff2') ? args.font : `${args.font}.woff2`;
+    if (!avail.includes(file)) {
+      console.error(`Error: 字体 "${args.font}" 不在 font/${lang} 下。可选: ${avail.map((f) => f.replace(/\.woff2$/, '')).join(', ')}`);
+      process.exit(1);
+    }
+    console.log(`检测语言 ${detected}${lang !== detected ? `(回退 ${lang})` : ''}，字体: ${file}`);
+  }
+  const pubFontsDir = resolve('public', 'fonts');
+  mkdirSync(pubFontsDir, {recursive: true});
+  copyFileSync(join(fontDir, file), resolve(pubFontsDir, file));
+  fontFamily = file.replace(/\.woff2$/, '');
+  fontFile = `fonts/${file}`;
+}
+
 // Build input props
 // Sanitize title: single-line, max 50 chars
 const rawTitle = (args.title || 'Music Video').replace(/[\r\n]+/g, ' ').trim();
@@ -506,6 +546,8 @@ const inputProps = {
   width: resWidth,
   height: resHeight,
   fps,
+  fontFamily,
+  fontFile,
 };
 
 const output = args.output ? resolveFilePath(args.output) : 'out/video.mp4';

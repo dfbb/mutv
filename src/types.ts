@@ -37,6 +37,10 @@ export interface MVInputProps extends Record<string, unknown> {
   height: number;
   /** Frames per second (set via CLI --fps) */
   fps: number;
+  /** Custom font family name to prepend to text (from --font); '' = use preset default. */
+  fontFamily: string;
+  /** Custom font file in public/ (e.g. 'fonts/Foo.woff2'), loaded via @font-face; '' = none. */
+  fontFile: string;
 }
 
 export const defaultProps: MVInputProps = {
@@ -56,4 +60,6 @@ export const defaultProps: MVInputProps = {
   width: 1080,
   height: 720,
   fps: 24,
+  fontFamily: '',
+  fontFile: '',
 };

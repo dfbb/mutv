@@ -5,6 +5,7 @@ import {Subtitles} from './Subtitles';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 
 export const MyComposition: React.FC<MVInputProps> = ({
 	audioFileName,
@@ -17,7 +18,10 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	lyrics,
 	lyricOffset,
 	title,
+	fontFamily,
+	fontFile,
 }) => {
+	const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 	const audioSrc = audioFileName.startsWith('http')
 		? audioFileName
 		: staticFile(audioFileName);
@@ -26,8 +30,9 @@ export const MyComposition: React.FC<MVInputProps> = ({
 		<AbsoluteFill
 			style={{
 				fontSize,
-				fontFamily:
-					'"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+				fontFamily: ff(
+					'"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
+				),
 				backgroundColor: 'black',
 			}}
 		>
@@ -42,6 +47,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 				fallbackGradient="black"
 			/>
 			<StudioControlBar />
+			<FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} />
 			<Audio src={audioSrc} />
 			<Bottom audioSrc={audioSrc} title={title} />

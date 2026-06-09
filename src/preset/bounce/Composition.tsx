@@ -12,6 +12,7 @@ import {
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Playful bounce lyric overlay (ported from ai-music-video-maker's
@@ -115,16 +116,19 @@ export const BounceComposition: React.FC<MVInputProps> = ({
   backgroundCarousel,
   lyrics,
   lyricOffset,
+  fontFamily,
+  fontFile,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const data = lyricsToData(lyrics, lyricOffset);
   const fontSize = Math.round(height * 0.059);
+  const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
 
   return (
-    <AbsoluteFill style={{fontFamily: '"Fredoka One", "Bubblegum Sans", "Comic Sans MS", cursive', backgroundColor: '#10131a'}}>
+    <AbsoluteFill style={{fontFamily: ff('"Fredoka One", "Bubblegum Sans", "Comic Sans MS", cursive'), backgroundColor: '#10131a'}}>
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
@@ -133,6 +137,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
         fallbackGradient="linear-gradient(135deg, #2b1055 0%, #7597de 100%)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       <Audio src={audioSrc} />
 

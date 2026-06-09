@@ -125,7 +125,8 @@ export const Lyrics: React.FC<{
   lyrics: LyricLine[];
   lyricOffset: number;
   title: string;
-}> = ({lyrics, lyricOffset}) => {
+  fontFamily?: string;
+}> = ({lyrics, lyricOffset, fontFamily}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const time = frame / fps;
@@ -163,8 +164,9 @@ export const Lyrics: React.FC<{
         justifyContent: 'center',
         alignItems: 'center',
         padding: '0 8%',
-        fontFamily:
-          '"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+        fontFamily: fontFamily
+          ? `"${fontFamily}", "Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`
+          : '"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
       }}
     >
       {leadIn ? (
