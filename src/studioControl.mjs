@@ -1,8 +1,7 @@
-import {existsSync, readdirSync} from 'fs';
+import {existsSync, readdirSync, readFileSync, writeFileSync} from 'fs';
 import {resolve, join} from 'path';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {readFileSync, writeFileSync} from 'fs';
 
 /** 在长度 len 的环形列表里取下一个下标（到末尾回环）。 */
 export function nextIndex(idx, len) {
@@ -71,7 +70,9 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
   function restartStudio() {
     return new Promise((res) => {
       restarting = true;
+      const killTimer = setTimeout(() => studio.kill('SIGKILL'), 10000);
       studio.once('exit', () => {
+        clearTimeout(killTimer);
         spawnStudio();
         restarting = false;
         res();
@@ -104,8 +105,9 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
       return send(res, 200, state());
     }
     if (req.method === 'POST' && url === '/next') {
-      currentIndex = nextIndex(currentIndex, animList.length);
-      const label = animList[currentIndex];
+      if (restarting) return send(res, 409, {error: 'restart in progress'});
+      const idx = nextIndex(currentIndex, animList.length);
+      const label = animList[idx];
       try {
         const {backgroundAnim, backgroundAnimKind} = prepareAnim({label, beatReactive});
         const props = JSON.parse(readFileSync(propsFile, 'utf-8'));
@@ -115,6 +117,7 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
       } catch (e) {
         return send(res, 500, {error: String((e && e.message) || e)});
       }
+      currentIndex = idx; // 仅在 prepare + 写 props 成功后再提交序号推进
       await restartStudio();
       if (!(await waitForStudio())) {
         return send(res, 500, {error: 'studio restart timeout'});
