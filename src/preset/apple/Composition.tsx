@@ -9,6 +9,7 @@ import {
 } from 'remotion';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 import {Lyrics} from './Lyrics';
 
 /**
@@ -53,6 +54,7 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
         fallbackGradient="linear-gradient(135deg, hsl(260, 55%, 22%) 0%, hsl(320, 50%, 14%) 100%)"
         overlay="radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.6) 100%)"
       />
+      <StudioControlBar />
 
       <Audio src={audioSrc} />
 

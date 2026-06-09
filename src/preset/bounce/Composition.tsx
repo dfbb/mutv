@@ -11,6 +11,7 @@ import {
 } from 'remotion';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Playful bounce lyric overlay (ported from ai-music-video-maker's
@@ -131,6 +132,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
         backgroundCarousel={backgroundCarousel}
         fallbackGradient="linear-gradient(135deg, #2b1055 0%, #7597de 100%)"
       />
+      <StudioControlBar />
 
       <Audio src={audioSrc} />
 

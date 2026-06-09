@@ -11,6 +11,7 @@ import {
 import {useAudioData, visualizeAudio} from '@remotion/media-utils';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 
 export const AudioVisualization: React.FC<MVInputProps> = ({
   audioFileName,
@@ -92,6 +93,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
         fallbackGradient={`linear-gradient(135deg, hsl(${hue}, 80%, 12%) 0%, hsl(${hue + 80}, 70%, 8%) 100%)`}
         overlay="rgba(0, 0, 0, 0.45)"
       />
+      <StudioControlBar />
 
       {/* Radial glow effect */}
       <AbsoluteFill

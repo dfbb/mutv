@@ -12,6 +12,7 @@ import {
 } from 'remotion';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Neon / cyberpunk lyric overlay (ported from ai-music-video-maker's
@@ -164,6 +165,7 @@ export const NeonComposition: React.FC<MVInputProps> = ({
         backgroundCarousel={backgroundCarousel}
         fallbackGradient="linear-gradient(135deg, #1a0033 0%, #0a0014 60%, #05000a 100%)"
       />
+      <StudioControlBar />
 
       <Audio src={audioSrc} />
 

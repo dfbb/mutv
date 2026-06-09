@@ -11,6 +11,7 @@ import {
 } from 'remotion';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Cinematic / movie-trailer lyric overlay (ported from ai-music-video-maker's
@@ -134,6 +135,7 @@ export const CinemaComposition: React.FC<MVInputProps> = ({
         animKind={backgroundAnimKind}
         fallbackGradient="radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)"
       />
+      <StudioControlBar />
 
       <Audio src={audioSrc} />
 

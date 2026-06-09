@@ -9,6 +9,7 @@ import {
 } from 'remotion';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
+import {StudioControlBar} from '../StudioControlBar';
 import {lyricsToData, LyricsLine} from '../lyricsToData';
 
 // Typewriter / retro lyric overlay (ported from ai-music-video-maker's
@@ -155,6 +156,7 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
         animKind={backgroundAnimKind}
         fallbackGradient="linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)"
       />
+      <StudioControlBar />
 
       <Audio src={audioSrc} />
 
