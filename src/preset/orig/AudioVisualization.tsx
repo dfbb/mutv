@@ -105,48 +105,6 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
       {/* Audio source */}
       <Audio src={audioSrc} />
 
-      {/* Bottom frequency bars */}
-      <AbsoluteFill
-        style={{
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            gap: 4,
-            height: 350,
-            width: '90%',
-            marginBottom: 180,
-          }}
-        >
-          {visualization.map((value, index) => {
-            const scaledValue = Math.pow(value, 0.6);
-            const barHeight = Math.max(scaledValue * 800, 20);
-            const colorIndex = (index / visualization.length) * 360;
-
-            return (
-              <div
-                key={index}
-                style={{
-                  width: `${100 / visualization.length}%`,
-                  height: barHeight,
-                  background: `linear-gradient(to top,
-                    hsl(${(colorIndex + hue) % 360}, 90%, 60%),
-                    hsl(${(colorIndex + hue + 40) % 360}, 90%, 70%))`,
-                  borderRadius: '4px 4px 0 0',
-                  boxShadow: `0 0 ${10 + scaledValue * 30}px hsla(${(colorIndex + hue) % 360}, 100%, 60%, ${scaledValue})`,
-                  transition: 'height 0.05s ease-out',
-                }}
-              />
-            );
-          })}
-        </div>
-      </AbsoluteFill>
-
       {/* Symmetrical side bars */}
       <AbsoluteFill
         style={{
