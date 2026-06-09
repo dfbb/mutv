@@ -5,7 +5,7 @@ import {needsVirtualMouse, injectVirtualMouse, injectBeatClock} from './animbgIn
 /**
  * 把 animbg/<label>/index.html 拷进 public/animbg/ 并返回 props 片段。
  * 与 render.mjs 原 inline 逻辑一致：注入虚拟鼠标 / beat 时钟、查 manifest 定
- * winamp 类别、按需拷贝 vendor 库。以 process.cwd()（= src/）为根。
+ * winamp 类别、按需拷贝 vendor 库。以 process.cwd()（项目根）为根。
  *
  * @param {{label: string, beatReactive: boolean}} opts
  * @returns {{backgroundAnim: string, backgroundAnimLabel: string, backgroundAnimKind: string}}
@@ -33,7 +33,9 @@ export function prepareAnim({label, beatReactive}) {
       const entry = manifest.find((e) => e.label === label);
       if (entry && entry.category === 'WINAMP') backgroundAnimKind = 'winamp';
     }
-  } catch {}
+  } catch (e) {
+    console.warn(`Warning: could not read animbg/manifest.json: ${e.message}`);
+  }
 
   if (animHtml.includes('vendor/')) {
     const vendorSrc = resolve('animbg', 'vendor');
