@@ -223,7 +223,7 @@ function getAudioDuration(filePath) {
 
 function parseArgs(argv) {
   // Flags that take no value (presence = true)
-  const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim']);
+  const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim', 'debug-preset']);
   const args = {};
   for (let i = 2; i < argv.length; i++) {
     const key = argv[i];
@@ -241,6 +241,12 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv);
+
+// --debug-preset 与 --debug-bg-anim 互斥（都需配合 --html）。
+if (args['debug-preset'] && args['debug-bg-anim']) {
+  console.error('Error: --debug-preset 与 --debug-bg-anim 互斥，不能同时使用');
+  process.exit(1);
+}
 
 // 节拍反应默认开;--no-bg-anim-beat 关闭;--bg-anim-beat=false 也关闭。
 const beatReactive =
@@ -531,7 +537,11 @@ if (args.html) {
   if (args['debug-bg-anim']) {
     // 调试模式：由控制服务接管 studio 子进程，并提供 bg-anim 切换/标记。
     console.log('  bg-anim 调试控制条已启用（叠加在预览画面上）。');
-    startStudioControl({presetEntry, propsFile, presetLabel, beatReactive, prepareAnim});
+    startStudioControl({mode: 'bg-anim', presetEntry, propsFile, presetLabel, beatReactive, prepareAnim});
+  } else if (args['debug-preset']) {
+    // 调试模式：循环切换 preset（换 studio 入口重启），无标记。
+    console.log('  preset 调试控制条已启用（叠加在预览画面上）。');
+    startStudioControl({mode: 'preset', presetEntry, propsFile, presetLabel, beatReactive, prepareAnim});
   } else {
     // Inherit stdio so Studio's "Server ready" line is shown live.
     const studio = spawn(

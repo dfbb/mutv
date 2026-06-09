@@ -1,7 +1,14 @@
 import React, {useEffect, useState, useCallback} from 'react';
 import {getRemotionEnvironment} from 'remotion';
 
-type State = {presetLabel: string; animLabel: string; animIndex: number; animTotal: number};
+type State = {
+  mode: 'bg-anim' | 'preset';
+  presetLabel: string;
+  animLabel: string;
+  index: number;
+  total: number;
+  canMark: boolean;
+};
 
 const CONTROL_URL = 'http://localhost:3001';
 
@@ -93,23 +100,33 @@ const ControlBarInner: React.FC = () => {
         lineHeight: 1,
       }}
     >
-      <span style={{opacity: 0.85}}>
-        preset: <b>{state.presetLabel}</b>
-      </span>
-      <span style={{opacity: 0.4}}>·</span>
-      <span>
-        bg-anim: <b>{state.animLabel}</b> ({state.animIndex}/{state.animTotal})
-      </span>
+      {state.mode === 'preset' ? (
+        <span>
+          preset: <b>{state.presetLabel}</b> ({state.index}/{state.total})
+        </span>
+      ) : (
+        <>
+          <span style={{opacity: 0.85}}>
+            preset: <b>{state.presetLabel}</b>
+          </span>
+          <span style={{opacity: 0.4}}>·</span>
+          <span>
+            bg-anim: <b>{state.animLabel}</b> ({state.index}/{state.total})
+          </span>
+        </>
+      )}
       <button type="button" onClick={onNext} disabled={busy} style={btn}>
         {busy ? '切换中…' : '下一个'}
       </button>
-      <button
-        type="button"
-        onClick={onMark}
-        style={{...btn, background: marked ? '#2e7d32' : '#444'}}
-      >
-        {marked ? '✓ 已标记' : '标记'}
-      </button>
+      {state.canMark && (
+        <button
+          type="button"
+          onClick={onMark}
+          style={{...btn, background: marked ? '#2e7d32' : '#444'}}
+        >
+          {marked ? '✓ 已标记' : '标记'}
+        </button>
+      )}
     </div>
   );
 };

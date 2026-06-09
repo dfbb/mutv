@@ -17,6 +17,15 @@ export function listAnimLabels() {
     .sort();
 }
 
+/** src/preset/ 下所有含 index.ts 的目录名（视觉模板），按名排序。 */
+export function listPresets() {
+  const dir = resolve('preset');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((d) => existsSync(join(dir, d, 'index.ts')))
+    .sort();
+}
+
 const STUDIO_PORT = 3000;
 const CONTROL_PORT = 3001;
 
@@ -37,30 +46,45 @@ async function waitForStudio(timeoutMs = 20000) {
 
 /**
  * 启动控制服务（:3001）并接管 remotion studio 子进程（:3000）。
- * 仅在 --debug-bg-anim 时由 render.mjs 调用。
+ * 由 render.mjs 在 --debug-bg-anim / --debug-preset 时调用。
  *
- * @param {{presetEntry: string, propsFile: string, presetLabel: string,
- *          beatReactive: boolean, prepareAnim: Function}} ctx
+ * mode='bg-anim'：循环 bg-anim（改写 props 重启），有「标记」。
+ * mode='preset' ：循环 preset（换 studio 入口 index.ts 重启），无「标记」。
+ *
+ * @param {{mode?: 'bg-anim'|'preset', presetEntry: string, propsFile: string,
+ *          presetLabel: string, beatReactive: boolean, prepareAnim: Function}} ctx
  */
-export function startStudioControl({presetEntry, propsFile, presetLabel, beatReactive, prepareAnim}) {
-  const animList = listAnimLabels();
+export function startStudioControl({mode = 'bg-anim', presetEntry, propsFile, presetLabel, beatReactive, prepareAnim}) {
+  const isPreset = mode === 'preset';
+  // 循环维度的候选列表：preset 模式是视觉模板，bg-anim 模式是动画特效。
+  const items = isPreset ? listPresets() : listAnimLabels();
 
-  // 当前序号：从 props 文件的 backgroundAnim（animbg/animbg-<label>.html）反推。
+  // 当前序号：preset 从 presetLabel 取；bg-anim 从 props.backgroundAnim 反推。
   let currentIndex = 0;
-  try {
-    const props = JSON.parse(readFileSync(propsFile, 'utf-8'));
-    const m = /animbg-(.+)\.html$/.exec(props.backgroundAnim || '');
-    if (m) {
-      const i = animList.indexOf(m[1]);
-      if (i >= 0) currentIndex = i;
-    }
-  } catch {}
+  if (isPreset) {
+    const i = items.indexOf(presetLabel);
+    if (i >= 0) currentIndex = i;
+  } else {
+    try {
+      const props = JSON.parse(readFileSync(propsFile, 'utf-8'));
+      const m = /animbg-(.+)\.html$/.exec(props.backgroundAnim || '');
+      if (m) {
+        const i = items.indexOf(m[1]);
+        if (i >= 0) currentIndex = i;
+      }
+    } catch {}
+  }
 
   let studio = null;
   let restarting = false;
 
+  // studio 入口：preset 模式随当前 preset 变（换 index.ts）；bg-anim 模式固定。
+  function currentEntry() {
+    return isPreset ? resolve('preset', items[currentIndex], 'index.ts') : presetEntry;
+  }
+
   function spawnStudio() {
-    studio = spawn('npx', ['remotion', 'studio', presetEntry, `--props=${propsFile}`], {stdio: 'inherit'});
+    studio = spawn('npx', ['remotion', 'studio', currentEntry(), `--props=${propsFile}`], {stdio: 'inherit'});
     studio.on('exit', (code) => {
       if (restarting) return; // 主动重启时由 restartStudio 的 once 处理
       process.exit(code ?? 0);
@@ -83,10 +107,12 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
 
   function state() {
     return {
-      presetLabel,
-      animLabel: animList[currentIndex],
-      animIndex: currentIndex + 1,
-      animTotal: animList.length,
+      mode,
+      presetLabel: isPreset ? items[currentIndex] : presetLabel,
+      animLabel: isPreset ? '' : items[currentIndex],
+      index: currentIndex + 1,
+      total: items.length,
+      canMark: !isPreset,
     };
   }
 
@@ -106,18 +132,21 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
     }
     if (req.method === 'POST' && url === '/next') {
       if (restarting) return send(res, 409, {error: 'restart in progress'});
-      const idx = nextIndex(currentIndex, animList.length);
-      const label = animList[idx];
-      try {
-        const {backgroundAnim, backgroundAnimKind} = prepareAnim({label, beatReactive});
-        const props = JSON.parse(readFileSync(propsFile, 'utf-8'));
-        props.backgroundAnim = backgroundAnim;
-        props.backgroundAnimKind = backgroundAnimKind;
-        writeFileSync(propsFile, JSON.stringify(props));
-      } catch (e) {
-        return send(res, 500, {error: String((e && e.message) || e)});
+      const idx = nextIndex(currentIndex, items.length);
+      if (!isPreset) {
+        // bg-anim 模式：拷贝下一个特效并改写 props（preset 模式只换入口、不动 props）。
+        const label = items[idx];
+        try {
+          const {backgroundAnim, backgroundAnimKind} = prepareAnim({label, beatReactive});
+          const props = JSON.parse(readFileSync(propsFile, 'utf-8'));
+          props.backgroundAnim = backgroundAnim;
+          props.backgroundAnimKind = backgroundAnimKind;
+          writeFileSync(propsFile, JSON.stringify(props));
+        } catch (e) {
+          return send(res, 500, {error: String((e && e.message) || e)});
+        }
       }
-      currentIndex = idx; // 仅在 prepare + 写 props 成功后再提交序号推进
+      currentIndex = idx; // 仅在（bg-anim）prepare+写 props 成功后再提交序号推进
       await restartStudio();
       if (!(await waitForStudio())) {
         return send(res, 500, {error: 'studio restart timeout'});
@@ -125,8 +154,9 @@ export function startStudioControl({presetEntry, propsFile, presetLabel, beatRea
       return send(res, 200, state());
     }
     if (req.method === 'POST' && url === '/mark') {
+      if (isPreset) return send(res, 404, {error: 'mark not available in preset mode'});
       try {
-        writeFileSync(resolve('animbg', animList[currentIndex], 'blank.txt'), '');
+        writeFileSync(resolve('animbg', items[currentIndex], 'blank.txt'), '');
         return send(res, 200, {marked: true});
       } catch (e) {
         return send(res, 500, {error: String((e && e.message) || e)});

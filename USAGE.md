@@ -176,6 +176,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | --- | --- |
 | `--html` | 启动本地 **Remotion Studio** 网页预览（`http://localhost:3000`）而非渲染视频。长驻进程，按 `Ctrl+C` 停止。此模式下 `--max-size` 不生效。 |
 | `--debug-bg-anim` | 关闭 | 仅配合 `--html` 调试用：在 Studio 预览画面顶部叠加控制条，显示当前 preset / bg-anim 及其按目录名排序的序号，并提供「下一个」（切换到下一个 bg-anim 并重载 Studio）与「标记」（在该特效目录下建空文件 `blank.txt`）两个按钮。控制服务仅绑定 `127.0.0.1:3001`。 |
+| `--debug-preset` | 关闭 | 仅配合 `--html` 调试用：在 Studio 预览画面顶部叠加控制条，显示当前 preset 及其按目录名排序的序号，提供「下一个」（切换到下一个 preset、换 Studio 入口并重载）按钮，无标记按钮。与 `--debug-bg-anim` 互斥。控制服务仅绑定 `127.0.0.1:3001`。 |
 | `-h` / `--help` | 打印帮助信息。 |
 
 ## 环境变量
