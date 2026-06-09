@@ -23,7 +23,7 @@ export const Bottom: React.FC<{audioSrc: string; title: string}> = ({
 				<h1
 					style={{
 						color: 'white',
-						fontSize: 40,
+						fontSize: 32,
 						marginBottom: 0,
 						marginLeft: 20,
 					}}

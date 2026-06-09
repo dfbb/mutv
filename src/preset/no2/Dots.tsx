@@ -15,7 +15,7 @@ type Difference = {
 	y: number;
 };
 
-export const fontSize = 70;
+export const fontSize = 56;
 export const lineHeight = 2;
 export const dotSize = 20;
 export const transitionDuration = 10;

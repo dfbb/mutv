@@ -75,13 +75,13 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
             textShadow: '0 2px 20px rgba(0,0,0,0.6)',
           }}
         >
-          <div style={{fontSize: 44, fontWeight: 700, color: 'white'}}>
+          <div style={{fontSize: 35, fontWeight: 700, color: 'white'}}>
             {title}
           </div>
           {subtitle ? (
             <div
               style={{
-                fontSize: 30,
+                fontSize: 24,
                 fontWeight: 500,
                 color: 'rgba(255,255,255,0.7)',
                 marginTop: 6,
