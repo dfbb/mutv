@@ -174,7 +174,7 @@ export function startStudioControl({mode = 'bg-anim', presetEntry, propsFile, pr
   });
 
   server.listen(CONTROL_PORT, '127.0.0.1', () => {
-    console.log(`bg-anim 调试控制服务: http://localhost:${CONTROL_PORT}`);
+    console.log(`${isPreset ? 'preset' : 'bg-anim'} 调试控制服务: http://localhost:${CONTROL_PORT}`);
     spawnStudio();
   });
 }
