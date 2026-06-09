@@ -64,14 +64,6 @@
     "fetchedAt": "2026-06-06T17:09:20.049842+00:00"
   },
   {
-    "label": "click-response",
-    "name": "Click Response",
-    "category": "interactive",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/interactive/click-response",
-    "fetchedAt": "2026-06-06T17:08:47.342979+00:00"
-  },
-  {
     "label": "clouds",
     "name": "Vanta Clouds",
     "category": "backgrounds",
@@ -192,36 +184,12 @@
     "fetchedAt": "2026-06-06T17:08:35.104342+00:00"
   },
   {
-    "label": "glass-orbs",
-    "name": "Glassmorphism Orbs",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/envato-glassmorphism-orbs",
-    "fetchedAt": "2026-06-06T17:08:22.436179+00:00"
-  },
-  {
     "label": "globe",
     "name": "Vanta Globe",
     "category": "3d-webgl",
     "tech": "webgl",
     "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-globe",
     "fetchedAt": "2026-06-06T17:08:09.422159+00:00"
-  },
-  {
-    "label": "gradients",
-    "name": "Gradients",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/gradients",
-    "fetchedAt": "2026-06-06T17:08:23.667730+00:00"
-  },
-  {
-    "label": "gravity-points",
-    "name": "Gravity Points",
-    "category": "interactive",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/interactive/gravity-points",
-    "fetchedAt": "2026-06-06T17:08:49.823934+00:00"
   },
   {
     "label": "halo",
@@ -256,14 +224,6 @@
     "fetchedAt": "2026-06-06T17:08:24.863894+00:00"
   },
   {
-    "label": "kernel-panic",
-    "name": "Kernel Panic",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/kernel-panic-data-dump",
-    "fetchedAt": "2026-06-06T17:09:22.686442+00:00"
-  },
-  {
     "label": "kinetic-swarm",
     "name": "Kinetic Swarm",
     "category": "text-typography",
@@ -286,14 +246,6 @@
     "tech": "webgl",
     "sourceUrl": "https://htmlhub.org/library/3d-webgl/envato-liquid-distortion",
     "fetchedAt": "2026-06-06T17:08:05.294594+00:00"
-  },
-  {
-    "label": "liquid-metal",
-    "name": "Liquid Metal Text morph",
-    "category": "text-typography",
-    "tech": "svg",
-    "sourceUrl": "https://htmlhub.org/library/text-typography/envato-liquid-metal-text",
-    "fetchedAt": "2026-06-06T17:09:26.197505+00:00"
   },
   {
     "label": "long-shadow",
@@ -368,14 +320,6 @@
     "fetchedAt": "2026-06-06T17:09:02.234449+00:00"
   },
   {
-    "label": "parallax-skyline",
-    "name": "Parallax Skyline",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/parallax-skyline",
-    "fetchedAt": "2026-06-06T17:08:28.382919+00:00"
-  },
-  {
     "label": "particle-collision",
     "name": "Particle Collision",
     "category": "particles-systems",
@@ -446,14 +390,6 @@
     "tech": "webgl",
     "sourceUrl": "https://htmlhub.org/library/3d-webgl/vanta-rings",
     "fetchedAt": "2026-06-06T17:08:11.496200+00:00"
-  },
-  {
-    "label": "ripple",
-    "name": "Vanta Ripple",
-    "category": "backgrounds",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-ripple",
-    "fetchedAt": "2026-06-06T17:08:36.129320+00:00"
   },
   {
     "label": "rotating-spiral",
@@ -722,20 +658,6 @@
     "presetKey": "flexi + amandio c - organic [random mashup]"
   },
   {
-    "label": "flexi-amandio-2",
-    "name": "Flexi Amandio 2",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "flexi + amandio c - organic12-3d-2.milk"
-  },
-  {
-    "label": "flexi-amandio-3",
-    "name": "Flexi Amandio 3",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Flexi + amandio c - piercing 05 - Kopie (2) - Kopie"
-  },
-  {
     "label": "flexi-fishbrain",
     "name": "Flexi Fishbrain",
     "category": "WINAMP",
@@ -806,13 +728,6 @@
     "presetKey": "Flexi - mindblob [shiny mix]"
   },
   {
-    "label": "flexi-mindblob-2",
-    "name": "Flexi Mindblob 2",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Flexi - mindblob mix"
-  },
-  {
     "label": "flexi-mom",
     "name": "Flexi Mom",
     "category": "WINAMP",
@@ -827,13 +742,6 @@
     "presetKey": "flexi - patternton, district of media, capitol of the united abstractions of fractopia"
   },
   {
-    "label": "flexi-predator",
-    "name": "Flexi Predator",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Flexi - predator-prey-spirals"
-  },
-  {
     "label": "flexi-smashing",
     "name": "Flexi Smashing",
     "category": "WINAMP",
@@ -846,13 +754,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "flexi - swing out on the spiral"
-  },
-  {
-    "label": "flexi-truly",
-    "name": "Flexi Truly",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Flexi - truly soft piece of software - this is generic texturing (Jelly) "
   },
   {
     "label": "flexi-what",
@@ -939,13 +840,6 @@
     "presetKey": "high-altitude basket unraveling - singh grooves nitrogen argon nz+"
   },
   {
-    "label": "idiot-star",
-    "name": "Idiot Star",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Idiot - Star Of Annon"
-  },
-  {
     "label": "krash-illusion",
     "name": "Krash Illusion",
     "category": "WINAMP",
@@ -988,13 +882,6 @@
     "presetKey": "martin - bombyx mori"
   },
   {
-    "label": "martin-castle",
-    "name": "Martin Castle",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin - castle in the air"
-  },
-  {
     "label": "martin-chain",
     "name": "Martin Chain",
     "category": "WINAMP",
@@ -1007,13 +894,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Martin - charisma"
-  },
-  {
-    "label": "martin-disco",
-    "name": "Martin Disco",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin - disco mix 4"
   },
   {
     "label": "martin-extreme",
@@ -1063,13 +943,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Martin - liquid arrows"
-  },
-  {
-    "label": "martin-mandelbox",
-    "name": "Martin Mandelbox",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin - mandelbox explorer - high speed demo version"
   },
   {
     "label": "martin-mucus",
@@ -1128,13 +1001,6 @@
     "presetKey": "martin, flexi, fishbrain + sto - enterstate [random mashup]"
   },
   {
-    "label": "milk-artist",
-    "name": "Milk Artist",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Milk Artist At our Best - FED - SlowFast Ft AdamFX n Martin - HD CosmoFX"
-  },
-  {
     "label": "orb-waaa",
     "name": "Orb Waaa",
     "category": "WINAMP",
@@ -1168,13 +1034,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "sawtooth grin roam"
-  },
-  {
-    "label": "shifter-dark",
-    "name": "Shifter Dark",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "shifter - dark tides bdrv mix 2"
   },
   {
     "label": "suksma-heretical",

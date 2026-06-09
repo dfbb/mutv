@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve, join} from 'node:path';
-import {prepareAnim} from './animbgPrepare.mjs';
+import {prepareAnim, isBeatExcluded} from './animbgPrepare.mjs';
 
 // 在临时目录搭一个最小项目骨架，chdir 进去后调用 prepareAnim（它以 cwd 为根）。
 function withFixture(fn) {
@@ -12,9 +12,12 @@ function withFixture(fn) {
   try {
     mkdirSync(join(root, 'animbg', 'plain'), {recursive: true});
     mkdirSync(join(root, 'animbg', 'libfx'), {recursive: true});
+    mkdirSync(join(root, 'animbg', 'clouds'), {recursive: true});
     mkdirSync(join(root, 'animbg', 'vendor'), {recursive: true});
     mkdirSync(join(root, 'public'), {recursive: true});
     writeFileSync(join(root, 'animbg', 'plain', 'index.html'),
+      '<html><body><canvas></canvas></body></html>');
+    writeFileSync(join(root, 'animbg', 'clouds', 'index.html'),
       '<html><body><canvas></canvas></body></html>');
     writeFileSync(join(root, 'animbg', 'libfx', 'index.html'),
       '<html><body><script src="../vendor/p5.min.js"></script></body></html>');
@@ -71,4 +74,30 @@ test('prepareAnim: 不存在的 label → 抛错', () => {
   withFixture(() => {
     assert.throws(() => prepareAnim({label: 'nope', beatReactive: false}), /not found/);
   });
+});
+
+test('prepareAnim: beat 排除列表的特效即使 beatReactive=true 也不注入 beat', () => {
+  withFixture(() => {
+    prepareAnim({label: 'clouds', beatReactive: true});
+    const out = readFileSync(resolve('public', 'animbg', 'animbg-clouds.html'), 'utf-8');
+    assert.ok(!out.includes('__beatTick'), 'clouds 应被排除，不注入 beat');
+  });
+});
+
+test('isBeatExcluded: 精确名(net/net-dots/cartoon/clouds/clouds2)被排除', () => {
+  for (const l of ['net', 'net-dots', 'cartoon', 'clouds', 'clouds2']) {
+    assert.equal(isBeatExcluded(l), true, l);
+  }
+});
+
+test('isBeatExcluded: particle-/supernova 前缀被排除', () => {
+  for (const l of ['particle-collision', 'particle-dots', 'particle-x', 'supernova', 'supernova-2']) {
+    assert.equal(isBeatExcluded(l), true, l);
+  }
+});
+
+test('isBeatExcluded: 其他特效(含 abstract-particles/network/clouds-x)不排除', () => {
+  for (const l of ['plain', 'ribbons', 'abstract-particles', 'network', 'clouds-x']) {
+    assert.equal(isBeatExcluded(l), false, l);
+  }
 });

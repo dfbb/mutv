@@ -127,7 +127,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-image-trans <组>` | `soft` | 轮播转场风格组：`soft`（柔和淡入淡出/滑动/缩放）、`cool`（翻页/扭曲/炫彩）、`hard`（故障/像素化/燃烧）。 |
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
-| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。 |
+| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
 
 ### 背景图轮播与缩放规则
 
@@ -175,6 +175,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | 参数 | 说明 |
 | --- | --- |
 | `--html` | 启动本地 **Remotion Studio** 网页预览（`http://localhost:3000`）而非渲染视频。长驻进程，按 `Ctrl+C` 停止。此模式下 `--max-size` 不生效。 |
+| `--debug-bg-anim` | 关闭 | 仅配合 `--html` 调试用：在 Studio 预览画面顶部叠加控制条，显示当前 preset / bg-anim 及其按目录名排序的序号，并提供「下一个」（切换到下一个 bg-anim 并重载 Studio）与「标记」（在该特效目录下建空文件 `blank.txt`）两个按钮。控制服务仅绑定 `127.0.0.1:3001`。 |
 | `-h` / `--help` | 打印帮助信息。 |
 
 ## 环境变量
@@ -227,13 +228,13 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 ## 动画背景特效（bg-anim）列表
 
-> 默认所有 bg-anim 均带节拍反应（随音乐起伏）。如需静态背景，加 `--no-bg-anim-beat`。
+> 默认大多数 bg-anim 带节拍反应（随音乐起伏）。如需静态背景，加 `--no-bg-anim-beat`。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，已默认排除，不受 beat 影响。
 
-用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 71 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
+用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 63 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
 
-> 部分特效原本依赖鼠标移动才会动（如 `mouse-trails`、`gravity-points`）。渲染时检测到这类特效会自动注入一个“虚拟鼠标”脚本，按随机平滑曲线轨迹模拟光标移动，无需真实鼠标即可让特效动起来。
+> 部分特效原本依赖鼠标移动才会动（如 `mouse-trails`）。渲染时检测到这类特效会自动注入一个“虚拟鼠标”脚本，按随机平滑曲线轨迹模拟光标移动，无需真实鼠标即可让特效动起来。
 
-> **WINAMP 分类**：100 个移植自 butterchurn（Milkdrop）的经典音乐可视化 preset，用 `--bg-anim <两词名>` 选择（如 `--bg-anim royal-mashup`）。它们由当前歌曲音频实时驱动（离线 FFT 注入），无需 `--bg-anim-beat`（本身即音频反应）。完整 label 见 `src/animbg/manifest.json` 中 category=WINAMP 的条目。
+> **WINAMP 分类**：89 个移植自 butterchurn（Milkdrop）的经典音乐可视化 preset，用 `--bg-anim <两词名>` 选择（如 `--bg-anim royal-mashup`）。它们由当前歌曲音频实时驱动（离线 FFT 注入），无需 `--bg-anim-beat`（本身即音频反应）。完整 label 见 `src/animbg/manifest.json` 中 category=WINAMP 的条目。
 
 ### 3D & WebGL
 
@@ -259,14 +260,10 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `clouds` | 缓缓飘移的 3D 云层 | webgl |
 | `clouds2` | 云层变体，更厚重的天空质感 | webgl |
 | `fog` | 弥漫流动的雾气 | webgl |
-| `glass-orbs` | 玻璃拟态光球漂浮 | canvas |
-| `gradients` | 平滑流动的渐变色彩 | canvas |
 | `interactive-stars` | 可交互的星点闪烁 | canvas |
 | `liquid-blobs` | 液态融球变形蠕动 | canvas |
 | `meteor` | 流星雨划过夜空 | canvas |
-| `parallax-skyline` | 视差城市天际线 | canvas |
 | `ribbons` | 彩色丝带飘舞 | canvas |
-| `ripple` | 水面涟漪扩散 | webgl |
 | `rotating-spiral` | 旋转的螺旋图案 | canvas |
 | `star-genesis` | 星辰诞生的粒子聚合 | canvas |
 | `symbolic-gyre` | 符号环绕的旋涡 | canvas |
@@ -289,9 +286,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 | label | 效果简介 | tech |
 | --- | --- | --- |
-| `click-response` | 点击响应的涟漪反馈 | canvas |
 | `data-tunnel` | 3D 透视数据隧道 | canvas |
-| `gravity-points` | 引力点吸引粒子运动 | canvas |
 | `long-shadow` | 长投影几何动画 | canvas |
 | `mouse-trails` | 磁吸鼠标拖尾 | canvas |
 
@@ -326,7 +321,6 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `crt-boot` | CRT 显示器开机序列 | canvas |
 | `fiber-optics` | 赛博光纤数据传输 | canvas |
 | `hyperspace-corridor` | 超空间走廊穿梭 | canvas |
-| `kernel-panic` | 内核崩溃数据转储 | canvas |
 | `neon-hexagons` | 霓虹六边形图案 | canvas |
 | `pixel-flow` | 动态像素流 | canvas |
 | `synthwave-grid` | 合成波网格飞驰 | canvas |
@@ -339,4 +333,3 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `financial-stream` | 金融数据流滚动 | canvas |
 | `hex-wave` | 十六进制代码波浪 | canvas |
 | `kinetic-swarm` | 动态文字集群 | canvas |
-| `liquid-metal` | 液态金属文字变形 | svg |
