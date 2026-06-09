@@ -33,6 +33,7 @@ import {execSync, spawn} from 'child_process';
 import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
 import {prepareAnim} from './animbgPrepare.mjs';
+import {startStudioControl} from './studioControl.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
 import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
 import {homedir} from 'os';
@@ -222,7 +223,7 @@ function getAudioDuration(filePath) {
 
 function parseArgs(argv) {
   // Flags that take no value (presence = true)
-  const booleanFlags = new Set(['html', 'no-bg-anim-beat']);
+  const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim']);
   const args = {};
   for (let i = 2; i < argv.length; i++) {
     const key = argv[i];
@@ -526,14 +527,20 @@ if (args.html) {
   console.log('  A browser tab will open at http://localhost:3000 (Composition: MusicVideo).');
   console.log('  Press Ctrl+C to stop the server.\n');
 
-  // Inherit stdio so Studio's "Server ready - Local: http://localhost:3000" line is shown live.
-  const studio = spawn(
-    'npx',
-    ['remotion', 'studio', presetEntry, `--props=${propsFile}`],
-    {stdio: 'inherit'}
-  );
-  studio.on('exit', (code) => process.exit(code ?? 0));
   // Do NOT delete the props file here — Studio needs it while running.
+  if (args['debug-bg-anim']) {
+    // 调试模式：由控制服务接管 studio 子进程，并提供 bg-anim 切换/标记。
+    console.log('  bg-anim 调试控制条已启用（叠加在预览画面上）。');
+    startStudioControl({presetEntry, propsFile, presetLabel, beatReactive, prepareAnim});
+  } else {
+    // Inherit stdio so Studio's "Server ready" line is shown live.
+    const studio = spawn(
+      'npx',
+      ['remotion', 'studio', presetEntry, `--props=${propsFile}`],
+      {stdio: 'inherit'}
+    );
+    studio.on('exit', (code) => process.exit(code ?? 0));
+  }
 } else {
 
 const {path: browserExe, chromeMode} = findBrowserExecutable(args.browser);
