@@ -27,3 +27,8 @@ src/public/
 
 # Brainstorming visual companion
 .superpowers/
+dup/
+__pycache__
+
+# Local font library (~2GB woff2/jpg 源材料；构建脚本在 scripts/fonts/)
+font/
