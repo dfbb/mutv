@@ -29,6 +29,7 @@
  *   --bg-video    Background video file (mutually exclusive)
  *   --bg-anim     Animated background effect label (see src/animbg/), or 'random' (mutually exclusive)
  *   --no-bg-anim-beat  Disable beat-reactive animation for --bg-anim (default: enabled)
+ *   --font        字体名(font/<lang>/ 下 woff2 去扩展名)或 'random'；按歌词语言自动选 en/zh_CN/zh_TW/kr/ja 目录
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
  *   --preset      Visual template under preset/<label>/ (default: orig), or 'random'
  *   --res         Output resolution WxH (default: 1080x720)
@@ -117,6 +118,7 @@ if (opts['bg-image-trans']) nodeArgs.push('--bg-image-trans', opts['bg-image-tra
 if (opts['bg-video']) nodeArgs.push('--bg-video', resolve(opts['bg-video']));
 if (opts['bg-anim']) nodeArgs.push('--bg-anim', opts['bg-anim']);
 if (opts['no-bg-anim-beat']) nodeArgs.push('--no-bg-anim-beat');
+if (opts.font) nodeArgs.push('--font', opts.font);
 if (opts.browser) nodeArgs.push('--browser', opts.browser);
 if (opts.res) nodeArgs.push('--res', opts.res);
 if (opts.fps) nodeArgs.push('--fps', opts.fps);

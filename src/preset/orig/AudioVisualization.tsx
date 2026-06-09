@@ -12,6 +12,7 @@ import {useAudioData, visualizeAudio} from '@remotion/media-utils';
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 
 export const AudioVisualization: React.FC<MVInputProps> = ({
   audioFileName,
@@ -26,9 +27,12 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   backgroundCarousel,
   backgroundAnimBeat,
   backgroundAnimKind,
+  fontFamily,
+  fontFile,
 }) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames} = useVideoConfig();
+  const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -94,6 +98,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
         overlay="rgba(0, 0, 0, 0.45)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       {/* Radial glow effect */}
       <AbsoluteFill
@@ -203,7 +208,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
               opacity: titleOpacity,
               transform: `translateY(${titleY}px)`,
               textShadow: `0 0 40px hsla(${hue}, 100%, 70%, 0.8), 0 4px 20px rgba(0,0,0,0.5)`,
-              fontFamily: '"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif',
+              fontFamily: ff('"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif'),
               marginBottom: 10,
             }}
           >
@@ -217,7 +222,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
               opacity: titleOpacity,
               transform: `translateY(${titleY}px)`,
               textShadow: `0 0 30px hsla(${hue + 60}, 100%, 70%, 0.6), 0 2px 10px rgba(0,0,0,0.5)`,
-              fontFamily: '"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif',
+              fontFamily: ff('"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif'),
               letterSpacing: '4px',
             }}
           >
@@ -245,7 +250,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
               opacity: lyricProgress,
               transform: `translateY(${(1 - lyricProgress) * 30}px)`,
               textShadow: `0 0 40px hsla(${hue}, 100%, 70%, 0.8), 0 4px 30px rgba(0,0,0,0.9)`,
-              fontFamily: '"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif',
+              fontFamily: ff('"Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK TC", "Noto Sans CJK KR", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", "Droid Sans Fallback", "Source Han Sans SC", "Microsoft YaHei", "SimHei", "Hiragino Sans GB", Arial, Helvetica, sans-serif'),
               lineHeight: 1.5,
               padding: '25px 50px',
               background: `linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2))`,

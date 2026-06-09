@@ -62,7 +62,8 @@ export const Lyrics: React.FC<{
   lyrics: LyricLine[];
   lyricOffset: number;
   fps: number;
-}> = ({lyrics, lyricOffset, fps}) => {
+  fontFamily?: string;
+}> = ({lyrics, lyricOffset, fps, fontFamily}) => {
   const frame = useCurrentFrame();
   const time = frame / fps;
 
@@ -101,8 +102,9 @@ export const Lyrics: React.FC<{
     <AbsoluteFill
       style={{
         overflow: 'hidden',
-        fontFamily:
-          '"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, sans-serif',
+        fontFamily: fontFamily
+          ? `"${fontFamily}", "Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, sans-serif`
+          : '"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, sans-serif',
       }}
     >
       <div

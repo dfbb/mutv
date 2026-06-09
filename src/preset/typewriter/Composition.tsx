@@ -10,6 +10,7 @@ import {
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 import {lyricsToData, LyricsLine} from '../lyricsToData';
 
 // Typewriter / retro lyric overlay (ported from ai-music-video-maker's
@@ -25,7 +26,8 @@ const TypewriterLine: React.FC<{
   frame: number;
   fps: number;
   fontSize: number;
-}> = ({line, frame, fps, fontSize}) => {
+  fontFamily?: string;
+}> = ({line, frame, fps, fontSize, fontFamily}) => {
   const lineStartFrame = line.lineStart * fps;
   const lineEndFrame = line.lineEnd * fps;
   if (frame < lineStartFrame || frame > lineEndFrame + 45) return null;
@@ -101,7 +103,9 @@ const TypewriterLine: React.FC<{
       <span
         style={{
           fontSize,
-          fontFamily: '"Courier Prime", "Courier New", monospace',
+          fontFamily: fontFamily
+            ? `"${fontFamily}", "Courier Prime", "Courier New", monospace`
+            : '"Courier Prime", "Courier New", monospace',
           letterSpacing: '0.02em',
           lineHeight: 1.4,
         }}
@@ -136,6 +140,8 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
   backgroundAnimKind,
   lyrics,
   lyricOffset,
+  fontFamily,
+  fontFile,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
@@ -157,12 +163,13 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
         fallbackGradient="linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       <Audio src={audioSrc} />
 
       <div style={{position: 'absolute', top: '50%', left: 40, right: 40, transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 20}}>
         {data.lines.map((line, index) => (
-          <TypewriterLine key={index} line={line} frame={frame} fps={fps} fontSize={fontSize} />
+          <TypewriterLine key={index} line={line} frame={frame} fps={fps} fontSize={fontSize} fontFamily={fontFamily} />
         ))}
       </div>
     </AbsoluteFill>

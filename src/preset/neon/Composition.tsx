@@ -13,6 +13,7 @@ import {
 import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
+import {FontLoader} from '../FontLoader';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Neon / cyberpunk lyric overlay (ported from ai-music-video-maker's
@@ -148,16 +149,19 @@ export const NeonComposition: React.FC<MVInputProps> = ({
   backgroundCarousel,
   lyrics,
   lyricOffset,
+  fontFamily,
+  fontFile,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const data = lyricsToData(lyrics, lyricOffset);
   const fontSize = Math.round(height * 0.055);
+  const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
 
   return (
-    <AbsoluteFill style={{fontFamily: '"Orbitron", "Rajdhani", system-ui, sans-serif', backgroundColor: '#0a0014'}}>
+    <AbsoluteFill style={{fontFamily: ff('"Orbitron", "Rajdhani", system-ui, sans-serif'), backgroundColor: '#0a0014'}}>
       <BackgroundLayer
         backgroundVideo={backgroundVideo}
         backgroundImage={backgroundImage}
@@ -166,6 +170,7 @@ export const NeonComposition: React.FC<MVInputProps> = ({
         fallbackGradient="linear-gradient(135deg, #1a0033 0%, #0a0014 60%, #05000a 100%)"
       />
       <StudioControlBar />
+      <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
 
       <Audio src={audioSrc} />
 

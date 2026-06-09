@@ -128,6 +128,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
 | `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
+| `--font <名\|random>` | 无（用各 preset 内置字体） | 指定文字字体。先按歌词（srt/lrc）语言自动选字库目录：英语/欧洲语言→`en`、简体中文→`zh_CN`、繁体中文→`zh_TW`、韩语→`kr`、日语→`ja`（检测不出或无对应目录→回退 `en`）。值为该目录下 woff2 文件名（去扩展名，如 `Pretendard-Regular`），或 `random` 随机选一个。选中字体经 `@font-face` 加载并前置到各 preset 字体栈。依赖本地 `font/` 目录（已 gitignore，未随仓库分发）。 |
 
 ### 背景图轮播与缩放规则
 
