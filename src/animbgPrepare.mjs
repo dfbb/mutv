@@ -4,7 +4,7 @@ import {needsVirtualMouse, injectVirtualMouse, injectBeatClock} from './animbgIn
 
 // 这些特效不适合节拍「抖动」（beat 时钟按鼓点加速时间轴会让它们顿挫/抖动），
 // 即使开了 beatReactive 也跳过 beat 注入。精确名 + 前缀两种匹配。
-const BEAT_EXCLUDE_EXACT = new Set(['net', 'net-dots', 'cartoon', 'clouds', 'clouds2']);
+const BEAT_EXCLUDE_EXACT = new Set(['net', 'net-dots', 'cartoon', 'clouds']);
 const BEAT_EXCLUDE_PREFIX = ['particle-', 'supernova'];
 
 /** 该特效是否应排除 beat 注入。 */

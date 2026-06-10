@@ -126,7 +126,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-image-trans <组>` | `soft` | 轮播转场风格组：`soft`（柔和淡入淡出/滑动/缩放）、`cool`（翻页/扭曲/炫彩）、`hard`（故障/像素化/燃烧）。 |
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
-| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
+| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
 | `--font <名\|random>` | 无（用各 preset 内置字体） | 指定文字字体。先按歌词（srt/lrc）语言自动选字库目录：英语/欧洲语言→`en`、简体中文→`zh_CN`、繁体中文→`zh_TW`、韩语→`kr`、日语→`ja`（检测不出或无对应目录→回退 `en`）。值为该目录下 woff2 文件名（去扩展名，如 `Pretendard-Regular`），或 `random` 随机选一个。选中字体经 `@font-face` 加载并前置到各 preset 字体栈。依赖本地 `font/` 目录（已 gitignore，未随仓库分发）。 |
 | `--font-scale <n>` | `1` | 字号倍率，整体放大/缩小**所有文字**（标题/歌词/署名等比缩放），不改变排版比例。`1`=跟随 preset 原样，`1.5`=放大 50%，`0.8`=缩小。非正数回退 `1`，并 clamp 到 `[0.1, 10]`。所有 preset 一致生效，与 `--font` 正交。 |
 | `--font-fg-color <色>` | 无（用各 preset 内置配色） | 文字填充色，作用于**所有文字**。支持 `R:G:B`（各 0-255，如 `212:122:33`）和 CSS 颜色名（如 `white`、`blue`）。设置后强制覆盖 preset 自身配色（含 `ktv` 的逐字变色、`neon` 的霓虹色等动态效果）。非法值警告并忽略。 |
@@ -233,13 +233,13 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 ## 动画背景特效（bg-anim）列表
 
-> 默认大多数 bg-anim 带节拍反应（随音乐起伏）。如需静态背景，加 `--no-bg-anim-beat`。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，已默认排除，不受 beat 影响。
+> 默认大多数 bg-anim 带节拍反应（随音乐起伏）。如需静态背景，加 `--no-bg-anim-beat`。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`particle-*`、`supernova`）不适合节拍抖动，已默认排除，不受 beat 影响。
 
-用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 63 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
+用 `--bg-anim <label>` 选择，传 `random` 随机选一个。共 57 个，按类别分组（`tech` 列：canvas / webgl / svg 渲染方式）。
 
 > 部分特效原本依赖鼠标移动才会动（如 `mouse-trails`）。渲染时检测到这类特效会自动注入一个“虚拟鼠标”脚本，按随机平滑曲线轨迹模拟光标移动，无需真实鼠标即可让特效动起来。
 
-> **WINAMP 分类**：89 个移植自 butterchurn（Milkdrop）的经典音乐可视化 preset，用 `--bg-anim <两词名>` 选择（如 `--bg-anim royal-mashup`）。它们由当前歌曲音频实时驱动（离线 FFT 注入），无需 `--bg-anim-beat`（本身即音频反应）。完整 label 见 `src/animbg/manifest.json` 中 category=WINAMP 的条目。
+> **WINAMP 分类**：74 个移植自 butterchurn（Milkdrop）的经典音乐可视化 preset，用 `--bg-anim <两词名>` 选择（如 `--bg-anim royal-mashup`）。它们由当前歌曲音频实时驱动（离线 FFT 注入），无需 `--bg-anim-beat`（本身即音频反应）。完整 label 见 `src/animbg/manifest.json` 中 category=WINAMP 的条目。
 
 ### 3D & WebGL
 
@@ -263,12 +263,10 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `ascendant-light` | 自下而上升腾的光束氛围 | canvas |
 | `aurora` | 极光在夜空中飘舞 | canvas |
 | `clouds` | 缓缓飘移的 3D 云层 | webgl |
-| `clouds2` | 云层变体，更厚重的天空质感 | webgl |
 | `fog` | 弥漫流动的雾气 | webgl |
 | `interactive-stars` | 可交互的星点闪烁 | canvas |
 | `liquid-blobs` | 液态融球变形蠕动 | canvas |
 | `meteor` | 流星雨划过夜空 | canvas |
-| `ribbons` | 彩色丝带飘舞 | canvas |
 | `rotating-spiral` | 旋转的螺旋图案 | canvas |
 | `star-genesis` | 星辰诞生的粒子聚合 | canvas |
 | `symbolic-gyre` | 符号环绕的旋涡 | canvas |
@@ -278,9 +276,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 | label | 效果简介 | tech |
 | --- | --- | --- |
-| `bouncing-balloons` | 弹跳的 SVG 气球 | canvas |
 | `cartoon` | 卡通风格动画元素 | canvas |
-| `confetti` | 五彩纸屑喷射 | canvas |
 | `falling-confetti` | 飘落的纸屑雨 | canvas |
 | `fireworks` | 绽放的烟花 | canvas |
 | `fizzy-sparks` | 嘶嘶作响的火花气泡 | canvas |
@@ -322,12 +318,10 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | label | 效果简介 | tech |
 | --- | --- | --- |
 | `circuit-tracers` | 电路板走线追踪 | canvas |
-| `crimson-glitch` | 猩红故障数据流 | canvas |
 | `crt-boot` | CRT 显示器开机序列 | canvas |
 | `fiber-optics` | 赛博光纤数据传输 | canvas |
 | `hyperspace-corridor` | 超空间走廊穿梭 | canvas |
 | `neon-hexagons` | 霓虹六边形图案 | canvas |
-| `pixel-flow` | 动态像素流 | canvas |
 | `synthwave-grid` | 合成波网格飞驰 | canvas |
 | `system-breach` | 系统入侵破坏特效 | canvas |
 

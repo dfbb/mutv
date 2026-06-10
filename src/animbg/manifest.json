@@ -32,14 +32,6 @@
     "fetchedAt": "2026-06-06T17:08:07.273068+00:00"
   },
   {
-    "label": "bouncing-balloons",
-    "name": "Bouncing SVG Balloons",
-    "category": "celebration",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/celebration/envato-bouncing-balloons",
-    "fetchedAt": "2026-06-06T17:08:40.313743+00:00"
-  },
-  {
     "label": "cartoon",
     "name": "Cartoon",
     "category": "celebration",
@@ -72,36 +64,12 @@
     "fetchedAt": "2026-06-06T17:08:30.616548+00:00"
   },
   {
-    "label": "clouds2",
-    "name": "Vanta Clouds 2",
-    "category": "backgrounds",
-    "tech": "webgl",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/vanta-clouds2",
-    "fetchedAt": "2026-06-06T17:08:31.629790+00:00"
-  },
-  {
-    "label": "confetti",
-    "name": "Confetti",
-    "category": "celebration",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/celebration/confetti",
-    "fetchedAt": "2026-06-06T17:08:39.165754+00:00"
-  },
-  {
     "label": "cosmic",
     "name": "Cosmic",
     "category": "particles-systems",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/particles-systems/cosmic",
     "fetchedAt": "2026-06-06T17:08:55.146499+00:00"
-  },
-  {
-    "label": "crimson-glitch",
-    "name": "Crimson Glitch Stream",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/1-crimson-glitch-stream",
-    "fetchedAt": "2026-06-06T17:09:13.137678+00:00"
   },
   {
     "label": "crt-boot",
@@ -360,28 +328,12 @@
     "fetchedAt": "2026-06-06T17:09:07.023394+00:00"
   },
   {
-    "label": "pixel-flow",
-    "name": "Dynamic Pixel Flow",
-    "category": "retro-cyberpunk",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/retro-cyberpunk/animated-background-dynamic-pixel-flow",
-    "fetchedAt": "2026-06-06T17:09:15.572334+00:00"
-  },
-  {
     "label": "quantum-mesh",
     "name": "Quantum Node Mesh",
     "category": "particles-systems",
     "tech": "canvas",
     "sourceUrl": "https://htmlhub.org/library/particles-systems/envato-quantum-mesh",
     "fetchedAt": "2026-06-06T17:08:59.941508+00:00"
-  },
-  {
-    "label": "ribbons",
-    "name": "Colorful Ribbons",
-    "category": "backgrounds",
-    "tech": "canvas",
-    "sourceUrl": "https://htmlhub.org/library/backgrounds/colorful-ribbons",
-    "fetchedAt": "2026-06-06T17:08:21.277300+00:00"
   },
   {
     "label": "rings",
@@ -539,13 +491,6 @@
     "presetKey": "_Geiss - Artifact 01"
   },
   {
-    "label": "geiss-desert",
-    "name": "Geiss Desert",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "_Geiss - Desert Rose 2"
-  },
-  {
     "label": "geiss-untitled",
     "name": "Geiss Untitled",
     "category": "WINAMP",
@@ -565,13 +510,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "_Mig_085"
-  },
-  {
-    "label": "rovastar-geiss",
-    "name": "Rovastar Geiss",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "_Rovastar + Geiss - Hurricane Nightmare (Posterize Mix)"
   },
   {
     "label": "aderrasi-geiss",
@@ -616,13 +554,6 @@
     "presetKey": "cope + martin - mother-of-pearl"
   },
   {
-    "label": "cope-the",
-    "name": "Cope The",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Cope - The Neverending Explosion of Red Liquid Fire"
-  },
-  {
     "label": "eo-s",
     "name": "Eo S",
     "category": "WINAMP",
@@ -635,13 +566,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Eo.S. + Zylot - skylight (Stained Glass Majesty mix)"
-  },
-  {
-    "label": "eo-s-3",
-    "name": "Eo S 3",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Eo.S. - glowsticks v2 05 and proton lights (+Krash′s beat code) _Phat_remix02b"
   },
   {
     "label": "fishbrain-flexi",
@@ -714,25 +638,11 @@
     "presetKey": "flexi - bouncing balls [double mindblob neon mix]"
   },
   {
-    "label": "flexi-infused",
-    "name": "Flexi Infused",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Flexi - infused with the spiral"
-  },
-  {
     "label": "flexi-mindblob",
     "name": "Flexi Mindblob",
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Flexi - mindblob [shiny mix]"
-  },
-  {
-    "label": "flexi-mom",
-    "name": "Flexi Mom",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "flexi - mom, why the sky looks different today"
   },
   {
     "label": "flexi-patternton",
@@ -819,13 +729,6 @@
     "presetKey": "Geiss - Thumb Drum"
   },
   {
-    "label": "geiss-flexi-2",
-    "name": "Geiss Flexi 2",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Geiss, Flexi + Stahlregen - Thumbdrum Tokamak [crossfiring aftermath jelly mashup]"
-  },
-  {
     "label": "goody-the",
     "name": "Goody The",
     "category": "WINAMP",
@@ -833,25 +736,11 @@
     "presetKey": "Goody - The Wild Vort"
   },
   {
-    "label": "high-altitude",
-    "name": "High Altitude",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "high-altitude basket unraveling - singh grooves nitrogen argon nz+"
-  },
-  {
     "label": "krash-illusion",
     "name": "Krash Illusion",
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Krash + Illusion - Spiral Movement"
-  },
-  {
-    "label": "martin-flexi",
-    "name": "Martin Flexi",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin + flexi - diamond cutter [prismaticvortex.com] - camille - i wish i wish i wish i was constrained"
   },
   {
     "label": "martin-acid",
@@ -896,13 +785,6 @@
     "presetKey": "Martin - charisma"
   },
   {
-    "label": "martin-extreme",
-    "name": "Martin Extreme",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin - extreme heat"
-  },
-  {
     "label": "martin-frosty",
     "name": "Martin Frosty",
     "category": "WINAMP",
@@ -915,13 +797,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "martin - fruit machine"
-  },
-  {
-    "label": "martin-ghost",
-    "name": "Martin Ghost",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin - ghost city"
   },
   {
     "label": "martin-glass",
@@ -943,13 +818,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Martin - liquid arrows"
-  },
-  {
-    "label": "martin-mucus",
-    "name": "Martin Mucus",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin - mucus cervix"
   },
   {
     "label": "martin-qbikal",
@@ -994,13 +862,6 @@
     "presetKey": "martin [shadow harlequins shape code] - fata morgana"
   },
   {
-    "label": "martin-flexi-2",
-    "name": "Martin Flexi 2",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "martin, flexi, fishbrain + sto - enterstate [random mashup]"
-  },
-  {
     "label": "orb-waaa",
     "name": "Orb Waaa",
     "category": "WINAMP",
@@ -1027,13 +888,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Rovastar - Oozing Resistance"
-  },
-  {
-    "label": "sawtooth-grin",
-    "name": "Sawtooth Grin",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "sawtooth grin roam"
   },
   {
     "label": "suksma-heretical",
@@ -1090,13 +944,6 @@
     "category": "WINAMP",
     "tech": "webgl",
     "presetKey": "Unchained - Rewop"
-  },
-  {
-    "label": "unchained-unified",
-    "name": "Unchained Unified",
-    "category": "WINAMP",
-    "tech": "webgl",
-    "presetKey": "Unchained - Unified Drag 2"
   },
   {
     "label": "yin-temporal",

@@ -84,8 +84,8 @@ test('prepareAnim: beat 排除列表的特效即使 beatReactive=true 也不注�
   });
 });
 
-test('isBeatExcluded: 精确名(net/net-dots/cartoon/clouds/clouds2)被排除', () => {
-  for (const l of ['net', 'net-dots', 'cartoon', 'clouds', 'clouds2']) {
+test('isBeatExcluded: 精确名(net/net-dots/cartoon/clouds)被排除', () => {
+  for (const l of ['net', 'net-dots', 'cartoon', 'clouds']) {
     assert.equal(isBeatExcluded(l), true, l);
   }
 });
