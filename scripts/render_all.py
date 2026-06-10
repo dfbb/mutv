@@ -2,7 +2,7 @@
 """把所有 bg-anim 各渲染一遍，输出 out/render_all/<label>.mp4（720x480）。
 
 每个 bg-anim 固定为该 label，preset 与 font 随机（沿用基准命令）：
-    node src/cli.mjs --audio example/cn-2.mp3 --lyrics example/cn-2.srt \\
+    node src/cli.mjs --audio example/cn-3.mp3 --lyrics example/cn-3.srt \\
         --title "歌名" --preset random --bg-anim <label> --font random \\
         --res 720x480 --output out/render_all/<label>.mp4
 
@@ -19,8 +19,8 @@ REPO = Path(__file__).resolve().parents[1]
 ANIMBG = REPO / "src" / "animbg"
 OUT_DIR = REPO / "out" / "render_all"
 
-AUDIO = "example/cn-2.mp3"
-LYRICS = "example/cn-2.srt"
+AUDIO = "example/cn-3.mp3"
+LYRICS = "example/cn-3.srt"
 TITLE = "歌名"
 RES = "720x480"
 
