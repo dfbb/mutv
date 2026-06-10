@@ -1,4 +1,4 @@
-import {AbsoluteFill, Audio, staticFile} from 'remotion';
+import {AbsoluteFill, Audio, staticFile, useVideoConfig} from 'remotion';
 import {Bottom} from './Bottom';
 import {fontSize} from './Dots';
 import {Subtitles} from './Subtitles';
@@ -22,6 +22,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	fontFile,
 }) => {
 	const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
+	const {height} = useVideoConfig();
 	const audioSrc = audioFileName.startsWith('http')
 		? audioFileName
 		: staticFile(audioFileName);
@@ -29,7 +30,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	return (
 		<AbsoluteFill
 			style={{
-				fontSize,
+				fontSize: Math.round((fontSize * height) / 720),
 				fontFamily: ff(
 					'"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
 				),

@@ -23,6 +23,7 @@
  *   --offset      Lyric timing offset in seconds (default: -0.5)
  *   --output      Output file path (default: out/<audio_basename>.mp4)
  *   --codec       h264|h265|vp8|vp9 (default: h264)
+ *   --crf         视频质量/体积(libx264 -crf，默认 23；越大越小越糊，常用 20-28)
  *   --bg-image    Background image file OR directory (multi-image = transition slideshow)
  *   --bg-image-intvl  Seconds each carousel image holds (default 5)
  *   --bg-image-trans  Carousel transition group: soft|cool|hard (default soft)
@@ -106,6 +107,7 @@ const nodeArgs = [
   '--offset', opts.offset || '-0.5',
   '--output', output,
   '--codec', opts.codec || 'h264',
+  '--crf', opts.crf || '23',
   '--preset', opts.preset || 'orig',
 ];
 if (opts.lyrics) nodeArgs.push('--lyrics', resolve(opts.lyrics));

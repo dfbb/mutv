@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import {LyricLine} from '../../types';
 
 const LINE_HEIGHT = 130; // vertical spacing between lines (px)
@@ -65,6 +65,7 @@ export const Lyrics: React.FC<{
   fontFamily?: string;
 }> = ({lyrics, lyricOffset, fps, fontFamily}) => {
   const frame = useCurrentFrame();
+  const {height} = useVideoConfig();
   const time = frame / fps;
 
   if (!lyrics || lyrics.length === 0) return null;
@@ -131,7 +132,7 @@ export const Lyrics: React.FC<{
                 left: 0,
                 right: 0,
                 color: 'white',
-                fontSize: 58,
+                fontSize: Math.round((58 * height) / 720),
                 fontWeight: 700,
                 lineHeight: 1.15,
                 transformOrigin: 'left center',

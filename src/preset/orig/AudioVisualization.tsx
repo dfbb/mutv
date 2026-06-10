@@ -31,8 +31,10 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   fontFile,
 }) => {
   const frame = useCurrentFrame();
-  const {fps, durationInFrames} = useVideoConfig();
+  const {fps, durationInFrames, height} = useVideoConfig();
   const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
+  // 字号按高度相对基准 720 缩放，使低分辨率下文字不至于过大。
+  const fs = (px: number) => Math.round((px * height) / 720);
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -202,7 +204,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
         >
           <div
             style={{
-              fontSize: 96,
+              fontSize: fs(96),
               fontWeight: 'bold',
               color: 'white',
               opacity: titleOpacity,
@@ -216,7 +218,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
           </div>
           <div
             style={{
-              fontSize: 56,
+              fontSize: fs(56),
               fontWeight: '600',
               color: 'rgba(255,255,255,0.95)',
               opacity: titleOpacity,
@@ -242,7 +244,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
         >
           <div
             style={{
-              fontSize: 48,
+              fontSize: fs(48),
               fontWeight: '600',
               color: 'white',
               textAlign: 'center',
@@ -275,7 +277,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
       >
         <div
           style={{
-            fontSize: 32,
+            fontSize: fs(32),
             fontWeight: '500',
             color: 'white',
             opacity: 0.8,

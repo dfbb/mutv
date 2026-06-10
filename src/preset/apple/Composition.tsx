@@ -37,8 +37,9 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
   fontFile,
 }) => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
+  const {fps, height} = useVideoConfig();
   const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
+  const fs = (px: number) => Math.round((px * height) / 720);
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -81,13 +82,13 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
             textShadow: '0 2px 20px rgba(0,0,0,0.6)',
           }}
         >
-          <div style={{fontSize: 35, fontWeight: 700, color: 'white'}}>
+          <div style={{fontSize: fs(35), fontWeight: 700, color: 'white'}}>
             {title}
           </div>
           {subtitle ? (
             <div
               style={{
-                fontSize: 24,
+                fontSize: fs(24),
                 fontWeight: 500,
                 color: 'rgba(255,255,255,0.7)',
                 marginTop: 6,

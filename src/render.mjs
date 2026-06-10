@@ -552,6 +552,9 @@ const inputProps = {
 
 const output = args.output ? resolveFilePath(args.output) : 'out/video.mp4';
 const codec = args.codec || 'h264';
+// CRF：质量/体积权衡。Remotion 默认 h264 CRF 18（高质量大体积），导致繁忙
+// bg-anim 视频体积过大且波动大。默认 23（视觉近无损、体积约减半），可 --crf 调。
+const crf = args.crf || '23';
 
 // Write props to temp file to avoid shell escaping issues
 const propsFile = resolve('.render-props.json');
@@ -613,7 +616,11 @@ const cmd = [
   `"${output}"`,
   `--props="${propsFile}"`,
   `--codec=${codec}`,
+  `--crf=${crf}`,
   '--log=error',
+  // 资源加载超时放宽到 120s：大字体(--font，Source Han 变体可达 21MB)与 bg-anim
+  // 的 <IFrame> 并发加载时，默认 ~28s 容易不够。
+  '--timeout=120000',
   // WebGL-based anim effects (Vanta/three) need a real GL backend; the default
   // headless context fails to create one. ANGLE provides software WebGL.
   backgroundAnim ? '--gl=angle' : '',

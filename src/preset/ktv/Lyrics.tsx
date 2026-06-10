@@ -86,6 +86,7 @@ const LeadIn: React.FC<{lineStart: number; gap: number; time: number}> = ({
   lineStart,
   time,
 }) => {
+  const {height} = useVideoConfig();
   // Appear ~2s before the line, count down with growing arrows.
   const appear = lineStart - 2;
   const opacity = interpolate(
@@ -108,7 +109,7 @@ const LeadIn: React.FC<{lineStart: number; gap: number; time: number}> = ({
         <span
           key={i}
           style={{
-            fontSize: 64,
+            fontSize: Math.round((64 * height) / 720),
             fontWeight: 900,
             color: i < lit ? SUNG : UNSUNG,
             textShadow: outlineShadow,
@@ -128,7 +129,8 @@ export const Lyrics: React.FC<{
   fontFamily?: string;
 }> = ({lyrics, lyricOffset, fontFamily}) => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
+  const {fps, height} = useVideoConfig();
+  const fs = (px: number) => Math.round((px * height) / 720);
   const time = frame / fps;
 
   if (!lyrics || lyrics.length === 0) return null;
@@ -187,7 +189,7 @@ export const Lyrics: React.FC<{
             <div
               key={globalIndex}
               style={{
-                fontSize: isActive ? 88 : 60,
+                fontSize: isActive ? fs(88) : fs(60),
                 fontWeight: 800,
                 textAlign: 'center',
                 lineHeight: 1.2,

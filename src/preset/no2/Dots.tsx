@@ -27,7 +27,9 @@ export const Dots: React.FC<{
 	layouts: LayoutsState;
 	words: Word[];
 }> = ({layouts, words}) => {
-	const {width} = useVideoConfig();
+	const {width, height} = useVideoConfig();
+	// 字号按高度相对基准 720 缩放（与 Composition 根样式一致），布局换行同步缩放。
+	const scaledFontSize = Math.round((fontSize * height) / 720);
 	const hasAllLayouts = layouts.every((layout) => layout !== null);
 	const maximumLineWidth = width - padding * 2;
 
@@ -58,7 +60,7 @@ export const Dots: React.FC<{
 				if (lineWidths >= maximumLineWidth) {
 					lineWidths = layouts[idx]?.width as number;
 					x = padding;
-					y += fontSize * lineHeight;
+					y += scaledFontSize * lineHeight;
 				}
 
 				if (!nextWordIsShown) {
@@ -67,7 +69,7 @@ export const Dots: React.FC<{
 			});
 			return {x, y, word: words[i]};
 		});
-	}, [layouts, maximumLineWidth, words]);
+	}, [layouts, maximumLineWidth, words, scaledFontSize]);
 
 	const differences = useMemo(() => {
 		const arr: Difference[] = [];
