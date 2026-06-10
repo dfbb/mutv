@@ -142,11 +142,12 @@ export const TypewriterComposition: React.FC<MVInputProps> = ({
   lyricOffset,
   fontFamily,
   fontFile,
+  fontScale = 1,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const data = lyricsToData(lyrics, lyricOffset);
-  const fontSize = Math.round(height * 0.044);
+  const fontSize = Math.round(height * 0.044 * fontScale);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);
 

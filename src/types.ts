@@ -41,6 +41,8 @@ export interface MVInputProps extends Record<string, unknown> {
   fontFamily: string;
   /** Custom font file in public/ (e.g. 'fonts/Foo.woff2'), loaded via @font-face; '' = none. */
   fontFile: string;
+  /** Global font-size multiplier (from --font-scale); 1 = preset default. */
+  fontScale: number;
 }
 
 export const defaultProps: MVInputProps = {
@@ -62,4 +64,5 @@ export const defaultProps: MVInputProps = {
   fps: 24,
   fontFamily: '',
   fontFile: '',
+  fontScale: 1,
 };

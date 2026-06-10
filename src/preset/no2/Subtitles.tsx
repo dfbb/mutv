@@ -44,7 +44,8 @@ function lyricsToSegments(lyrics: LyricLine[], offset: number): Segment[] {
 export const Subtitles: React.FC<{
 	lyrics: LyricLine[];
 	lyricOffset: number;
-}> = ({lyrics, lyricOffset}) => {
+	fontScale: number;
+}> = ({lyrics, lyricOffset, fontScale}) => {
 	if (!lyrics || lyrics.length === 0) {
 		return null;
 	}
@@ -58,7 +59,7 @@ export const Subtitles: React.FC<{
 			}}
 		>
 			{segments.map((segment) => {
-				return <SegmentComp key={segment.id} segment={segment} />;
+				return <SegmentComp key={segment.id} segment={segment} fontScale={fontScale} />;
 			})}
 		</AbsoluteFill>
 	);

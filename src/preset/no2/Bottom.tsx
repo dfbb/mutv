@@ -3,9 +3,10 @@ import {AbsoluteFill, useVideoConfig} from 'remotion';
 import {AudioViz} from './AudioViz';
 import {padding} from './Dots';
 
-export const Bottom: React.FC<{audioSrc: string; title: string}> = ({
+export const Bottom: React.FC<{audioSrc: string; title: string; fontScale: number}> = ({
 	audioSrc,
 	title,
+	fontScale,
 }) => {
 	const {height} = useVideoConfig();
 	return (
@@ -24,7 +25,7 @@ export const Bottom: React.FC<{audioSrc: string; title: string}> = ({
 				<h1
 					style={{
 						color: 'white',
-						fontSize: Math.round((32 * height) / 720),
+						fontSize: Math.round((32 * height * fontScale) / 720),
 						marginBottom: 0,
 						marginLeft: 20,
 					}}

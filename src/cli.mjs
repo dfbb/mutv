@@ -8,7 +8,7 @@
  *   - Default output naming (out/<audio_basename>.mp4)
  *   - CJK font check/auto-install in Linux containers
  *   - Invoke render.mjs (the core: props build + remotion)
- *   - Post-render --max-size compression via two-pass ffmpeg
+ *   - Post-render standardized H.264 transcode (CRF 24, profile/level per --res; always)
  *
  * Usage:
  *   node cli.mjs --audio <file> --lyrics <lrc_or_srt> --title "Title" [options]
@@ -22,8 +22,7 @@
  *   --credit      Bottom credit text
  *   --offset      Lyric timing offset in seconds (default: -0.5)
  *   --output      Output file path (default: out/<audio_basename>.mp4)
- *   --codec       h264|h265|vp8|vp9 (default: h264)
- *   --crf         视频质量/体积(libx264 -crf，默认 23；越大越小越糊，常用 20-28)
+ *   --crf         视频质量/体积(libx264 -crf，默认 24；越大越小越糊，常用 20-28)
  *   --bg-image    Background image file OR directory (multi-image = transition slideshow)
  *   --bg-image-intvl  Seconds each carousel image holds (default 5)
  *   --bg-image-trans  Carousel transition group: soft|cool|hard (default soft)
@@ -35,7 +34,7 @@
  *   --preset      Visual template under preset/<label>/ (default: orig), or 'random'
  *   --res         Output resolution WxH (default: 1080x720)
  *   --fps         Frames per second (default: 24)
- *   --max-size    Max output size in MB; compresses video if exceeded
+ *   --font-scale  字号倍率，整体放大/缩小所有文字(默认 1=跟随 preset；clamp 0.1–10)
  *   --html        Start a local web preview (Remotion Studio) instead of rendering
  *   --debug-bg-anim   与 --html 配合：在预览画面叠加 bg-anim 调试控制条（下一个/标记）
  *   --debug-preset    与 --html 配合：在预览画面叠加 preset 调试控制条（下一个）。与 --debug-bg-anim 互斥
@@ -45,7 +44,7 @@
  */
 
 import {execSync, spawnSync} from 'child_process';
-import {existsSync, mkdirSync, statSync, rmSync} from 'fs';
+import {existsSync, mkdirSync} from 'fs';
 import {resolve, dirname, basename, extname} from 'path';
 import {fileURLToPath} from 'url';
 
@@ -106,8 +105,7 @@ const nodeArgs = [
   '--title', opts.title || 'Music Video',
   '--offset', opts.offset || '-0.5',
   '--output', output,
-  '--codec', opts.codec || 'h264',
-  '--crf', opts.crf || '23',
+  '--crf', opts.crf || '24',
   '--preset', opts.preset || 'orig',
 ];
 if (opts.lyrics) nodeArgs.push('--lyrics', resolve(opts.lyrics));
@@ -124,6 +122,7 @@ if (opts.font) nodeArgs.push('--font', opts.font);
 if (opts.browser) nodeArgs.push('--browser', opts.browser);
 if (opts.res) nodeArgs.push('--res', opts.res);
 if (opts.fps) nodeArgs.push('--fps', opts.fps);
+if (opts['font-scale']) nodeArgs.push('--font-scale', opts['font-scale']);
 if (opts.html) nodeArgs.push('--html');
 if (opts['debug-bg-anim']) nodeArgs.push('--debug-bg-anim');
 if (opts['debug-preset']) nodeArgs.push('--debug-preset');
@@ -194,70 +193,8 @@ if (res.status !== 0) process.exit(res.status ?? 1);
 // In --html mode render.mjs runs Studio (long-running); nothing more to do here.
 if (opts.html) process.exit(0);
 
-// --- Post-render: compress if --max-size is set ---
-if (opts['max-size'] && existsSync(output)) {
-  const maxSizeMb = parseInt(opts['max-size'], 10);
-  const fileBytes = statSync(output).size;
-  const maxBytes = maxSizeMb * 1024 * 1024;
-
-  if (fileBytes > maxBytes) {
-    console.log('');
-    console.log(`Video size ${Math.floor(fileBytes / 1024 / 1024)}MB exceeds ${maxSizeMb}MB limit. Compressing...`);
-
-    const compressed = output.replace(/\.mp4$/, '_compressed.mp4');
-
-    let duration;
-    try {
-      duration = parseFloat(execSync(
-        `ffprobe -v error -show_entries format=duration -of csv=p=0 "${output}"`,
-        {encoding: 'utf-8'}
-      ).trim());
-    } catch {
-      duration = NaN;
-    }
-    if (!Number.isFinite(duration)) {
-      console.error('Error: Cannot determine video duration for compression.');
-      process.exit(1);
-    }
-
-    // Target total bitrate (bits/s) from max size and duration, with 0.95 safety margin.
-    const targetBitrate = Math.floor((maxBytes * 8 / duration) * 0.95);
-    const audioBitrate = 96000; // 96k audio
-    const videoBitrate = targetBitrate - audioBitrate;
-
-    if (videoBitrate < 100000) {
-      console.error('Error: Target size too small for this video duration.');
-      process.exit(1);
-    }
-
-    console.log(`  Target video bitrate: ${Math.floor(videoBitrate / 1000)}kbps`);
-
-    // Two-pass encoding for best quality at target size.
-    spawnSync('ffmpeg', ['-y', '-i', output, '-c:v', 'libx264', '-b:v', String(videoBitrate),
-      '-pass', '1', '-preset', 'medium', '-an', '-f', 'null', '/dev/null'], {stdio: 'ignore', cwd: RENDER_DIR});
-    spawnSync('ffmpeg', ['-y', '-i', output, '-c:v', 'libx264', '-b:v', String(videoBitrate),
-      '-pass', '2', '-preset', 'medium', '-c:a', 'aac', '-b:a', '96k',
-      '-movflags', '+faststart', compressed], {stdio: 'ignore', cwd: RENDER_DIR});
-
-    // Clean up two-pass log files.
-    for (const f of ['ffmpeg2pass-0.log', 'ffmpeg2pass-0.log.mbtree']) {
-      try { rmSync(resolve(RENDER_DIR, f)); } catch {}
-    }
-
-    if (existsSync(compressed)) {
-      const compBytes = statSync(compressed).size;
-      console.log(`  Compressed: ${Math.floor(compBytes / 1024 / 1024)}MB (was ${Math.floor(fileBytes / 1024 / 1024)}MB)`);
-      rmSync(output);
-      spawnSync('mv', [compressed, output]);
-      console.log(`  ✅ Compressed video saved to: ${output}`);
-    } else {
-      console.log('  ⚠️  Compression failed, keeping original file.');
-    }
-  } else {
-    console.log(`Video size ${Math.floor(fileBytes / 1024 / 1024)}MB is within ${maxSizeMb}MB limit. No compression needed.`);
-  }
-}
-
+// 渲染由 render.mjs 一次成型（h264/CRF/slow/yuv420p/AAC 128k，h264 默认带 faststart），
+// 无二次转码。
 console.log('');
 console.log(`Output: ${output}`);
 

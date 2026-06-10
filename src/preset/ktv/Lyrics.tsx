@@ -82,9 +82,10 @@ const WordSpan: React.FC<{word: Word; time: number}> = ({word, time}) => {
 };
 
 // Lead-in arrows: shown in the gap before a line that follows a long silence.
-const LeadIn: React.FC<{lineStart: number; gap: number; time: number}> = ({
+const LeadIn: React.FC<{lineStart: number; gap: number; time: number; fontScale: number}> = ({
   lineStart,
   time,
+  fontScale,
 }) => {
   const {height} = useVideoConfig();
   // Appear ~2s before the line, count down with growing arrows.
@@ -109,7 +110,7 @@ const LeadIn: React.FC<{lineStart: number; gap: number; time: number}> = ({
         <span
           key={i}
           style={{
-            fontSize: Math.round((64 * height) / 720),
+            fontSize: Math.round((64 * height * fontScale) / 720),
             fontWeight: 900,
             color: i < lit ? SUNG : UNSUNG,
             textShadow: outlineShadow,
@@ -127,10 +128,11 @@ export const Lyrics: React.FC<{
   lyricOffset: number;
   title: string;
   fontFamily?: string;
-}> = ({lyrics, lyricOffset, fontFamily}) => {
+  fontScale?: number;
+}> = ({lyrics, lyricOffset, fontFamily, fontScale = 1}) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
-  const fs = (px: number) => Math.round((px * height) / 720);
+  const fs = (px: number) => Math.round((px * height * fontScale) / 720);
   const time = frame / fps;
 
   if (!lyrics || lyrics.length === 0) return null;
@@ -172,7 +174,7 @@ export const Lyrics: React.FC<{
       }}
     >
       {leadIn ? (
-        <LeadIn lineStart={leadIn.start} gap={leadIn.gap} time={time} />
+        <LeadIn lineStart={leadIn.start} gap={leadIn.gap} time={time} fontScale={fontScale} />
       ) : null}
 
       <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 30}}>

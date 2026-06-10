@@ -17,7 +17,6 @@
  *   --duration     Audio duration in seconds (auto-detected if omitted)
  *   --offset       Lyric timing offset in seconds (default: -0.5)
  *   --output       Output file path (default: out/video.mp4)
- *   --codec        Video codec: h264, h265, vp8, vp9 (default: h264)
  *   --bg-image     Background image file OR directory (multi-image = transition slideshow)
  *   --bg-image-intvl   Seconds each carousel image holds (default 5)
  *   --bg-image-trans   Carousel transition group: soft|cool|hard (default soft)
@@ -296,6 +295,17 @@ if (args.fps) {
   }
 }
 
+// 字号倍率（--font-scale）。默认 1=跟随 preset；非正数回退 1，并 clamp 到 [0.1, 10]。
+let fontScale = 1;
+if (args['font-scale'] !== undefined) {
+  const v = parseFloat(args['font-scale']);
+  if (!Number.isFinite(v) || v <= 0) {
+    console.warn(`⚠️  --font-scale 非法（需正数），回退 1：${args['font-scale']}`);
+  } else {
+    fontScale = Math.min(10, Math.max(0.1, v));
+  }
+}
+
 // Validate required args
 if (!args.audio) {
   console.error('Error: --audio is required');
@@ -548,13 +558,13 @@ const inputProps = {
   fps,
   fontFamily,
   fontFile,
+  fontScale,
 };
 
 const output = args.output ? resolveFilePath(args.output) : 'out/video.mp4';
-const codec = args.codec || 'h264';
 // CRF：质量/体积权衡。Remotion 默认 h264 CRF 18（高质量大体积），导致繁忙
-// bg-anim 视频体积过大且波动大。默认 23（视觉近无损、体积约减半），可 --crf 调。
-const crf = args.crf || '23';
+// bg-anim 视频体积过大且波动大。默认 24（视觉近无损、体积约减半），可 --crf 调。
+const crf = args.crf || '24';
 
 // Write props to temp file to avoid shell escaping issues
 const propsFile = resolve('.render-props.json');
@@ -615,8 +625,14 @@ const cmd = [
   'MusicVideo',
   `"${output}"`,
   `--props="${propsFile}"`,
-  `--codec=${codec}`,
+  // 一次成型的编码参数：h264 + CRF + libx264 slow preset + yuv420p + AAC 128k。
+  // h264 输出 Remotion 默认已加 -movflags faststart；profile/level 交给 x264 自动选。
+  '--codec=h264',
   `--crf=${crf}`,
+  '--x264-preset=slow',
+  '--pixel-format=yuv420p',
+  '--audio-codec=aac',
+  '--audio-bitrate=128k',
   '--log=error',
   // 资源加载超时放宽到 120s：大字体(--font，Source Han 变体可达 21MB)与 bg-anim
   // 的 <IFrame> 并发加载时，默认 ~28s 容易不够。
@@ -636,7 +652,6 @@ console.log(`  Duration: ${duration.toFixed(1)}s`);
 console.log(`  Resolution: ${resWidth}x${resHeight} @ ${fps}fps`);
 console.log(`  Lyrics: ${lyrics.length} lines`);
 console.log(`  Output: ${output}`);
-console.log(`  Codec: ${codec}`);
 if (backgroundImage) console.log(`  Background: ${backgroundImage}`);
 if (backgroundVideo) console.log(`  Background video: ${backgroundVideo}`);
 if (backgroundAnim) console.log(`  Background anim: ${backgroundAnimLabel}`);

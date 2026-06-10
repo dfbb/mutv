@@ -35,7 +35,7 @@ src/                     项目代码根目录
 ## 前置条件
 
 - Node.js（建议 18+）
-- `ffmpeg` / `ffprobe`（用于自动检测音频时长、`--max-size` 压缩）
+- `ffprobe`（检测音频时长；视频编码由 Remotion 自带 ffmpeg 完成，无需单独安装系统 ffmpeg）
 - 首次使用前安装依赖：
 
 ```bash
@@ -65,16 +65,15 @@ node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --html
 
 # 指定分辨率和帧率（竖屏 + 60fps）
 node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --res 1080x1920 --fps 60
-
-# 限制输出大小到 24MB（超出则两遍压缩，适合 IM 平台上传）
-node src/cli.mjs --audio cn-1.mp3 --lyrics cn-1.srt --max-size 24
 ```
+
+> 渲染由 Remotion **一次成型**输出标准 H.264（CRF 24 / `slow` preset / AAC 128k / faststart），无二次转码。质量用 `--crf` 调。
 
 ## 入口说明
 
 有两个入口，正常使用走 `cli.mjs`：
 
-- **`cli.mjs`** — 友好入口。处理路径解析、默认输出命名、CJK 字体检查、`--max-size` 压缩，然后调用 `render.mjs`。**推荐日常使用。**
+- **`cli.mjs`** — 友好入口。处理路径解析、默认输出命名、CJK 字体检查，然后调用 `render.mjs`。**推荐日常使用。**
 - **`render.mjs`** — 渲染核心。可直接调用，但需要自行处理路径等细节。`cli.mjs` 的所有参数都会透传给它。
 
 也可通过 npm scripts 调用：
@@ -90,7 +89,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 ## 参数详解
 
-`cli.mjs` 与 `render.mjs` 接受相同的参数（`cli.mjs` 额外处理 `--max-size`）。
+`cli.mjs` 与 `render.mjs` 接受相同的参数（编码一致，`cli.mjs` 仅多做路径/字体等便利处理）。
 
 ### 必填
 
@@ -129,6 +128,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
 | `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
 | `--font <名\|random>` | 无（用各 preset 内置字体） | 指定文字字体。先按歌词（srt/lrc）语言自动选字库目录：英语/欧洲语言→`en`、简体中文→`zh_CN`、繁体中文→`zh_TW`、韩语→`kr`、日语→`ja`（检测不出或无对应目录→回退 `en`）。值为该目录下 woff2 文件名（去扩展名，如 `Pretendard-Regular`），或 `random` 随机选一个。选中字体经 `@font-face` 加载并前置到各 preset 字体栈。依赖本地 `font/` 目录（已 gitignore，未随仓库分发）。 |
+| `--font-scale <n>` | `1` | 字号倍率，整体放大/缩小**所有文字**（标题/歌词/署名等比缩放），不改变排版比例。`1`=跟随 preset 原样，`1.5`=放大 50%，`0.8`=缩小。非正数回退 `1`，并 clamp 到 `[0.1, 10]`。所有 preset 一致生效，与 `--font` 正交。 |
 
 ### 背景图轮播与缩放规则
 
@@ -154,8 +154,9 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
 | `--output <file>` | `out/<音频名>.mp4` | 输出文件路径。 |
-| `--codec <name>` | `h264` | 编码：`h264` / `h265` / `vp8` / `vp9`。 |
-| `--max-size <MB>` | 无 | 仅 `cli.mjs`。输出超过该大小时用两遍 ffmpeg 压缩到目标体积（保留 5% 余量，音频固定 96k）。适合 WhatsApp/Discord/Telegram 等上传限制。 |
+| `--crf <n>` | `24` | H.264 质量/体积（libx264 `-crf`）。越大体积越小越糊，常用 20–28。 |
+
+> **编码一次成型**：`render.mjs` 调用 Remotion 直接输出最终视频，**无二次转码** —— H.264 / `--crf`（默认 24）/ libx264 `slow` preset / 音频 AAC 128k；H.264 输出 Remotion 默认带 `+faststart`。profile/level 由 x264 按分辨率自动选定（如 480p 约 High@3.x）。CRF 为定质量模式，不保证体积。
 
 ### 浏览器
 
@@ -175,7 +176,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 
 | 参数 | 说明 |
 | --- | --- |
-| `--html` | 启动本地 **Remotion Studio** 网页预览（`http://localhost:3000`）而非渲染视频。长驻进程，按 `Ctrl+C` 停止。此模式下 `--max-size` 不生效。 |
+| `--html` | 启动本地 **Remotion Studio** 网页预览（`http://localhost:3000`）而非渲染视频。长驻进程，按 `Ctrl+C` 停止。此模式不渲染视频。 |
 | `--debug-bg-anim` | 关闭 | 仅配合 `--html` 调试用：在 Studio 预览画面顶部叠加控制条，显示当前 preset / bg-anim 及其按目录名排序的序号，并提供「下一个」（切换到下一个 bg-anim 并重载 Studio）与「标记」（在该特效目录下建空文件 `blank.txt`）两个按钮。控制服务仅绑定 `127.0.0.1:3001`。 |
 | `--debug-preset` | 关闭 | 仅配合 `--html` 调试用：在 Studio 预览画面顶部叠加控制条，显示当前 preset 及其按目录名排序的序号，提供「下一个」（切换到下一个 preset、换 Studio 入口并重载）按钮，无标记按钮。与 `--debug-bg-anim` 互斥。控制服务仅绑定 `127.0.0.1:3001`。 |
 | `-h` / `--help` | 打印帮助信息。 |
@@ -196,7 +197,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
    - 把所有参数写入临时文件 `.render-props.json`
    - 调用 `npx remotion render preset/<label>/index.ts MusicVideo <output>`（或 `--html` 时启动 studio）
 3. 分辨率/帧率通过 props 传入，`preset/orig/Root.tsx` 的 `calculateMetadata` 读取后决定画布尺寸，无需在组件里写死。
-4. （可选）`cli.mjs` 按 `--max-size` 做两遍压缩。
+4. Remotion 一次成型输出最终 H.264 视频（编码参数见上），无额外后处理。
 
 ## 新增视觉模板（preset）
 

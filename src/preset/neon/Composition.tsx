@@ -151,11 +151,12 @@ export const NeonComposition: React.FC<MVInputProps> = ({
   lyricOffset,
   fontFamily,
   fontFile,
+  fontScale = 1,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const data = lyricsToData(lyrics, lyricOffset);
-  const fontSize = Math.round(height * 0.055);
+  const fontSize = Math.round(height * 0.055 * fontScale);
   const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 
   const audioSrc = audioFileName.startsWith('http') ? audioFileName : staticFile(audioFileName);

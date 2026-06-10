@@ -20,6 +20,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	title,
 	fontFamily,
 	fontFile,
+	fontScale = 1,
 }) => {
 	const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 	const {height} = useVideoConfig();
@@ -30,7 +31,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	return (
 		<AbsoluteFill
 			style={{
-				fontSize: Math.round((fontSize * height) / 720),
+				fontSize: Math.round((fontSize * height * fontScale) / 720),
 				fontFamily: ff(
 					'"Noto Sans CJK SC", "Noto Sans CJK JP", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
 				),
@@ -49,9 +50,9 @@ export const MyComposition: React.FC<MVInputProps> = ({
 			/>
 			<StudioControlBar />
 			<FontLoader fontFamily={fontFamily} fontFile={fontFile} />
-			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} />
+			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} fontScale={fontScale} />
 			<Audio src={audioSrc} />
-			<Bottom audioSrc={audioSrc} title={title} />
+			<Bottom audioSrc={audioSrc} title={title} fontScale={fontScale} />
 		</AbsoluteFill>
 	);
 };

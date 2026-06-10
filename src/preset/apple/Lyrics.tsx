@@ -63,7 +63,8 @@ export const Lyrics: React.FC<{
   lyricOffset: number;
   fps: number;
   fontFamily?: string;
-}> = ({lyrics, lyricOffset, fps, fontFamily}) => {
+  fontScale?: number;
+}> = ({lyrics, lyricOffset, fps, fontFamily, fontScale = 1}) => {
   const frame = useCurrentFrame();
   const {height} = useVideoConfig();
   const time = frame / fps;
@@ -132,7 +133,7 @@ export const Lyrics: React.FC<{
                 left: 0,
                 right: 0,
                 color: 'white',
-                fontSize: Math.round((58 * height) / 720),
+                fontSize: Math.round((58 * height * fontScale) / 720),
                 fontWeight: 700,
                 lineHeight: 1.15,
                 transformOrigin: 'left center',

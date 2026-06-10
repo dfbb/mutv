@@ -12,7 +12,8 @@ import {WordComponent} from './Word';
 
 const InnerComponent: React.FC<{
 	segment: Segment;
-}> = ({segment}) => {
+	fontScale: number;
+}> = ({segment, fontScale}) => {
 	const [wordRefs] = useState(() => {
 		return new Array(segment.words.length)
 			.fill(0)
@@ -63,7 +64,7 @@ const InnerComponent: React.FC<{
 				padding,
 			}}
 		>
-			<Dots layouts={layouts} words={segment.words} />
+			<Dots layouts={layouts} words={segment.words} fontScale={fontScale} />
 			<div>
 				{segment.words.map((word, i) => {
 					return (
@@ -83,7 +84,8 @@ const InnerComponent: React.FC<{
 
 export const SegmentComp: React.FC<{
 	segment: Segment;
-}> = ({segment}) => {
+	fontScale: number;
+}> = ({segment, fontScale}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 
@@ -94,5 +96,5 @@ export const SegmentComp: React.FC<{
 		return null;
 	}
 
-	return <InnerComponent segment={segment} />;
+	return <InnerComponent segment={segment} fontScale={fontScale} />;
 };

@@ -29,6 +29,7 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
   title,
   fontFamily,
   fontFile,
+  fontScale = 1,
 }) => {
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -52,7 +53,7 @@ export const KtvLyrics: React.FC<MVInputProps> = ({
 
       <Audio src={audioSrc} />
 
-      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} title={title} fontFamily={fontFamily} />
+      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} title={title} fontFamily={fontFamily} fontScale={fontScale} />
     </AbsoluteFill>
   );
 };

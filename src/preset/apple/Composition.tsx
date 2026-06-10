@@ -35,11 +35,12 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
   subtitle,
   fontFamily,
   fontFile,
+  fontScale = 1,
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
-  const fs = (px: number) => Math.round((px * height) / 720);
+  const fs = (px: number) => Math.round((px * height * fontScale) / 720);
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName
@@ -64,7 +65,7 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
 
       <Audio src={audioSrc} />
 
-      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} fps={fps} fontFamily={fontFamily} />
+      <Lyrics lyrics={lyrics} lyricOffset={lyricOffset} fps={fps} fontFamily={fontFamily} fontScale={fontScale} />
 
       {/* Song header: top-left, fades in at the start (Apple Music style) */}
       {(title || subtitle) && (

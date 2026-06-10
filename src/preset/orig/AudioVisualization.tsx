@@ -29,12 +29,13 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   backgroundAnimKind,
   fontFamily,
   fontFile,
+  fontScale = 1,
 }) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames, height} = useVideoConfig();
   const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
-  // 字号按高度相对基准 720 缩放，使低分辨率下文字不至于过大。
-  const fs = (px: number) => Math.round((px * height) / 720);
+  // 字号按高度相对基准 720 缩放，使低分辨率下文字不至于过大；再乘 --font-scale 倍率。
+  const fs = (px: number) => Math.round((px * height * fontScale) / 720);
 
   const audioSrc = audioFileName.startsWith('http')
     ? audioFileName

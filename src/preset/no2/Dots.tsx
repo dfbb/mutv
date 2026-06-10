@@ -26,10 +26,11 @@ export const padding = 100;
 export const Dots: React.FC<{
 	layouts: LayoutsState;
 	words: Word[];
-}> = ({layouts, words}) => {
+	fontScale: number;
+}> = ({layouts, words, fontScale}) => {
 	const {width, height} = useVideoConfig();
 	// 字号按高度相对基准 720 缩放（与 Composition 根样式一致），布局换行同步缩放。
-	const scaledFontSize = Math.round((fontSize * height) / 720);
+	const scaledFontSize = Math.round((fontSize * height * fontScale) / 720);
 	const hasAllLayouts = layouts.every((layout) => layout !== null);
 	const maximumLineWidth = width - padding * 2;
 
