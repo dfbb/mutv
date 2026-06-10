@@ -3,7 +3,7 @@
 
 每个 bg-anim 固定为该 label，preset 与 font 随机（沿用基准命令）：
     node src/cli.mjs --audio example/cn-3.mp3 --lyrics example/cn-3.srt \\
-        --title "歌名" --preset random --bg-anim <label> --font random \\
+        --title "歌名" --preset random --bg-anim <label> --no-bg-anim-beat --font random \\
         --res 720x480 --output out/render_all/<label>.mp4
 
 增量：同名 mp4 已存在则跳过（可中断后续跑）。单个失败不影响其余，末尾汇总。
@@ -21,16 +21,20 @@ OUT_DIR = REPO / "out" / "render_all"
 
 AUDIO = "example/cn-3.mp3"
 LYRICS = "example/cn-3.srt"
-TITLE = "歌名"
+TITLE = " 沧海一声笑"
 RES = "720x480"
+
+# 跳过的 bg-anim（渲染效果不佳，不纳入批量）。
+EXCLUDE = {"an-adamfx", "aderrasi-storm"}
 
 
 def list_labels() -> list[str]:
-    """src/animbg/ 下所有含 index.html 的目录名，按名排序。"""
+    """src/animbg/ 下所有含 index.html 的目录名（去掉 EXCLUDE），按名排序。"""
     if not ANIMBG.is_dir():
         return []
     return sorted(
-        d.name for d in ANIMBG.iterdir() if d.is_dir() and (d / "index.html").exists()
+        d.name for d in ANIMBG.iterdir()
+        if d.is_dir() and (d / "index.html").exists() and d.name not in EXCLUDE
     )
 
 
@@ -61,6 +65,7 @@ def main() -> None:
             "--title", TITLE,
             "--preset", "random",
             "--bg-anim", label,
+            "--no-bg-anim-beat",
             "--font", "random",
             "--res", RES,
             "--output", str(out_file),
