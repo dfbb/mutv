@@ -6,6 +6,7 @@ import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
 import {FontLoader} from '../FontLoader';
+import {TextColorOverride} from '../TextColorOverride';
 
 export const MyComposition: React.FC<MVInputProps> = ({
 	audioFileName,
@@ -21,6 +22,8 @@ export const MyComposition: React.FC<MVInputProps> = ({
 	fontFamily,
 	fontFile,
 	fontScale = 1,
+	fontFgColor = '',
+	fontBgColor = '',
 }) => {
 	const ff = (base: string) => (fontFamily ? `"${fontFamily}", ${base}` : base);
 	const {height} = useVideoConfig();
@@ -50,6 +53,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 			/>
 			<StudioControlBar />
 			<FontLoader fontFamily={fontFamily} fontFile={fontFile} />
+			<TextColorOverride fgColor={fontFgColor} bgColor={fontBgColor} />
 			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} fontScale={fontScale} />
 			<Audio src={audioSrc} />
 			<Bottom audioSrc={audioSrc} title={title} fontScale={fontScale} />

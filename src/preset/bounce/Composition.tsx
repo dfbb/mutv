@@ -13,6 +13,7 @@ import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
 import {FontLoader} from '../FontLoader';
+import {TextColorOverride} from '../TextColorOverride';
 import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
 
 // Playful bounce lyric overlay (ported from ai-music-video-maker's
@@ -119,6 +120,8 @@ export const BounceComposition: React.FC<MVInputProps> = ({
   fontFamily,
   fontFile,
   fontScale = 1,
+  fontFgColor = '',
+  fontBgColor = '',
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
@@ -139,6 +142,7 @@ export const BounceComposition: React.FC<MVInputProps> = ({
       />
       <StudioControlBar />
       <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
+      <TextColorOverride fgColor={fontFgColor} bgColor={fontBgColor} />
 
       <Audio src={audioSrc} />
 

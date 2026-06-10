@@ -13,6 +13,7 @@ import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
 import {FontLoader} from '../FontLoader';
+import {TextColorOverride} from '../TextColorOverride';
 
 export const AudioVisualization: React.FC<MVInputProps> = ({
   audioFileName,
@@ -30,6 +31,8 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
   fontFamily,
   fontFile,
   fontScale = 1,
+  fontFgColor = '',
+  fontBgColor = '',
 }) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames, height} = useVideoConfig();
@@ -102,6 +105,7 @@ export const AudioVisualization: React.FC<MVInputProps> = ({
       />
       <StudioControlBar />
       <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
+      <TextColorOverride fgColor={fontFgColor} bgColor={fontBgColor} />
 
       {/* Radial glow effect */}
       <AbsoluteFill

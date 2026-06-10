@@ -129,6 +129,8 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`clouds2`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
 | `--font <名\|random>` | 无（用各 preset 内置字体） | 指定文字字体。先按歌词（srt/lrc）语言自动选字库目录：英语/欧洲语言→`en`、简体中文→`zh_CN`、繁体中文→`zh_TW`、韩语→`kr`、日语→`ja`（检测不出或无对应目录→回退 `en`）。值为该目录下 woff2 文件名（去扩展名，如 `Pretendard-Regular`），或 `random` 随机选一个。选中字体经 `@font-face` 加载并前置到各 preset 字体栈。依赖本地 `font/` 目录（已 gitignore，未随仓库分发）。 |
 | `--font-scale <n>` | `1` | 字号倍率，整体放大/缩小**所有文字**（标题/歌词/署名等比缩放），不改变排版比例。`1`=跟随 preset 原样，`1.5`=放大 50%，`0.8`=缩小。非正数回退 `1`，并 clamp 到 `[0.1, 10]`。所有 preset 一致生效，与 `--font` 正交。 |
+| `--font-fg-color <色>` | 无（用各 preset 内置配色） | 文字填充色，作用于**所有文字**。支持 `R:G:B`（各 0-255，如 `212:122:33`）和 CSS 颜色名（如 `white`、`blue`）。设置后强制覆盖 preset 自身配色（含 `ktv` 的逐字变色、`neon` 的霓虹色等动态效果）。非法值警告并忽略。 |
+| `--font-bg-color <色>` | 无（不强制勾边） | 文字勾边（描边）色，格式同上。用 8 方向 text-shadow 实现，描边粗细随字号等比缩放；设置后替换 preset 自带的描边/发光阴影。与 `--font-fg-color` 可单独或组合使用。 |
 
 ### 背景图轮播与缩放规则
 

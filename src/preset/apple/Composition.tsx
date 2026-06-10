@@ -11,6 +11,7 @@ import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../BackgroundLayer';
 import {StudioControlBar} from '../StudioControlBar';
 import {FontLoader} from '../FontLoader';
+import {TextColorOverride} from '../TextColorOverride';
 import {Lyrics} from './Lyrics';
 
 /**
@@ -36,6 +37,8 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
   fontFamily,
   fontFile,
   fontScale = 1,
+  fontFgColor = '',
+  fontBgColor = '',
 }) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
@@ -62,6 +65,7 @@ export const AppleLyrics: React.FC<MVInputProps> = ({
       />
       <StudioControlBar />
       <FontLoader fontFamily={fontFamily} fontFile={fontFile} />
+      <TextColorOverride fgColor={fontFgColor} bgColor={fontBgColor} />
 
       <Audio src={audioSrc} />
 

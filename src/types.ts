@@ -43,6 +43,10 @@ export interface MVInputProps extends Record<string, unknown> {
   fontFile: string;
   /** Global font-size multiplier (from --font-scale); 1 = preset default. */
   fontScale: number;
+  /** Text fill color (from --font-fg-color), CSS color string; '' = preset default. */
+  fontFgColor: string;
+  /** Text outline color (from --font-bg-color), CSS color string; '' = no forced outline. */
+  fontBgColor: string;
 }
 
 export const defaultProps: MVInputProps = {
@@ -65,4 +69,6 @@ export const defaultProps: MVInputProps = {
   fontFamily: '',
   fontFile: '',
   fontScale: 1,
+  fontFgColor: '',
+  fontBgColor: '',
 };

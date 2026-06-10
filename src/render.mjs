@@ -25,6 +25,8 @@
  *   --preset       Visual template under preset/<label>/ (default: orig)
  *   --res          Output resolution WxH (default: 1080x720)
  *   --fps          Frames per second (default: 24)
+ *   --font-fg-color  文字填充色，R:G:B（如 212:122:33）或 CSS 颜色名（如 white）
+ *   --font-bg-color  文字勾边色，同上格式
  *   --html         Launch local Remotion Studio preview instead of rendering
  */
 
@@ -306,6 +308,26 @@ if (args['font-scale'] !== undefined) {
   }
 }
 
+// 文字颜色（--font-fg-color 填充色 / --font-bg-color 勾边色）。
+// 支持 R:G:B（各 0-255，如 212:122:33）与 CSS 颜色名（white/blue 等）；
+// 非法时警告并忽略（跟随 preset 默认配色）。
+function parseFontColor(raw, flag) {
+  const s = String(raw).trim();
+  const m = s.match(/^(\d{1,3}):(\d{1,3}):(\d{1,3})$/);
+  if (m) {
+    const [r, g, b] = m.slice(1).map((v) => parseInt(v, 10));
+    if (r <= 255 && g <= 255 && b <= 255) return `rgb(${r}, ${g}, ${b})`;
+  } else if (/^[a-zA-Z]+$/.test(s)) {
+    return s.toLowerCase();
+  }
+  console.warn(`⚠️  ${flag} 非法（需 R:G:B 各 0-255 或颜色名），忽略：${raw}`);
+  return '';
+}
+const fontFgColor =
+  args['font-fg-color'] !== undefined ? parseFontColor(args['font-fg-color'], '--font-fg-color') : '';
+const fontBgColor =
+  args['font-bg-color'] !== undefined ? parseFontColor(args['font-bg-color'], '--font-bg-color') : '';
+
 // Validate required args
 if (!args.audio) {
   console.error('Error: --audio is required');
@@ -559,6 +581,8 @@ const inputProps = {
   fontFamily,
   fontFile,
   fontScale,
+  fontFgColor,
+  fontBgColor,
 };
 
 const output = args.output ? resolveFilePath(args.output) : 'out/video.mp4';

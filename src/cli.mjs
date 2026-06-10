@@ -35,6 +35,8 @@
  *   --res         Output resolution WxH (default: 1080x720)
  *   --fps         Frames per second (default: 24)
  *   --font-scale  字号倍率，整体放大/缩小所有文字(默认 1=跟随 preset；clamp 0.1–10)
+ *   --font-fg-color  文字填充色，R:G:B(如 212:122:33)或 CSS 颜色名(如 white)；默认跟随 preset
+ *   --font-bg-color  文字勾边色，同上格式；设置后替换 preset 自带描边/发光
  *   --html        Start a local web preview (Remotion Studio) instead of rendering
  *   --debug-bg-anim   与 --html 配合：在预览画面叠加 bg-anim 调试控制条（下一个/标记）
  *   --debug-preset    与 --html 配合：在预览画面叠加 preset 调试控制条（下一个）。与 --debug-bg-anim 互斥
@@ -123,6 +125,8 @@ if (opts.browser) nodeArgs.push('--browser', opts.browser);
 if (opts.res) nodeArgs.push('--res', opts.res);
 if (opts.fps) nodeArgs.push('--fps', opts.fps);
 if (opts['font-scale']) nodeArgs.push('--font-scale', opts['font-scale']);
+if (opts['font-fg-color']) nodeArgs.push('--font-fg-color', opts['font-fg-color']);
+if (opts['font-bg-color']) nodeArgs.push('--font-bg-color', opts['font-bg-color']);
 if (opts.html) nodeArgs.push('--html');
 if (opts['debug-bg-anim']) nodeArgs.push('--debug-bg-anim');
 if (opts['debug-preset']) nodeArgs.push('--debug-preset');
