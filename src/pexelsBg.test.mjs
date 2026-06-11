@@ -1,10 +1,13 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {mkdtempSync, rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {
   parseApiKeys, langToLocale, orientationOf, aspectOk, meetsMinRes,
   pickPhotoCropUrl, pickVideoFile, pickLeastUsed, parseKeywords,
   shard, photoCachePath, videoCachePath, buildConcatArgs,
-  renderCreditsMd, renderCreditsLine, isLastSecond,
+  renderCreditsMd, renderCreditsLine, isLastSecond, openCacheDb,
 } from './pexelsBg.mjs';
 
 test('parseApiKeys: 多行/含等号值/缺键', () => {
@@ -121,4 +124,19 @@ test('isLastSecond: 最后 1 秒边界', () => {
   assert.ok(!isLastSecond(100 - 24 - 1, 100, 24));
   assert.ok(isLastSecond(100 - 24, 100, 24));
   assert.ok(isLastSecond(99, 100, 24));
+});
+
+test('openCacheDb: usage 计数与 attribution 往返', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pexdb-'));
+  try {
+    const db = openCacheDb(dir);
+    assert.deepEqual(db.getCounts('photo', [1, 2]), new Map([[1, 0], [2, 0]])); // 缺失=0
+    db.bumpUsage('photo', 1);
+    db.bumpUsage('photo', 1);
+    assert.equal(db.getCounts('photo', [1]).get(1), 2);
+    assert.equal(db.getCounts('video', [1]).get(1), 0); // type 隔离
+    db.putAttribution({type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
+    assert.deepEqual(db.getAttribution('photo', 1), {type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
+    db.close();
+  } finally { rmSync(dir, {recursive: true, force: true}); }
 });

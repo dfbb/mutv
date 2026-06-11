@@ -3,6 +3,8 @@
  * 设计文档：docs/superpowers/specs/2026-06-11-pexels-bg-design.md
  */
 import {join} from 'path';
+import Database from 'better-sqlite3';
+import {mkdirSync} from 'fs';
 
 export function parseApiKeys(text) {
   const out = {};
@@ -111,4 +113,42 @@ export function renderCreditsLine(credits) {
 /** 最后 1 秒判定（署名字幕时机）。 */
 export function isLastSecond(frame, durationInFrames, fps) {
   return frame >= durationInFrames - fps;
+}
+
+/** 打开 cache/usage.sqlite（两表 usage + attribution）。 */
+export function openCacheDb(cacheDir) {
+  mkdirSync(cacheDir, {recursive: true});
+  const db = new Database(join(cacheDir, 'usage.sqlite'));
+  db.exec(`CREATE TABLE IF NOT EXISTS usage (
+      type TEXT NOT NULL, id INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (type, id));
+    CREATE TABLE IF NOT EXISTS attribution (
+      type TEXT NOT NULL, id INTEGER NOT NULL,
+      author TEXT, author_url TEXT, pexels_url TEXT,
+      PRIMARY KEY (type, id));`);
+  const bump = db.prepare(
+    'INSERT INTO usage(type,id,count) VALUES(?,?,1) ON CONFLICT(type,id) DO UPDATE SET count=count+1');
+  const putAttr = db.prepare(
+    'INSERT INTO attribution(type,id,author,author_url,pexels_url) VALUES(?,?,?,?,?) ' +
+    'ON CONFLICT(type,id) DO UPDATE SET author=excluded.author,author_url=excluded.author_url,pexels_url=excluded.pexels_url');
+  const getAttr = db.prepare('SELECT * FROM attribution WHERE type=? AND id=?');
+  return {
+    getCounts(type, ids) {
+      const map = new Map(ids.map((i) => [i, 0]));
+      if (ids.length) {
+        const rows = db.prepare(
+          `SELECT id,count FROM usage WHERE type=? AND id IN (${ids.map(() => '?').join(',')})`)
+          .all(type, ...ids);
+        for (const r of rows) map.set(r.id, r.count);
+      }
+      return map;
+    },
+    bumpUsage(type, id) { bump.run(type, id); },
+    putAttribution(c) { putAttr.run(c.type, c.id, c.author, c.authorUrl, c.pexelsUrl); },
+    getAttribution(type, id) {
+      const r = getAttr.get(type, id);
+      return r ? {type: r.type, id: r.id, author: r.author, authorUrl: r.author_url, pexelsUrl: r.pexels_url} : null;
+    },
+    close() { db.close(); },
+  };
 }
