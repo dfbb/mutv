@@ -30,7 +30,7 @@
  *   --html         Launch local Remotion Studio preview instead of rendering
  */
 
-import {execSync, spawn} from 'child_process';
+import {execSync, spawn, spawnSync} from 'child_process';
 import {readFileSync, writeFileSync, readdirSync, existsSync, copyFileSync, mkdirSync, statSync} from 'fs';
 import {resolve, basename, isAbsolute, join} from 'path';
 import {prepareAnim} from './animbgPrepare.mjs';
@@ -39,6 +39,8 @@ import {detectLang} from './langDetect.mjs';
 import {buildCarousel} from './lib/buildCarousel.mjs';
 import {isValidGroup, VALID_GROUPS} from './lib/transitionGroups.mjs';
 import {homedir} from 'os';
+import {fileURLToPath} from 'url';
+import {preparePexelsBackground, parseApiKeys, langToLocale, renderCreditsMd, renderCreditsLine} from './pexelsBg.mjs';
 
 /**
  * Resolve a file path that may be a MSYS2/Cygwin-style path on Windows.
@@ -225,7 +227,7 @@ function getAudioDuration(filePath) {
 
 function parseArgs(argv) {
   // Flags that take no value (presence = true)
-  const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim', 'debug-preset']);
+  const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim', 'debug-preset', 'bg-pexels-image', 'bg-pexels-video']);
   const args = {};
   for (let i = 2; i < argv.length; i++) {
     const key = argv[i];
@@ -389,8 +391,24 @@ if (args.lyrics) {
   console.log(`Loaded ${lyrics.length} lyric lines from JSON file`);
 }
 
+// Determine audio duration
+let duration = args.duration ? parseFloat(args.duration) : null;
+if (!duration) {
+  const audioPath = resolve('public', audioFileName);
+  if (existsSync(audioPath)) {
+    duration = getAudioDuration(audioPath);
+    if (duration) {
+      console.log(`Auto-detected audio duration: ${duration.toFixed(2)}s`);
+    }
+  }
+}
+if (!duration) {
+  console.error('Error: Could not detect audio duration. Please provide --duration');
+  process.exit(1);
+}
+
 // --- Background sources (mutually exclusive): video > image > anim ---
-const bgFlags = ['bg-video', 'bg-image', 'bg-anim'].filter((k) => args[k]);
+const bgFlags = ['bg-video', 'bg-image', 'bg-anim', 'bg-pexels-image', 'bg-pexels-video'].filter((k) => args[k]);
 if (bgFlags.length > 1) {
   console.error(`Error: choose only one background source (got: ${bgFlags.map((f) => '--' + f).join(', ')})`);
   process.exit(1);
@@ -419,6 +437,58 @@ let backgroundAnim = '';
 let backgroundCarousel = '';
 let backgroundAnimLabel = '';
 let backgroundAnimKind = '';
+
+let pexelsCredits = null;
+if (args['bg-pexels-image'] || args['bg-pexels-video']) {
+  const kind = args['bg-pexels-image'] ? 'image' : 'video';
+  if (kind === 'video') {
+    const ck = spawnSync('ffmpeg', ['-version'], {stdio: 'ignore'});
+    if (ck.error || ck.status !== 0) {
+      console.error('Error: --bg-pexels-video 需要系统 ffmpeg，请先安装（brew install ffmpeg）');
+      process.exit(1);
+    }
+  }
+  const keyFile = fileURLToPath(new URL('../scripts/api.key', import.meta.url));
+  if (!existsSync(keyFile)) {
+    console.error('Error: 缺少 scripts/api.key（pexels=... / openrouter=...）');
+    process.exit(1);
+  }
+  const apiKeys = parseApiKeys(readFileSync(keyFile, 'utf-8'));
+  const lyricsText = lyrics.map((l) => l.text).join('\n');
+  const locale = langToLocale(detectLang(lyricsText));
+  const intvl = args['bg-image-intvl'] ? parseFloat(args['bg-image-intvl']) : 5;
+  let pex;
+  try {
+    pex = await preparePexelsBackground({
+      kind, lyricsText, durationSec: duration, width: resWidth, height: resHeight,
+      fps, locale, intvl, apiKeys,
+      publicDir: resolve('public'),
+      cacheDir: fileURLToPath(new URL('../cache', import.meta.url)),
+    });
+  } catch (e) {
+    console.error(`Error: ${e.message}`);
+    process.exit(1);
+  }
+  pexelsCredits = pex.credits;
+  if (kind === 'image') {
+    if (pex.imageUrls.length === 1) {
+      backgroundImage = pex.imageUrls[0];
+    } else {
+      const group = args['bg-image-trans'] || 'soft';
+      const html = buildCarousel({
+        imageUrls: pex.imageUrls, intvl, transDur: 1, group,
+        width: resWidth, height: resHeight,
+        seed: Math.floor(Math.random() * 0xffffffff),
+      });
+      writeFileSync(resolve('public', 'bgimage-carousel.html'), html);
+      backgroundCarousel = 'bgimage-carousel.html';
+    }
+    console.log(`Pexels 图片背景：${pex.imageUrls.length} 张`);
+  } else {
+    backgroundVideo = pex.videoFile;
+    console.log(`Pexels 视频背景：${pex.videoFile}`);
+  }
+}
 
 if (args['bg-image']) {
   const resolvedBg = resolveFilePath(args['bg-image']);
@@ -501,22 +571,6 @@ if (args['bg-image']) {
   console.log(`Using animated background: ${animLabel}`);
 }
 
-// Determine audio duration
-let duration = args.duration ? parseFloat(args.duration) : null;
-if (!duration) {
-  const audioPath = resolve('public', audioFileName);
-  if (existsSync(audioPath)) {
-    duration = getAudioDuration(audioPath);
-    if (duration) {
-      console.log(`Auto-detected audio duration: ${duration.toFixed(2)}s`);
-    }
-  }
-}
-if (!duration) {
-  console.error('Error: Could not detect audio duration. Please provide --duration');
-  process.exit(1);
-}
-
 // --font: 按歌词语言选字库目录，挑字体(指定名/random)，拷进 public/fonts/ 并经 @font-face 用上。
 let fontFamily = '';
 let fontFile = '';
@@ -583,6 +637,7 @@ const inputProps = {
   fontScale,
   fontFgColor,
   fontBgColor,
+  pexelsCreditsText: pexelsCredits ? renderCreditsLine(pexelsCredits) : '',
 };
 
 const output = args.output ? resolveFilePath(args.output) : 'out/video.mp4';
@@ -690,6 +745,11 @@ try {
   const outputLines = result.split(/\r?\n/).filter(l => l.includes(output) || /^\+/.test(l.replace(/\x1b\[[0-9;]*m/g, '').trim()));
   if (outputLines.length) console.log(outputLines.join('\n'));
   console.log(`\n✅ Video rendered successfully: ${output}`);
+  if (pexelsCredits) {
+    const creditsPath = output.replace(/\.[^.]+$/, '') + '.credits.md';
+    writeFileSync(creditsPath, renderCreditsMd(pexelsCredits));
+    console.log(`  Credits: ${creditsPath}`);
+  }
 } catch (e) {
   // Show stderr on failure for debugging
   if (e.stderr) console.error(e.stderr.toString());
