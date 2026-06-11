@@ -64,11 +64,12 @@ src/preset/
 
 ### 驱帧规则（CSS 动画 → 逐帧确定性）
 
-对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`。**t = 行内时间 = 当前帧时间 − 当前歌词行 start**（demo 在换行时重建 Shadow DOM、动画逐行重播，引擎等价做法是换行时重挂效果子树 + 行内时间驱帧），one-shot 入场动画因此每行重播。需要全局相位的无限循环动画在效果定义 schema 中标注：visual 定义为 `{css, html, letterTpl?, timeBase?: 'line' | 'global'}`，默认 `'line'`。识别规则：转换脚本对 `animation-iteration-count: infinite` 且 keyframes 含位移类属性（translate/margin/left 等）的效果输出候选清单，人工确认后标注；首批已知 global：014 跑马灯、030 机场翻牌屏。步骤 3 验收含「候选清单已确认完毕」。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
+对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`。**t = 行内时间 = 当前帧时间 − 当前歌词行 start**（demo 在换行时重建 Shadow DOM、动画逐行重播，引擎等价做法是换行时重挂效果子树 + 行内时间驱帧），one-shot 入场动画因此每行重播。需要全局相位的无限循环动画在效果定义 schema 中标注：visual 定义为 `{css, html, letterTpl?, timeBase?: 'line' | 'global'}`，默认 `'line'`。识别规则：转换脚本对 `animation-iteration-count: infinite`（含 shorthand 内的 `infinite`）且 keyframes 含位移类属性（translate/margin/left 等）的效果输出候选清单，人工确认后标注；首批已知 global：014 跑马灯、030 机场翻牌屏。步骤 3 验收含「候选清单已确认完毕」。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
 
 ### CSS scope 规则（替代 Shadow DOM）
 
-转换时用 postcss 做选择器改写，不用裸字符串替换（postcss + postcss-selector-parser **显式加入 devDependencies**，不依赖 Remotion 的传递依赖）：
+转换时用 postcss 做选择器改写，不用裸字符串替换（postcss + postcss-selector-parser + postcss-value-parser **显式加入 devDependencies**，不依赖 Remotion 的传递依赖）：
+- 所有 `animation` **shorthand**（如 `animation: marquee 16s infinite linear`）用 postcss-value-parser 拆解后读写 name/duration/delay/iteration-count，与显式 `animation-name`/`animation-delay`/`animation-iteration-count` 属性走同一套读写逻辑；keyframes 改名、delay 合成、infinite 检测均同时覆盖 shorthand 与 longhand，并各有单测
 - `:host` → 效果根容器类 `.fx-<id>`；`:host .x` → `.fx-<id> .x`；其余选择器统一加 `.fx-<id> ` 前缀（伪类/伪元素保持在末位）
 - `@keyframes` 名与所有 `animation-name` 引用统一加 `fx<id>-` 前缀，防跨效果串名
 - 样式注入顺序与 demo 一致：效果 css 在前、引擎 VISUAL_OVERRIDE 等价层在后；源效果里既有的 `:host .bl-wrap … !important` 黑屏修复经映射后特异度关系不变，原样生效
@@ -89,7 +90,7 @@ src/preset/
 
 1. `_shared/` 整理 + 旧 preset 改名 → 验证：`render.mjs --preset fx-neon --html` 正常
 2. `_engine/` 两引擎 + makePreset → 验证：手写 fx-001（text）+ fx-014（visual）渲染出帧
-3. 脚本批量转换 97 个效果定义 + 生成薄 preset 目录 → 验证：**97 个 preset 全量 smoke render（各出 1 帧 still）成功**，TS/CSS/模板错误在此层全部暴露
+3. 脚本批量转换 97 个效果定义 + 生成薄 preset 目录 → 验证：**105 个 preset（97 新 + 8 旧改名）全量 smoke render（各出 1 帧 still）成功**，TS/CSS/模板错误与改名/共享组件移动导致的 import 断裂在此层全部暴露；timeBase 候选清单已确认完毕
 4. 批量出帧**视觉**抽检（复用 `--debug-preset`），重点查 visual 类黑屏 / 动画不动 / 颜色覆盖失效，逐个修复——抽检只判视觉质量，可用性以步骤 3 的全量 smoke 为准
 5. 写 `preset/README.md` 索引
 
