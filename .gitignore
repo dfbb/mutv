@@ -8,6 +8,7 @@ node_modules/
 out/
 .render-props.json
 *.mp4
+*.key
 
 # Generated POC artifacts (regenerated from scripts/poc-grid.mjs, ~3MB each)
 poc-grid-*.html

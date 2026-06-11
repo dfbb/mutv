@@ -1,0 +1,56 @@
+BL.register({
+  id: '043',
+  name: '043 Text-Shadow Animate',
+  kind: 'visual',
+  group: 'Visual 数据集特效',
+  order: 43,
+  src: 'Text-Shadow Animate · CodePen',
+  css: `
+.bl-wrap {
+  background: #EDEEE9;
+}
+
+@keyframes animateShadow {
+  0% {
+    text-shadow: 0px 0px #252526, -1px 1px #252526, -2px 2px #252526, -3px 3px #252526, -4px 4px #252526, -5px 5px #252526, -6px 6px #252526, -7px 7px #252526, -8px 8px #252526, -9px 9px #252526, -10px 10px #252526;
+  }
+  50% {
+    text-shadow: 0px 0px #4a4a4d, -1px 1px #4a4a4d, -2px 2px #4a4a4d, -3px 3px #4a4a4d, -4px 4px #4a4a4d, -5px 5px #4a4a4d, -6px 6px #4a4a4d, -7px 7px #4a4a4d, -8px 8px #4a4a4d, -9px 9px #4a4a4d, -10px 10px #4a4a4d;
+  }
+  100% {
+    text-shadow: 0px 0px #252526, -1px 1px #252526, -2px 2px #252526, -3px 3px #252526, -4px 4px #252526, -5px 5px #252526, -6px 6px #252526, -7px 7px #252526, -8px 8px #252526, -9px 9px #252526, -10px 10px #252526;
+  }
+}
+
+.sl {
+  display: inline-block;
+  position: relative;
+  font-weight: 600;
+  font-size: 3rem;
+  color: #EDEEE9;
+  font-family: "Georgia", serif;
+  text-shadow: 0px 0px #252526, -1px 1px #252526, -2px 2px #252526, -3px 3px #252526, -4px 4px #252526, -5px 5px #252526, -6px 6px #252526, -7px 7px #252526, -8px 8px #252526, -9px 9px #252526, -10px 10px #252526, -11px 11px #252526, -12px 12px #252526, -13px 13px #252526, -14px 14px #252526, -15px 15px #252526, -16px 16px #252526, -17px 17px #252526, -18px 18px #252526, -19px 19px #252526, -20px 20px #252526, -21px 21px #313134, -22px 22px #313134, -23px 23px #313134, -24px 24px #313134, -25px 25px #313134, -26px 26px #313134, -27px 27px #313134, -28px 28px #313134, -29px 29px #313134, -30px 30px #313134, -31px 31px #313134, -32px 32px #313134, -33px 33px #313134, -34px 34px #313134, -35px 35px #313134, -36px 36px #313134, -37px 37px #313134, -38px 38px #313134, -39px 39px #313134, -40px 40px #313134, -41px 41px #3e3e40, -42px 42px #3e3e40, -43px 43px #3e3e40, -44px 44px #3e3e40, -45px 45px #3e3e40, -46px 46px #3e3e40, -47px 47px #3e3e40, -48px 48px #3e3e40, -49px 49px #3e3e40, -50px 50px #3e3e40;
+  animation-name: animateShadow;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  /* 按歌词时间逐字符出现:字符 i 在 reveal>i/n 即自身 start 时刻显示 */
+  opacity: clamp(0, calc((var(--reveal, 1) - var(--i) / var(--n, 1)) * 1000), 1);
+}
+/* 修复:逐字 span 后,右侧字符的长投影会盖住左侧字符的绿色前景(后绘制的 span 投影压住
+   前一个字)。用 ::after 复制前景置于 z-index:1,使所有前景统一绘制在所有投影(z0)之上。
+   .sl 只用 position:relative 作偏移基准,不设 z-index(否则会困住 ::after)。 */
+.sl::after {
+  content: attr(data-ch);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--theme-text, #00e676);
+  -webkit-text-fill-color: var(--theme-text, #00e676);
+  z-index: 1;
+}
+/* 取消引擎按 --reveal 的遮罩露出(与字幕不同步),改用上面的逐字符显示 */
+:host .bl-wrap { -webkit-mask-image: none !important; mask-image: none !important; }
+`,
+  html: `<div class="shadow-text">{{LETTERS}}</div>`,
+  letterTpl: `<span class="sl" data-ch="{ch}" style="--i:{i}; --n:{n}">{ch}</span>`
+});

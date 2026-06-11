@@ -1,0 +1,46 @@
+BL.register({
+  id: '090',
+  name: '090 Variable Longshadow with Gradients Mixin',
+  kind: 'visual',
+  group: 'Visual 数据集特效',
+  order: 90,
+  src: 'Variable Longshadow with Gradients Mixin · CodePen',
+  css: `
+@import url("https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap");
+
+.bl-wrap {
+  background: #FFEA80;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.gradient-longshadow {
+  font-size: 7vmin;
+  font-weight: 600;
+  font-family: "Fredoka One", sans-serif;
+  text-transform: uppercase;
+  display: block;
+  color: #FFFFD9;
+  text-shadow: #ff6239 1px 1px, #ff6339 2px 2px, #ff643a 3px 3px, #ff663a 4px 4px, #ff673b 5px 5px, #ff683c 6px 6px, #ff693c 7px 7px, #ff6a3d 8px 8px, #ff6b3d 9px 9px, #ff6c3e 10px 10px, #ff6e3f 11px 11px, #ff6f3f 12px 12px, #ff7040 13px 13px, #ff7140 14px 14px, #ff7241 15px 15px, #ff7342 16px 16px, #ff7442 17px 17px, #ff7643 18px 18px, #ff7743 19px 19px, #ff7844 20px 20px, #ff7945 21px 21px, #ff7a45 22px 22px, #ff7b46 23px 23px, #ff7c46 24px 24px, #ff7e47 25px 25px, #ff7f48 26px 26px, #ff8048 27px 27px, #ff8149 28px 28px, #ff8249 29px 29px, #ff834a 30px 30px, #ff844b 31px 31px, #ff864b 32px 32px, #ff874c 33px 33px, #ff884c 34px 34px, #ff894d 35px 35px, #ff8a4e 36px 36px, #ff8b4e 37px 37px, #ff8c4f 38px 38px, #ff8e4f 39px 39px, #ff8f50 40px 40px, #ff9051 41px 41px, #ff9151 42px 42px, #ff9252 43px 43px, #ff9352 44px 44px, #ff9453 45px 45px, #ff9654 46px 46px, #ff9754 47px 47px, #ff9855 48px 48px, #ff9955 49px 49px, #ff9a56 50px 50px, #ff9b57 51px 51px, #ff9c57 52px 52px, #ff9e58 53px 53px, #ff9f58 54px 54px, #ffa059 55px 55px, #ffa15a 56px 56px, #ffa25a 57px 57px, #ffa35b 58px 58px, #ffa45b 59px 59px, #ffa65c 60px 60px, #ffa75d 61px 61px, #ffa85d 62px 62px, #ffa95e 63px 63px, #ffaa5e 64px 64px, #ffab5f 65px 65px, #ffac60 66px 66px, #ffad60 67px 67px, #ffaf61 68px 68px, #ffb061 69px 69px, #ffb162 70px 70px, #ffb263 71px 71px, #ffb363 72px 72px, #ffb464 73px 73px, #ffb564 74px 74px, #ffb765 75px 75px, #ffb866 76px 76px, #ffb966 77px 77px, #ffba67 78px 78px, #ffbb67 79px 79px, #ffbc68 80px 80px, #ffbd69 81px 81px, #ffbf69 82px 82px, #ffc06a 83px 83px, #ffc16a 84px 84px, #ffc26b 85px 85px, #ffc36c 86px 86px, #ffc46c 87px 87px, #ffc56d 88px 88px, #ffc76d 89px 89px, #ffc86e 90px 90px, #ffc96f 91px 91px, #ffca6f 92px 92px, #ffcb70 93px 93px, #ffcc70 94px 94px, #ffcd71 95px 95px, #ffcf72 96px 96px, #ffd072 97px 97px, #ffd173 98px 98px, #ffd273 99px 99px, #ffd374 100px 100px, #ffd475 101px 101px, #ffd575 102px 102px, #ffd776 103px 103px, #ffd876 104px 104px, #ffd977 105px 105px, #ffda78 106px 106px, #ffdb78 107px 107px, #ffdc79 108px 108px, #ffdd79 109px 109px, #ffdf7a 110px 110px, #ffe07b 111px 111px, #ffe17b 112px 112px, #ffe27c 113px 113px, #ffe37c 114px 114px, #ffe47d 115px 115px, #ffe57e 116px 116px, #ffe77e 117px 117px, #ffe87f 118px 118px, #ffe97f 119px 119px, #ffea80 120px 120px, #FF6138 0px 0px;
+}
+
+/* 取消引擎遮罩,改用逐字露出 */
+:host .bl-wrap { -webkit-mask-image: none !important; mask-image: none !important; }
+
+/* 恢复颜色 */
+:host .bl-wrap .gradient-longshadow,
+:host .bl-wrap .gradient-longshadow .bl-char {
+  color: #FFFFD9 !important;
+  -webkit-text-fill-color: #FFFFD9 !important;
+}
+
+/* 逐字露出 */
+.bl-char {
+  display: inline-block;
+  opacity: clamp(0, calc((var(--reveal, 1) - var(--i) / var(--n, 1)) * 1000), 1);
+}
+`,
+  html: `<span class="gradient-longshadow">{{LETTERS}}</span>`,
+  letterTpl: `<span class="bl-char" style="--i:{i};--n:{n}">{ch}</span>`
+});
