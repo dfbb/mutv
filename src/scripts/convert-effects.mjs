@@ -15,9 +15,29 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 // timeBase='global' 成员：动画为"贯穿屏幕的连续单向位移"，若每行重启会割裂观感。
-// 014 gooey 跑马灯、030 机场信息板翻滚、060 deconstructed 切片从右贯穿到左飞出。
+// 014 gooey 跑马灯、060 deconstructed 切片从右贯穿到左飞出。（030 原为 global，因
+// 跑马灯在歌词出现时已滚出屏外，改静态面板，见 PATCHES。）
 // 其余 infinite 候选均为原地振荡/抖动（回到原点），每行重启不可感知，留 line。
-const TIME_BASE_GLOBAL = new Set(['014', '030', '060']);
+const TIME_BASE_GLOBAL = new Set(['014', '060']);
+
+// 逐特效黑屏修复补丁：在 scope/改名/delay 转换完成后，按 id 追加到 css 末尾（已自带
+// .fx-<id> scope，不再过转换）。仅用于"该特效独有"的成因；多特效共因走引擎 overrideCss。
+//
+// 注：030 由 TIME_BASE_GLOBAL 移出（不再 global）——其跑马灯用绝对时间定位，歌词
+// 直到 10.56s 才出现时文字已滚出屏幕左侧，故停掉滚动改为面板内静态居中。
+const PATCHES = {
+  // 035：固定 3px 黑描边在引擎字号下糊满字形成黑块；改成随字号缩放的 0.04em。
+  '035': `.fx-035 .hello { -webkit-text-stroke-width: 0.04em !important; }`,
+  // 044：无限"烟散"动画——逐帧暂停下相位随 --fx-t 推进，约 1s 后字已淡出/飘走 → 黑屏。
+  // 降级为静态柔光烟字（保留 whitesmoke 发光观感，文字恒可读）。
+  '044': `.fx-044 .smoky-text .ch { animation: none !important; opacity: 1 !important; text-shadow: 0 0 0.18em whitesmoke, 0 0 0 whitesmoke !important; }`,
+  // 030：跑马灯滚出屏外 + 引擎露出遮罩裁切；停掉滚动、让文字在面板内静态居中、去遮罩。
+  '030': `.fx-030 .monitor p { animation: none !important; position: static !important; left: auto !important; }
+.fx-030 .bl-wrap { width: auto !important; max-width: none !important; -webkit-mask-image: none !important; mask-image: none !important; }`,
+  // 039：h1 入场 translateY 滑入带 1s 起始延迟，每行前 ~1.4s 文字停在屏幕上方不可见；
+  // 去掉起始延迟，让文字随本行立即归位。
+  '039': `.fx-039 h1.bl-mixblend { animation-delay: calc(0s - var(--fx-t)) !important; }`,
+};
 
 /**
  * 把一个特效的 css 转换为已 scope、已改名 keyframes、已合成 --fx-t delay 的 css。
@@ -229,7 +249,8 @@ function main() {
     if (effect.kind !== 'visual') continue;
     const id = effect.id;
     const slug = slugOf(file);
-    const css = transformCss(effect.css || '', id);
+    let css = transformCss(effect.css || '', id);
+    if (PATCHES[id]) css += `\n${PATCHES[id]}`;
     const timeBase = TIME_BASE_GLOBAL.has(id) ? 'global' : 'line';
     if (timeBaseCandidate) candidates.push({id, slug, global: TIME_BASE_GLOBAL.has(id)});
     count++;

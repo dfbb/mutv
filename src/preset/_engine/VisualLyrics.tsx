@@ -69,6 +69,11 @@ function overrideCss(id: string, fontSize: number, fg: string, bg: string): stri
   const mask = `linear-gradient(90deg,#000 calc(var(--reveal,1)*100% - 0.4ch), transparent calc(var(--reveal,1)*100% + 0.1ch))`;
   let css = `
 ${p} * { animation-play-state: paused !important; }
+/* 默认文字色：demo 的 VISUAL_OVERRIDE 强制 .bl-wrap* 为白字；移植时为保留渐变文字
+   (background-clip:text + text-fill-color:transparent) 改成只在 .fx-<id> 上设低优先级
+   白色(color 可继承、fill-color 缺省取 currentColor)，无自带颜色的特效(012/047 等)
+   才不再黑字黑底；任何特效自身的颜色/渐变规则(更高 specificity)都覆盖它。 */
+${p} { color: #fff; }
 ${p} .bl-wrap { background: transparent !important; }
 ${p} .bl-wrap, ${p} .bl-wrap * { font-size: ${fontSize}px !important; white-space: nowrap !important; }
 ${p} .bl-wrap {
