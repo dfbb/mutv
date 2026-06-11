@@ -105,6 +105,7 @@ export const ScrollLyrics: React.FC<MVInputProps & {effect: TextEffect}> = ({
 
       <Audio src={audioSrc} />
 
+      <AbsoluteFill style={{maskImage: extra?.stageMask, WebkitMaskImage: extra?.stageMask}}>
       <div
         style={{
           position: 'absolute',
@@ -113,8 +114,6 @@ export const ScrollLyrics: React.FC<MVInputProps & {effect: TextEffect}> = ({
           top: 0,
           transform: trackTransform,
           transformOrigin: 'center center',
-          maskImage: extra?.stageMask,
-          WebkitMaskImage: extra?.stageMask,
         }}
       >
         {info.map((li, i) => {
@@ -169,6 +168,7 @@ export const ScrollLyrics: React.FC<MVInputProps & {effect: TextEffect}> = ({
           );
         })}
       </div>
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
