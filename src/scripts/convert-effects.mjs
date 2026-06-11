@@ -14,8 +14,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-// 直接执行时才用到（main），测试时不触发
-const TIME_BASE_GLOBAL = new Set(['014', '030']);
+// timeBase='global' 成员：动画为"贯穿屏幕的连续单向位移"，若每行重启会割裂观感。
+// 014 gooey 跑马灯、030 机场信息板翻滚、060 deconstructed 切片从右贯穿到左飞出。
+// 其余 infinite 候选均为原地振荡/抖动（回到原点），每行重启不可感知，留 line。
+const TIME_BASE_GLOBAL = new Set(['014', '030', '060']);
 
 /**
  * 把一个特效的 css 转换为已 scope、已改名 keyframes、已合成 --fx-t delay 的 css。
@@ -209,7 +211,7 @@ function slugOf(filename) {
 function main() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const effectDir = path.resolve(__dirname, '../../../example/effect');
+  const effectDir = path.resolve(__dirname, '../../example/effect');
   const files = fs.readdirSync(effectDir)
     .filter((f) => /^\d{3}-.*\.js$/.test(f))
     .filter((f) => {
@@ -218,14 +220,19 @@ function main() {
     })
     .sort();
 
+  const candidates = []; // timeBaseCandidate=true 的 {id, slug}，供人工分类
+  let count = 0;
+
   for (const file of files) {
     const code = fs.readFileSync(path.join(effectDir, file), 'utf8');
-    const {effect} = parseEffectFile(file, code);
+    const {effect, timeBaseCandidate} = parseEffectFile(file, code);
     if (effect.kind !== 'visual') continue;
     const id = effect.id;
     const slug = slugOf(file);
     const css = transformCss(effect.css || '', id);
     const timeBase = TIME_BASE_GLOBAL.has(id) ? 'global' : 'line';
+    if (timeBaseCandidate) candidates.push({id, slug, global: TIME_BASE_GLOBAL.has(id)});
+    count++;
 
     const header = `// ${effect.name} · ${effect.src}，源 example/effect/${file}，本文件由 convert-effects.mjs 生成`;
     const effDef = `${header}
@@ -253,6 +260,13 @@ registerRoot(registerVisualPreset(effect));
     const presetPath = path.resolve(__dirname, `../preset/fx-${id}-${slug}/index.ts`);
     fs.mkdirSync(path.dirname(presetPath), {recursive: true});
     fs.writeFileSync(presetPath, presetIndex);
+  }
+
+  // 打印 timeBase 候选清单，供人工判定哪些应设为 global。
+  console.log(`已生成 ${count} 个 visual 特效。`);
+  console.log(`timeBase 候选（infinite + 位移，共 ${candidates.length} 个）：`);
+  for (const c of candidates) {
+    console.log(`  ${c.id}-${c.slug}${c.global ? '  [已设 global]' : ''}`);
   }
 }
 

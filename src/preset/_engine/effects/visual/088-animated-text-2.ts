@@ -1,0 +1,12 @@
+// 088 Animated Text-Shadow · Animated Text-Shadow · CodePen，源 example/effect/088-animated-text-2.js，本文件由 convert-effects.mjs 生成
+import type {VisualEffect} from '../../types';
+
+export const effect: VisualEffect = {
+  id: "088",
+  name: "088 Animated Text-Shadow",
+  src: "Animated Text-Shadow · CodePen",
+  css: "\n.fx-088 .bl-wrap {\n  background-color: #fdf9fd;\n  color: #011a32;\n  font: 16px/1.25 'Raleway', sans-serif;\n  text-align: center;\n}\n\n.fx-088 .animated-shadow {\n  animation: fx088-text-shadow 1.5s ease-in-out infinite;\n  animation-delay: calc(0s - var(--fx-t));\n  font-size: 4vmin;\n  font-weight: 900;\n  line-height: 1;\n}\n\n.fx-088 .animated-shadow:hover {\n  animation-play-state: paused;\n}\n\n@keyframes fx088-text-shadow {\n  0% {\n    transform: translateY(0);\n    text-shadow:\n      0 0 0 #0c2ffb,\n      0 0 0 #2cfcfd,\n      0 0 0 #fb203b,\n      0 0 0 #fefc4b;\n  }\n  20% {\n    transform: translateY(-1em);\n    text-shadow:\n      0 0.125em 0 #0c2ffb,\n      0 0.25em 0 #2cfcfd,\n      0 -0.125em 0 #fb203b,\n      0 -0.25em 0 #fefc4b;\n  }\n  40% {\n    transform: translateY(0.5em);\n    text-shadow:\n      0 -0.0625em 0 #0c2ffb,\n      0 -0.125em 0 #2cfcfd,\n      0 0.0625em 0 #fb203b,\n      0 0.125em 0 #fefc4b;\n  }\n  60% {\n    transform: translateY(-0.25em);\n    text-shadow:\n      0 0.03125em 0 #0c2ffb,\n      0 0.0625em 0 #2cfcfd,\n      0 -0.03125em 0 #fb203b,\n      0 -0.0625em 0 #fefc4b;\n  }\n  80% {\n    transform: translateY(0);\n    text-shadow:\n      0 0 0 #0c2ffb,\n      0 0 0 #2cfcfd,\n      0 0 0 #fb203b,\n      0 0 0 #fefc4b;\n  }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .fx-088 .animated-shadow {\n    animation: none !important;\n    animation-delay: calc(0s - var(--fx-t)) !important;\n    transition: none !important;\n  }\n}\n\n/* 取消引擎遮罩,改用逐字露出 */\n.fx-088 .bl-wrap { -webkit-mask-image: none !important; mask-image: none !important; }\n\n/* 恢复原始文字颜色(彩色阴影未被覆盖,自然显示) */\n.fx-088 .bl-wrap .animated-shadow,.fx-088 .bl-wrap .animated-shadow .bl-char {\n  color: #011a32 !important;\n  -webkit-text-fill-color: #011a32 !important;\n}\n\n/* 逐字露出 */\n.fx-088 .bl-char {\n  display: inline-block;\n  opacity: clamp(0, calc((var(--reveal, 1) - var(--i) / var(--n, 1)) * 1000), 1);\n}\n",
+  html: "<h1 class=\"animated-shadow\">{{LETTERS}}</h1>",
+  letterTpl: "<span class=\"bl-char\" style=\"--i:{i};--n:{n}\">{ch}</span>",
+  timeBase: "line",
+};

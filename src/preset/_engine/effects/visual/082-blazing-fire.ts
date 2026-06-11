@@ -1,0 +1,12 @@
+// 082 Blazing Fire · Blazing Fire · CodePen，源 example/effect/082-blazing-fire.js，本文件由 convert-effects.mjs 生成
+import type {VisualEffect} from '../../types';
+
+export const effect: VisualEffect = {
+  id: "082",
+  name: "082 Blazing Fire",
+  src: "Blazing Fire · CodePen",
+  css: "\n.fx-082 .bl-wrap {\n  background: #ca8;\n}\n\n.fx-082 .fire-wrap {\n  width: 80%;\n  max-width: 1000px;\n  border-radius: 10px;\n  overflow: hidden;\n  text-align: center;\n}\n\n.fx-082 .blazing {\n  display: inline-block;\n  margin: 0;\n  color: rgb(255, 115, 0);\n  font-size: 100px;\n  line-height: 1.2;\n  text-shadow:\n    0 3px 20px red,\n    0 0 20px red,\n    0 0 10px orange,\n    4px -5px 6px yellow,\n    -4px -10px 10px yellow,\n    0 -10px 30px yellow;\n  animation: fx082-blazing257 2s infinite alternate linear;\n  animation-delay: calc(0s - var(--fx-t));\n}\n\n@keyframes fx082-blazing257 {\n  0% {\n    text-shadow: 0 3px 20px red, 0 0 20px red, 0 0 10px orange,\n      0 0 0 yellow, 0 0 5px yellow, -2px -5px 5px yellow, 4px -10px 10px yellow;\n  }\n  25% {\n    text-shadow: 0 3px 20px red, 0 0 30px red, 0 0 20px orange,\n      0 0 5px yellow, -2px -5px 5px yellow, 3px -10px 10px yellow, -4px -15px 20px yellow;\n  }\n  50% {\n    text-shadow: 0 3px 20px red, 0 0 20px red, 0 -5px 10px orange,\n      -2px -5px 5px yellow, 3px -10px 10px yellow, -4px -15px 20px yellow,\n      2px -20px 30px rgba(255,255,0,0.5);\n  }\n  75% {\n    text-shadow: 0 3px 20px red, 0 0 20px red, 0 -5px 10px orange,\n      3px -5px 5px yellow, -4px -10px 10px yellow,\n      2px -20px 30px rgba(255,255,0,0.5), 0px -25px 40px rgba(255,255,0,0);\n  }\n  100% {\n    text-shadow: 0 3px 20px red, 0 0 20px red, 0 0 10px orange,\n      0 0 0 yellow, 0 0 5px yellow, -2px -5px 5px yellow, 4px -10px 10px yellow;\n  }\n}\n\n/* 取消引擎遮罩,改用逐字露出 */\n.fx-082 .bl-wrap { -webkit-mask-image: none !important; mask-image: none !important; }\n\n/* 恢复火焰橙色 */\n.fx-082 .bl-wrap .blazing,.fx-082 .bl-wrap .blazing .bl-char {\n  color: rgb(255, 115, 0) !important;\n  -webkit-text-fill-color: rgb(255, 115, 0) !important;\n}\n\n.fx-082 .bl-char {\n  display: inline-block;\n  opacity: clamp(0, calc((var(--reveal, 1) - var(--i) / var(--n, 1)) * 1000), 1);\n}\n",
+  html: "<div class=\"fire-wrap\"><h1 class=\"blazing\">{{LETTERS}}</h1></div>",
+  letterTpl: "<span class=\"bl-char\" style=\"--i:{i};--n:{n}\">{ch}</span>",
+  timeBase: "line",
+};

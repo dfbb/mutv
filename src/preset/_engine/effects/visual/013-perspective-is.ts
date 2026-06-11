@@ -1,0 +1,11 @@
+// 013 Perspective is a matter of perception · Perspective is a matter of perception · CodePen，源 example/effect/013-perspective-is.js，本文件由 convert-effects.mjs 生成
+import type {VisualEffect} from '../../types';
+
+export const effect: VisualEffect = {
+  id: "013",
+  name: "013 Perspective is a matter of perception",
+  src: "Perspective is a matter of perception · CodePen",
+  css: "\n.fx-013 .bl-wrap {\n  font-size: 3vw;\n}\n.fx-013 .wrap {\n  display: flex;\n  flex-direction: row;\n  justify-content: center;\n  align-items: center;\n  gap: 0 1rem;\n  width: 100%;\n  margin: 0 auto;\n  perspective: 12vmin;\n}\n.fx-013 .left,.fx-013 \n.right {\n  font-size: max(2rem, 6cqi);\n  font-weight: 900;\n  line-height: 4;\n  color: #fcf75e;\n  text-transform: uppercase;\n  transform-style: preserve-3d;\n  animation: fx013-rotate 5s ease-in-out backwards 1s;\n  animation-delay: calc(1s - var(--fx-t));\n}\n@keyframes fx013-rotate {\n  from {\n    perspective: 0vmin;\n    transform: rotateY(0deg);\n  }\n}\n.fx-013 .left {\n  transform-origin: right;\n  transform: rotateY(-10deg) scale(2);\n}\n.fx-013 .right {\n  transform-origin: left;\n  transform: rotateY(10deg) scale(2);\n}\n.fx-013 .centre {\n  font-size: max(1rem, 6cqi);\n  color: #98ff98;\n  line-height: 1;\n  writing-mode: vertical-lr;\n  transform: rotate(-180deg);\n  transform-style: preserve-3d;\n  animation: fx013-scaleAnim 5s ease-in-out forwards 1s;\n  animation-delay: calc(1s - var(--fx-t));\n}\n@keyframes fx013-scaleAnim {\n  to {\n    transform: rotate(-180deg) rotateX(-20deg) translateY(30%);\n  }\n}\n\n/* 与歌词同步的逐字露出：关掉引擎按整体宽度的遮罩（双份宽度会让露出变慢/错位），\n   改为给左右两份各自按 --reveal 在自身宽度内并行露出，与 lrc 时间轴同步 */\n.fx-013 .bl-wrap { -webkit-mask-image: none !important; mask-image: none !important; }\n.fx-013 .left,.fx-013  .right {\n  -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--reveal, 1) * 100% - 0.4ch), transparent calc(var(--reveal, 1) * 100% + 0.1ch));\n          mask-image: linear-gradient(90deg, #000 calc(var(--reveal, 1) * 100% - 0.4ch), transparent calc(var(--reveal, 1) * 100% + 0.1ch));\n}\n",
+  html: "<div class=\"wrap\">\n  <span class=\"left\">{{LINE}}</span>\n  <span class=\"centre\">*</span>\n  <span class=\"right\">{{LINE}}</span>\n</div>",
+  timeBase: "line",
+};
