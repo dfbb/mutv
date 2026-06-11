@@ -13,9 +13,18 @@ import type {VisualEffect} from './types';
 //
 // 见 example/lyrics-demo.html 的 buildTpl / VISUAL_OVERRIDE / renderVisual。
 
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// 转义 HTML 文本与属性值：含引号，避免歌词内的 " ' 破坏属性（部分 letterTpl 把
+// {ch} 注入 data-c="{ch}" 这类双引号属性）。
+const esc = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 // 构建内层 HTML：letterTpl 逐字模板 或默认 <span class="bl-l">；再代入 effect.html。
+// 注意：replace 的替换串用函数形式，避免歌词中的 $（$&/$1 等）被当作替换模式而损坏输出。
 function buildTpl(effect: VisualEffect, line: string): string {
   const chars = [...line];
   const safe = esc(line) || '&nbsp;';
@@ -25,9 +34,9 @@ function buildTpl(effect: VisualEffect, line: string): string {
       chars
         .map((ch, i) =>
           effect.letterTpl!
-            .replace(/\{i\}/g, String(i))
-            .replace(/\{n\}/g, String(chars.length))
-            .replace(/\{ch\}/g, ch === ' ' ? '&nbsp;' : esc(ch)),
+            .replace(/\{i\}/g, () => String(i))
+            .replace(/\{n\}/g, () => String(chars.length))
+            .replace(/\{ch\}/g, () => (ch === ' ' ? '&nbsp;' : esc(ch))),
         )
         .join('') || '&nbsp;';
   } else {
@@ -40,8 +49,8 @@ function buildTpl(effect: VisualEffect, line: string): string {
         .join('') || '&nbsp;';
   }
   return (effect.html || '<div class="bl-line">{{LINE}}</div>')
-    .replace(/\{\{LETTERS\}\}/g, letters)
-    .replace(/\{\{LINE\}\}/g, safe);
+    .replace(/\{\{LETTERS\}\}/g, () => letters)
+    .replace(/\{\{LINE\}\}/g, () => safe);
 }
 
 // 8 方向勾边偏移（与 _shared/TextColorOverride 一致），em 随字号缩放
