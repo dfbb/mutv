@@ -21,7 +21,7 @@ node src/cli.mjs --audio example/cn-1.mp3 --lyrics example/cn-1.srt \
 
 ## 2. 硬约束
 
-- **视频预拼接**：用系统 **ffmpeg** 在调用 Remotion 之前把多段视频拼接成**单个完整 mp4**（长度 = 歌曲时长，尺寸 = `--res`），再走现有 `--bg-video` 单文件路径渲染。**不改** `types.ts` / `BackgroundLayer` / 各 preset。
+- **视频预拼接**：用系统 **ffmpeg** 在调用 Remotion 之前把多段视频拼接成**单个完整 mp4**（长度 = 歌曲时长，尺寸 = `--res`），再走现有 `--bg-video` 单文件路径渲染。背景源本身**不改任何 preset**；仅 `BackgroundLayer.tsx` + `types.ts` 因「最后 1 秒右下角署名字幕」各做一处小改（见 §7.1，靠 `getInputProps()` 无需改 preset）。
 - **比例匹配**：下载素材的宽高比必须与 `--res` 生成尺寸相近，再缩放裁剪（cover）到生成尺寸（图片 `objectFit:cover`，视频由 ffmpeg `scale+crop`）。
 - **复用现有配置**：图片轮播完全复用 `--bg-image` 目录模式的 `buildCarousel`、`--bg-image-intvl`、`--bg-image-trans`。
 - **密钥**：Pexels 与 OpenRouter 的 key 都在 `scripts/api.key`（已 gitignore，格式 `pexels=...` / `openrouter=...`）。
@@ -42,9 +42,11 @@ cli.mjs（透传布尔 flag）
                  → 按宽高比接近度过滤候选
                  → 在「候选 ∩ 未被本次运行用过」里按 usage 升序挑最少用的 id
                  → 命中 cache 则复制，否则下载存 cache；usage[id]++
-            4) image → 返回 imageUrls[]，render.mjs 复用 buildCarousel
+            4) image → 返回 imageUrls[] + credits[]，render.mjs 复用 buildCarousel
                video → ffmpeg 把多段缩放裁剪并拼接成单个完整 mp4（长度=歌曲时长、尺寸=--res）
-                       → 返回该 public mp4 文件名 → render.mjs 当作 backgroundVideo
+                       → 返回该 public mp4 文件名 + credits[] → render.mjs 当作 backgroundVideo
+            5) render.mjs 用 credits[]：写 out/<basename>.credits.md + 注入 pexelsCreditsText
+               （最后 1 秒右下角屏上署名，Pexels 合规）
 ```
 
 ## 4. 关键词生成
@@ -96,27 +98,45 @@ Generate 20 to 40 Pexels search keywords.
 ## 5. Pexels 搜索与选择
 
 - SDK：官方 `pexels` npm 包，`createClient(pexelsKey)`，`.photos.search(...)` / `.videos.search(...)`。下载用全局 `fetch`（Node 18+）拉 URL。
-- **配额/报警**：响应头含 `X-Ratelimit-Limit/Remaining/Reset`（实测该 key 配额 25000/小时）。**HTTP 429 = 次数限制**、**401 = 鉴权失败**，打印对应中文错误后退出（已在探针 `scripts/test-pexels.mjs` 验证）。
-- 搜索参数：`{query: 单关键词, orientation, locale, per_page: 15（图）/ 10（视频）, page}`。
+- **配额/报警与预算**：响应头含 `X-Ratelimit-Limit/Remaining/Reset`（实测该 key 配额 25000/小时；但新 key 默认仅 200/小时，且 429 可能不带剩余额度头）。**HTTP 429 = 次数限制（硬失败）**、**401 = 鉴权失败**，打印中文错误后退出（已在探针 `scripts/test-pexels.mjs` 验证）。为防冷门词/严格过滤导致死循环打爆配额，设硬上限：
+  - `maxPagesPerKeyword = 3`（每个关键词最多翻 3 页）。
+  - `maxAttemptsPerSlot = 8`（单个槽位最多尝试 8 次搜索/候选后放弃该槽位）。
+  - `requestBudget`（全局 Pexels 请求数上限，默认 `min(150, 槽位数×4)`）；超预算即停止继续搜索，用已得素材兜底（循环填满/减少图数）。
+- 搜索参数：`{query: 单关键词, orientation, locale, per_page: 15（图）/ 10（视频）, page, size}`。图片用 `size=large`（≥24MP 优先）做粗筛以提高满足最小分辨率的概率。
 - **orientation**：`width > height → landscape`，`height > width → portrait`，相等 → `square`。
 - **比例过滤**：目标比 `R = width/height`，候选比 `r = w/h`，保留 `|r − R| ≤ 0.35` 的（实拍图常见 3:2=1.5，对 16:9=1.778 偏差 0.278，阈值须放宽到 0.35，否则误杀大量正常素材）；全被过滤则放宽到 0.6 重试一次，仍无则跳过该关键词。
   - 图片：用结果的 `width/height` 过滤。
   - 视频：先在视频级用 `v.width/v.height` 过滤掉超宽/超窄片（如 3840×1600=2.4）。
 - **下载分辨率选择**：
-  - 图片：**不下原图**（实测原图可达 12000px / 数 MB）。用 Pexels 动态裁剪：`<src.original>?auto=compress&cs=tinysrgb&w=W&h=H&fit=crop&dpr=1`，直接取**目标尺寸、已 cover 裁剪**的小图（带宽小、比例天然正确）。
-  - 视频：在 `video_files` 里选 orientation 一致、**分辨率 ≥ 目标且面积最接近**目标的档（**不取最大**——实测最大档可达 4K/53MB；多数视频有现成 1280×720）。取该档 `link`。
-- **低重复选择**：候选（已过比例过滤、排除本次 run 已用 id）按 `usage[id]` 升序排序（新资源 count=0 最优），取最小者；同 count 保持搜索相关性顺序。
+  - 图片：**先按最小分辨率过滤** `photo.width ≥ resWidth && photo.height ≥ resHeight`（保证不放大；动态裁剪 `fit=crop` 在原图过小时会拉伸放大，故此过滤必须前置）；满足后再**不下原图**（实测原图可达 12000px / 数 MB），用 Pexels 动态裁剪 `<src.original>?auto=compress&cs=tinysrgb&w=W&h=H&fit=crop&dpr=1` 取目标尺寸已 cover 裁剪的小图。最小分辨率过滤后无候选 → 跳过该关键词。
+  - 视频：在 `video_files` 里选 orientation 一致、**分辨率 ≥ 目标且面积最接近**目标的档（**不取最大**——实测最大档可达 4K/53MB；多数视频有现成 1280×720）。无 ≥ 目标的档则取最大可用档。取该档 `link`。
+- **低重复选择**：候选（已过比例/最小分辨率过滤、排除本次 run 已用 id）按 `usage[id]` 升序排序（新资源 count=0 最优），取最小者；同 count 保持搜索相关性顺序。
 
-## 6. 缓存与使用次数
+## 6. 缓存、使用次数与 Pexels 署名（attribution）
 
-- 目录：`cache/pexels/photos/<id>.<ext>`、`cache/pexels/videos/<id>.mp4`（项目根，gitignore 加 `cache/`）。
-- 计数：**SQLite 数据库 `cache/usage.sqlite`**，依赖 `better-sqlite3`（同步、简单）。
-  - 表：`CREATE TABLE IF NOT EXISTS usage (type TEXT NOT NULL, id INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (type, id));`，`type ∈ ('photo','video')`。
-  - 查最少用：对一批候选 id `SELECT id, count FROM usage WHERE type=? AND id IN (...)`，库中缺失的 id 视作 count=0。
-  - 累加：`INSERT INTO usage(type,id,count) VALUES(?,?,1) ON CONFLICT(type,id) DO UPDATE SET count=count+1;`
-- 下载前查 cache（文件）：命中则从 cache 复制到 `public/`，不命中才走网络并写入 cache。
-- 选中并实际使用后立即对该 id 执行上面的 UPSERT 累加（每个槽位选定即写，避免崩溃丢计数）。
-- 复制到 public 的命名：图片 `pexbg-NNN-<id>.<ext>`，视频 `pexvid-NNN-<id>.mp4`。
+- 资源文件：
+  - 图片 `cache/pexels/photos/<photoId>.jpg`。
+  - 视频 `cache/pexels/videos/<videoId>-<fileId>.mp4`（**键含 `video_files[].id`**——同一 video 有多个不同分辨率/fps 的 file，只按 video id 会串用错文件）。
+- **SQLite `cache/usage.sqlite`**（`better-sqlite3`），两张表：
+  - `usage(type TEXT, id INTEGER, count INTEGER DEFAULT 0, PRIMARY KEY(type,id))`，`type ∈ ('photo','video')`，**按 Pexels 媒体 id 统计**（视频不按 fileId，保证多样性）。查最少用 `SELECT id,count FROM usage WHERE type=? AND id IN (...)`（缺失 = 0）；累加 `INSERT ... ON CONFLICT(type,id) DO UPDATE SET count=count+1`。
+  - `attribution(type TEXT, id INTEGER, author TEXT, author_url TEXT, pexels_url TEXT, PRIMARY KEY(type,id))`——下载时从搜索结果写入（图片 `photographer`/`photographer_url`/`url`；视频 `user.name`/`user.url`/`url`）。cache 命中也据此补全署名。
+- 下载前查 cache（文件）：命中则从 cache 复制到 `public/`，不命中才走网络并写入 cache；两种情况都 upsert `attribution`。
+- 选中并实际使用后立即 upsert `usage` 累加（每槽位选定即写，避免崩溃丢计数）。
+- 复制到 public 的命名：图片 `pexbg-NNN-<photoId>.jpg`，视频 `pexvid-NNN-<videoId>.mp4`。
+- **合规署名输出（两路）**：每个**实际用到**的素材收集 `{author, author_url, pexels_url}`，render.mjs：
+  1. 写 sidecar `out/<basename>.credits.md`：顶部一行 "Photos/Videos provided by Pexels (https://www.pexels.com)"，逐条 "- Photo/Video by <author> (<author_url>) — <pexels_url>"（完整清单，供视频描述/存档）。
+  2. 生成**屏上署名**：把素材作者拼成一行简短文本，作为 `pexelsCreditsText` 传入 Remotion，最后 1 秒打印在背景右下角（见 §7.1）。
+  二者满足 Pexels Guidelines「展示 Pexels 链接 + 尽量 credit 作者」。
+
+## 7.1 署名片尾字幕（最后 1 秒，背景右下角）
+
+把 credits 生成一条小字幕，在视频**最后 1 秒叠加在背景右下角**（不替换背景，视频/图片照常显示）。图片与视频两条路径统一，**不改各 preset**：
+
+- 文本来源：render.mjs 用实际用到的素材作者去重拼一行，如 `Backgrounds via Pexels — Jane Doe, John Roe`（作者过多则截断为 `…等N位`），作为 `pexelsCreditsText` 写入 Remotion props。
+- 渲染位置：**共享 `BackgroundLayer.tsx`** 内实现，靠 Remotion `getInputProps()` 直接读 `pexelsCreditsText`（避免逐 preset 透传）。当 `getInputProps().pexelsCreditsText` 非空且 `useCurrentFrame() ≥ durationInFrames − fps`（最后 1 秒）时，在背景之上渲染一个绝对定位的右下角小字幕（`position:absolute; right:24px; bottom:24px; 半透明深色底 + 白字 + 小字号 + 圆角内边距`），叠在背景图/视频上方。
+- `types.ts` 的 `MVInputProps` 新增 `pexelsCreditsText: string`（默认 `''`，空=不显示），仅为类型完整；实际取值走 `getInputProps()`。
+- 边界：非 pexels 背景时 `pexelsCreditsText=''`，不渲染、零影响。`getInputProps()` 若拿不到（理论上不会，render.mjs 经 `--props` 注入）→ 回退为经 BackgroundLayer prop 透传（需改各 preset 调用点）；实现时先验证 `getInputProps()` 可用。
+- 注：字幕在 BackgroundLayer 内，理论上位于 preset 前景之下；右下角通常无前景元素，实测若被遮挡再提升层级。
 
 ## 7. 视频拼接（系统 ffmpeg 预拼接成单个 mp4）
 
@@ -176,9 +196,10 @@ ffmpeg -y -i c0.mp4 -i c1.mp4 ... \
 
 ```js
 /**
- * 准备 Pexels 背景。返回 { imageUrls } 或 { videoFile }。
- * @returns image: { imageUrls: string[] }（public 相对文件名，交 buildCarousel）
- *          video: { videoFile: string }（public 相对的已拼接 mp4，交 backgroundVideo）
+ * 准备 Pexels 背景。返回含背景源 + 署名清单。
+ * @returns image: { imageUrls: string[], credits: Credit[] }（imageUrls 交 buildCarousel）
+ *          video: { videoFile: string, credits: Credit[] }（videoFile 交 backgroundVideo）
+ *   Credit = { type:'photo'|'video', id, author, authorUrl, pexelsUrl }（仅实际用到的素材）
  */
 export async function preparePexelsBackground({
   kind,            // 'image' | 'video'
@@ -188,18 +209,28 @@ export async function preparePexelsBackground({
   intvl,           // 仅 image：每张停留秒数（默认 5）
   apiKeys,         // {pexels, openrouter}
   publicDir, cacheDir,
+  limits,          // {maxPagesPerKeyword:3, maxAttemptsPerSlot:8, requestBudget}
 })
+
+// render.mjs：用返回的 credits ① 写 out/<basename>.credits.md；
+//             ② 经 renderCreditsLine() 生成屏上一行，作为 pexelsCreditsText 注入 props。
 
 // 辅助（可单测，无网络）：
 export function parseApiKeys(text)        // 'pexels=..\nopenrouter=..' → {pexels, openrouter}
 export function langToLocale(lang)        // 'zh_CN' → 'zh-CN'
 export function orientationOf(w, h)       // → 'landscape'|'portrait'|'square'
 export function aspectScore(cw, ch, w, h) // |cw/ch − w/h|
+export function meetsMinRes(cw, ch, w, h) // cw>=w && ch>=h
+export function pickPhotoCropUrl(originalUrl, w, h) // 加 ?w&h&fit=crop&dpr=1
+export function pickVideoFile(files, w, h)         // ≥目标且面积最接近，否则最大
 export function pickLeastUsed(cands, counts, usedThisRun) // counts: Map<id,count> → 选中 id
-export function parseKeywords(text)       // LLM 输出 → string[]
+export function parseKeywords(text)       // LLM 输出 → string[]（slice 0,40）
 export function buildConcatArgs(clips, w, h, fps, durationSec, outPath) // → ffmpeg 参数数组
-// usage SQLite 封装（better-sqlite3）：
-export function openUsageDb(cacheDir)     // → {getCounts(type, ids), bump(type, id), close()}
+export function renderCreditsMd(credits)  // Credit[] → credits.md 完整文本
+export function renderCreditsLine(credits) // Credit[] → 屏上一行（去重作者、过多截断），pexelsCreditsText
+// SQLite 封装（better-sqlite3），两表 usage + attribution：
+export function openCacheDb(cacheDir)     // → {getCounts(type,ids), bumpUsage(type,id),
+                                          //     putAttribution(c), getAttribution(type,id), close()}
 ```
 
 ## 12. 测试（`node --test`，网络部分 mock）
@@ -207,13 +238,19 @@ export function openUsageDb(cacheDir)     // → {getCounts(type, ids), bump(typ
 - `parseApiKeys`：多行/含等号值/缺键。
 - `langToLocale`：5 种映射 + 回退。
 - `orientationOf`：横/竖/方。
-- `aspectScore` / 比例过滤阈值逻辑。
+- `aspectScore` / 比例过滤阈值（0.35→0.6 放宽）。
+- `meetsMinRes`：边界（恰好相等通过、任一维不足拒绝）。
+- `pickPhotoCropUrl`：正确拼接 `w/h/fit=crop`。
+- `pickVideoFile`：选 ≥目标且最接近、无≥目标时取最大、超宽片排除。
 - `pickLeastUsed`：优先 count 0、排除已用、同 count 稳定顺序。
-- `parseKeywords`：去序号/空行/去重。
-- `buildConcatArgs`：N 段输入 → 正确的 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、输出路径。
-- `openUsageDb`：建表、`bump` 后 count 递增、`getCounts` 缺失 id 返回 0（用临时 sqlite 文件）。
-- 视频段数累积 + 循环填满逻辑（总时长 ≥ 目标）。
-- 端到端 smoke：mock OpenRouter/Pexels/fetch/ffmpeg(exec)，验证 image 返回 imageUrls、video 返回单个 videoFile。
+- `parseKeywords`：去序号/空行/去重、`slice(0,40)`。
+- `buildConcatArgs`：N 段输入 → 正确 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、输出路径。
+- `openCacheDb`：建两表、`bumpUsage` 递增、`getCounts` 缺失=0、`putAttribution`/`getAttribution` 往返。
+- `renderCreditsMd`：含 Pexels 链接行 + 每条作者/URL。
+- `renderCreditsLine`：去重作者、作者过多截断为 `…等N位`、含 "Pexels"。
+- 视频段数累积 + 循环填满（总时长 ≥ 目标）；预算上限触发后停止。
+- 端到端 smoke：mock OpenRouter/Pexels/fetch/ffmpeg(exec)，验证 image 返回 imageUrls+credits、video 返回单个 videoFile+credits。
+- 署名字幕时机（轻量）：在 fps=24、durationInFrames=N 下，断言「最后 1 秒」判定 `frame ≥ N − fps` 的边界（纯函数抽出，不渲染 React）。
 
 ## 13. 依赖与文档
 
@@ -221,11 +258,12 @@ export function openUsageDb(cacheDir)     // → {getCounts(type, ids), bump(typ
 - 前置：系统 `ffmpeg`（`--bg-pexels-video` 需要）+ 已有的 `ffprobe`。
 - `.gitignore` 加 `cache/`、`scripts/_pextest/`。
 - 探针（已写并验证）：`scripts/test-openrouter-keywords.mjs`、`scripts/test-pexels.mjs`，零依赖（全局 fetch），实现时作为参数/响应字段的事实依据。
-- `USAGE.md`：在「画面」参数表新增 `--bg-pexels-image` / `--bg-pexels-video` 两行，新增「Pexels 智能背景」小节说明关键词生成、比例匹配、ffmpeg 视频拼接、缓存与低重复策略、api.key 配置、ffmpeg 前置，并在「工作原理」补充 pexels 流程。
+- `USAGE.md`：在「画面」参数表新增 `--bg-pexels-image` / `--bg-pexels-video` 两行，新增「Pexels 智能背景」小节说明关键词生成、比例匹配、ffmpeg 视频拼接、缓存与低重复策略、**Pexels 署名（`out/<name>.credits.md` + 最后 1 秒右下角字幕）**、api.key 配置、ffmpeg 前置，并在「工作原理」补充 pexels 流程。
 
 ## 14. 非目标（YAGNI）
 
 - 不缓存关键词（每次新生成即带来多样性）。
 - 不支持手动传 query 覆盖 LLM（保持布尔 flag）。
-- 视频拼接用系统 ffmpeg 预合成单个 mp4，**不改** Remotion 组件 / preset。
+- 视频拼接用系统 ffmpeg 预合成单个 mp4；Remotion 改动仅限 `BackgroundLayer.tsx` + `types.ts`（最后 1 秒右下角署名字幕），**不改任何 preset**。
+- 署名字幕固定右下角、最后 1 秒、单行；不做可配置位置/时长/样式。
 - 不引入 core-* 类抽象，逻辑集中在单一 `pexelsBg.mjs`。
