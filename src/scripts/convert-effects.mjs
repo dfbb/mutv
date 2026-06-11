@@ -37,6 +37,23 @@ const PATCHES = {
   // 039：h1 入场 translateY 滑入带 1s 起始延迟，每行前 ~1.4s 文字停在屏幕上方不可见；
   // 去掉起始延迟，让文字随本行立即归位。
   '039': `.fx-039 h1.bl-mixblend { animation-delay: calc(0s - var(--fx-t)) !important; }`,
+  // 028：section/.isolate/.noise 写死 400×310 大卡片(为原 5em 大字设计)，在引擎字号下
+  // 文字缩到 ~20px → 小字挤在大卡左上角、卡片整体偏置。让卡片随文字尺寸自适应(宽高 auto +
+  // 内边距)，全息噪点/渐变层贴合文字居中。
+  '028': `.fx-028 section { width: auto !important; height: auto !important; padding: 0.25em 0.5em; }
+.fx-028 .isolate { position: relative !important; height: auto !important; }
+.fx-028 .noise { width: auto !important; height: auto !important; padding: 0.1em 0.2em; }
+.fx-028 .overlay { display: none !important; }`,
+  // 024：16 份文字按 translateZ(220px) 排成 3D 文字环；该半径为原视口调校，在 640×360 下
+  // 环过大，旋转到边缘相位时上下两份被放大并溢出上下边框。收紧环半径(110px)使各份始终在画面内。
+  '024': `.fx-024 .box span { transform: translate(-50%, -50%) rotateX(calc(var(--i) * 22.5deg)) translateZ(110px) !important; }`,
+  // 096：虚线投影由 6px 平铺 :before 网点 + :after 文字叠加构成，为大号拉丁字设计；引擎字号下
+  // 6px 网点盖满 5 个 CJK 字 → 糊成网点块。去掉米色面板与网点遮罩，仅保留 :after 实体文字 +
+  // 错位投影，使歌词清晰可读(本质降级:放弃原"网点状投影"质感)。
+  '096': `.fx-096 .bl-wrap { background: transparent !important; }
+.fx-096 .dashed-shadow { top: 0 !important; left: 0 !important; color: #b85b3f !important; -webkit-text-fill-color: #b85b3f !important; text-shadow: 0.07em 0.07em #5c3a30 !important; }
+.fx-096 .dashed-shadow:before { display: none !important; }
+.fx-096 .dashed-shadow:after { display: none !important; }`,
 };
 
 /**
