@@ -126,7 +126,9 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-image-trans <组>` | `soft` | 轮播转场风格组：`soft`（柔和淡入淡出/滑动/缩放）、`cool`（翻页/扭曲/炫彩）、`hard`（故障/像素化/燃烧）。 |
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
-| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频“呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
+| `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频”呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
+| `--bg-pexels-image` | 关 | 自动背景：OpenRouter(mistral-nemo) 读歌词生成英文关键词 → Pexels 搜索按比例匹配的图片 → 每 `--bg-image-intvl` 秒一张轮播（复用 `--bg-image-trans` 转场）。素材缓存于 `cache/pexels/`，优先选历史使用次数少的。与其它背景源互斥。需 `scripts/api.key`。 |
+| `--bg-pexels-video` | 关 | 同上但下载视频：多段按比例匹配的视频经系统 ffmpeg 近无损拼接为整首长度的单个 mp4 作背景。**需系统 ffmpeg**。与其它背景源互斥。需 `scripts/api.key`。 |
 | `--font <名\|random>` | 无（用各 preset 内置字体） | 指定文字字体。先按歌词（srt/lrc）语言自动选字库目录：英语/欧洲语言→`en`、简体中文→`zh_CN`、繁体中文→`zh_TW`、韩语→`kr`、日语→`ja`（检测不出或无对应目录→回退 `en`）。值为该目录下 woff2 文件名（去扩展名，如 `Pretendard-Regular`），或 `random` 随机选一个。选中字体经 `@font-face` 加载并前置到各 preset 字体栈。依赖本地 `font/` 目录（已 gitignore，未随仓库分发）。 |
 | `--font-scale <n>` | `1` | 字号倍率，整体放大/缩小**所有文字**（标题/歌词/署名等比缩放），不改变排版比例。`1`=跟随 preset 原样，`1.5`=放大 50%，`0.8`=缩小。非正数回退 `1`，并 clamp 到 `[0.1, 10]`。所有 preset 一致生效，与 `--font` 正交。 |
 | `--font-fg-color <色>` | 无（用各 preset 内置配色） | 文字填充色，作用于**所有文字**。支持 `R:G:B`（各 0-255，如 `212:122:33`）和 CSS 颜色名（如 `white`、`blue`）。设置后强制覆盖 preset 自身配色（含 `ktv` 的逐字变色、`neon` 的霓虹色等动态效果）。非法值警告并忽略。 |
@@ -143,6 +145,34 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 - 极窄：背景模糊 cover + 前景 contain 完整显示
 
 横屏（1080×720）与竖屏（720×1080）共用同一套相对阈值，自动适配：同一张 16:9 横图在横屏里是「接近」，在竖屏里是「极宽」（横向慢移露出全景）。
+
+### Pexels 智能背景
+
+**前置条件**
+
+- 在仓库根创建 `scripts/api.key`（已 gitignore），格式：
+  ```
+  pexels=<你的 Pexels API Key>
+  openrouter=<你的 OpenRouter API Key>
+  ```
+- `--bg-pexels-video` 额外需要系统 `ffmpeg`（`brew install ffmpeg` / `apt install ffmpeg`）。
+
+**工作流程**
+
+1. **关键词生成**：读取歌词文本，调用 OpenRouter `mistralai/mistral-nemo` 生成 20–40 个英文搜索关键词（描述氛围/场景/色调/运动感）。
+2. **Pexels 搜索**：用官方 SDK（避免反爬）按关键词 + `--res` 推断的 orientation + 歌词语言 locale 逐词搜索。
+3. **比例匹配**：筛选宽高比与输出分辨率接近的素材（容差 ≤ 1.25 倍），再 cover 缩放裁剪到精确 `--res` 尺寸。
+4. **低重复**：素材按 Pexels id 缓存在 `cache/pexels/`（散列两级目录，图片含目标 `WxH`，视频含 file id），SQLite `cache/usage.sqlite` 记录各 id 历史使用次数，优先选次数少的。
+5. **图片**（`--bg-pexels-image`）：`ceil(时长 / --bg-image-intvl)` 张，交给现有轮播机制（支持 `--bg-image-trans` 转场）。
+6. **视频**（`--bg-pexels-video`）：累积下载直到总时长 ≥ 歌曲长度，用系统 ffmpeg `-crf 16 -preset veryfast` 近无损拼接为单个 mp4，再按 `--bg-video` 路径渲染。
+7. **Pexels 署名（合规）**：
+   - 渲染完成后在输出视频同目录写 `<name>.credits.md`，列全部作者/链接（供视频描述/存档）。
+   - 视频最后 1 秒右下角叠加简短屏上字幕（含 "Pexels.com" + 作者名），`zIndex: 9999` 确保不被歌词前景遮挡。
+
+**报警**
+
+- OpenRouter HTTP 402（余额不足）/ 429（速率限制）/ 401（鉴权失败）→ 报错退出。
+- Pexels 疑似限流或鉴权失败 → 报错退出。
 
 ### 时间轴
 
@@ -196,6 +226,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
    - 把绝对路径的音频/背景复制到 `public/`
    - 解析歌词（LRC → SRT 回退 / JSON）
    - 用 `ffprobe` 检测音频时长
+   - 若传入 `--bg-pexels-image` 或 `--bg-pexels-video`，调用 `pexelsBg.preparePexelsBackground()`：经 OpenRouter 生成关键词、Pexels 搜索/下载素材、缓存去重，最终将背景路径注入为等效的 `--bg-image` 目录或 `--bg-video` 文件交由后续流程处理。
    - 把所有参数写入临时文件 `.render-props.json`
    - 调用 `npx remotion render preset/<label>/index.ts MusicVideo <output>`（或 `--html` 时启动 studio）
 3. 分辨率/帧率通过 props 传入，`preset/orig/Root.tsx` 的 `calculateMetadata` 读取后决定画布尺寸，无需在组件里写死。
