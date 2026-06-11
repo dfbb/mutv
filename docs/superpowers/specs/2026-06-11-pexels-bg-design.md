@@ -140,10 +140,11 @@ Generate 20 to 40 Pexels search keywords.
 
 ## 7. 视频拼接（系统 ffmpeg 预拼接成单个 mp4）
 
-在调用 Remotion 之前，用系统 ffmpeg 把已下载的多段视频合成**一个**完整 mp4，再交给现有 `--bg-video` 单文件路径渲染。**不改** `types.ts` / `BackgroundLayer.tsx` / 任何 preset。
+在调用 Remotion 之前，用系统 ffmpeg 把已下载的多段视频合成**一个**完整 mp4，再交给现有 `--bg-video` 单文件路径渲染。背景源不改任何 preset（署名字幕的 BackgroundLayer/types 小改见 §7.1）。
 
 - **前置检查**：`--bg-pexels-video` 需要系统 `ffmpeg`（项目已用 `ffprobe`）。缺失则报错退出并提示安装。
 - **段数累积**：逐关键词下载视频，累加各段 `duration`（Pexels 视频含 `duration` 秒）直到总和 ≥ 歌曲时长；不足且关键词池耗尽 → 循环复用已下载片段填满。
+- **高质量近无损**：拼接 mp4 是**中间产物**，之后会被 Remotion 二次编码成最终视频；两次编码叠加损失，故中间用接近无损参数（`-crf 16 -preset slow`），把质量瓶颈留给最终 `--crf`，避免双重压缩伪影。
 - **拼接命令**（单次 `filter_complex`：每段 scale 到 cover 再 crop 到精确 `WxH`、统一 fps，再 concat，最后 `-t` 截到歌曲时长）：
 
 ```
@@ -153,11 +154,12 @@ ffmpeg -y -i c0.mp4 -i c1.mp4 ... \
     [1:v]scale=W:H:force_original_aspect_ratio=increase,crop=W:H,setsar=1,fps=F[v1]; \
     ... \
     [v0][v1]...[vN-1]concat=n=N:v=1:a=0[outv]" \
-  -map "[outv]" -an -t <歌曲时长> -c:v libx264 -pix_fmt yuv420p \
+  -map "[outv]" -an -t <歌曲时长> \
+  -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p \
   public/pexvid-concat.mp4
 ```
 
-- `W=resWidth, H=resHeight, F=fps`。`force_original_aspect_ratio=increase + crop` = cover，保证每段精确 `WxH`、无黑边。`-an` 去音轨（背景静音）。`-t` 截到歌曲时长。
+- `W=resWidth, H=resHeight, F=fps`。`force_original_aspect_ratio=increase + crop` = cover，保证每段精确 `WxH`、无黑边。`-an` 去音轨（背景静音）。`-t` 截到歌曲时长。`-crf 16 -preset slow` = 近无损中间件。
 - 输出 `public/pexvid-concat.mp4`，render.mjs 把它作为 `backgroundVideo`（现有单视频路径，`<Video loop muted cover>`；已等长，loop 不触发）。
 
 ## 8. CLI 与互斥
@@ -244,7 +246,7 @@ export function openCacheDb(cacheDir)     // → {getCounts(type,ids), bumpUsage
 - `pickVideoFile`：选 ≥目标且最接近、无≥目标时取最大、超宽片排除。
 - `pickLeastUsed`：优先 count 0、排除已用、同 count 稳定顺序。
 - `parseKeywords`：去序号/空行/去重、`slice(0,40)`。
-- `buildConcatArgs`：N 段输入 → 正确 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、输出路径。
+- `buildConcatArgs`：N 段输入 → 正确 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、近无损 `-crf 16 -preset slow`、输出路径。
 - `openCacheDb`：建两表、`bumpUsage` 递增、`getCounts` 缺失=0、`putAttribution`/`getAttribution` 往返。
 - `renderCreditsMd`：含 Pexels 链接行 + 每条作者/URL。
 - `renderCreditsLine`：去重作者、作者过多截断为 `…等N位`、含 "Pexels"。
