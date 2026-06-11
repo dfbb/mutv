@@ -97,8 +97,8 @@ Generate 20 to 40 Pexels search keywords.
 
 ## 5. Pexels 搜索与选择
 
-- SDK：官方 `pexels` npm 包，`createClient(pexelsKey)`，`.photos.search(...)` / `.videos.search(...)`。下载用全局 `fetch`（Node 18+）拉 URL。
-- **配额/报警与预算**：响应头含 `X-Ratelimit-Limit/Remaining/Reset`（实测该 key 配额 25000/小时；但新 key 默认仅 200/小时，且 429 可能不带剩余额度头）。**HTTP 429 = 次数限制（硬失败）**、**401 = 鉴权失败**，打印中文错误后退出（已在探针 `scripts/test-pexels.mjs` 验证）。为防冷门词/严格过滤导致死循环打爆配额，设硬上限：
+- **HTTP 客户端：统一用全局 `fetch`（不走官方 SDK）**。原因：401/429 报警与 `X-Ratelimit-*` 预算都依赖响应 status/headers，而官方 `pexels` SDK 只回解析后的 JSON、不暴露这些；fetch 保留 status/headers 再解析 JSON（已在探针 `scripts/test-pexels.mjs` 验证可拿到头）。搜索 `GET https://api.pexels.com/v1/search` / `/videos/search`，下载同 `fetch`。
+- **配额/报警与预算**：响应头含 `X-Ratelimit-Limit/Remaining/Reset`（实测该 key 配额 25000/小时；但新 key 默认仅 200/小时，且 429 可能不带剩余额度头）。**HTTP 429 = 次数限制（硬失败）**、**401 = 鉴权失败**，打印中文错误后退出。为防冷门词/严格过滤导致死循环打爆配额，设硬上限：
   - `maxPagesPerKeyword = 3`（每个关键词最多翻 3 页）。
   - `maxAttemptsPerSlot = 8`（单个槽位最多尝试 8 次搜索/候选后放弃该槽位）。
   - `requestBudget`（全局 Pexels 请求数上限，默认 `min(150, 槽位数×4)`）；超预算即停止继续搜索，用已得素材兜底（循环填满/减少图数）。
@@ -109,16 +109,16 @@ Generate 20 to 40 Pexels search keywords.
   - 视频：先在视频级用 `v.width/v.height` 过滤掉超宽/超窄片（如 3840×1600=2.4）。
 - **下载分辨率选择**：
   - 图片：**先按最小分辨率过滤** `photo.width ≥ resWidth && photo.height ≥ resHeight`（保证不放大；动态裁剪 `fit=crop` 在原图过小时会拉伸放大，故此过滤必须前置）；满足后再**不下原图**（实测原图可达 12000px / 数 MB），用 Pexels 动态裁剪 `<src.original>?auto=compress&cs=tinysrgb&w=W&h=H&fit=crop&dpr=1` 取目标尺寸已 cover 裁剪的小图。最小分辨率过滤后无候选 → 跳过该关键词。
-  - 视频：在 `video_files` 里选 orientation 一致、**分辨率 ≥ 目标且面积最接近**目标的档（**不取最大**——实测最大档可达 4K/53MB；多数视频有现成 1280×720）。无 ≥ 目标的档则取最大可用档。取该档 `link`。
+  - 视频：在 `video_files` 里**先剔除非法档**——只保留 `Number.isFinite(width) && Number.isFinite(height)` 且**直链 mp4**（`file_type === 'video/mp4'` 或 link 以 `.mp4` 结尾）的；**HLS/m3u8/其它格式跳过**（否则缓存成 .mp4 后 ffmpeg 拼接失败）。再在合法档里选 orientation 一致、**分辨率 ≥ 目标且面积最接近**目标的档（**不取最大**——实测最大档可达 4K/53MB；多数视频有现成 1280×720）。无 ≥ 目标的档则取最大合法档；无任何合法 mp4 档 → 跳过该视频。取该档 `link`。
 - **低重复选择**：候选（已过比例/最小分辨率过滤、排除本次 run 已用 id）按 `usage[id]` 升序排序（新资源 count=0 最优），取最小者；同 count 保持搜索相关性顺序。
 
 ## 6. 缓存、使用次数与 Pexels 署名（attribution）
 
-- 资源文件：
-  - 图片 `cache/pexels/photos/<photoId>.jpg`。
+- 资源文件（缓存键含决定文件内容的参数，避免换 `--res` 二次渲染串用旧尺寸）：
+  - 图片 `cache/pexels/photos/<photoId>-<W>x<H>-crop.jpg`（**键含目标 `WxH`**——图按 `fit=crop&w=W&h=H` 下载，不同 `--res` 内容不同）。
   - 视频 `cache/pexels/videos/<videoId>-<fileId>.mp4`（**键含 `video_files[].id`**——同一 video 有多个不同分辨率/fps 的 file，只按 video id 会串用错文件）。
 - **SQLite `cache/usage.sqlite`**（`better-sqlite3`），两张表：
-  - `usage(type TEXT, id INTEGER, count INTEGER DEFAULT 0, PRIMARY KEY(type,id))`，`type ∈ ('photo','video')`，**按 Pexels 媒体 id 统计**（视频不按 fileId，保证多样性）。查最少用 `SELECT id,count FROM usage WHERE type=? AND id IN (...)`（缺失 = 0）；累加 `INSERT ... ON CONFLICT(type,id) DO UPDATE SET count=count+1`。
+  - `usage(type TEXT, id INTEGER, count INTEGER DEFAULT 0, PRIMARY KEY(type,id))`，`type ∈ ('photo','video')`，**按 Pexels 媒体 id 统计**（图片按 photoId、视频按 videoId，均不含尺寸/fileId，保证跨分辨率多样性一致）。查最少用 `SELECT id,count FROM usage WHERE type=? AND id IN (...)`（缺失 = 0）；累加 `INSERT ... ON CONFLICT(type,id) DO UPDATE SET count=count+1`。
   - `attribution(type TEXT, id INTEGER, author TEXT, author_url TEXT, pexels_url TEXT, PRIMARY KEY(type,id))`——下载时从搜索结果写入（图片 `photographer`/`photographer_url`/`url`；视频 `user.name`/`user.url`/`url`）。cache 命中也据此补全署名。
 - 下载前查 cache（文件）：命中则从 cache 复制到 `public/`，不命中才走网络并写入 cache；两种情况都 upsert `attribution`。
 - 选中并实际使用后立即 upsert `usage` 累加（每槽位选定即写，避免崩溃丢计数）。
@@ -224,7 +224,7 @@ export function orientationOf(w, h)       // → 'landscape'|'portrait'|'square'
 export function aspectScore(cw, ch, w, h) // |cw/ch − w/h|
 export function meetsMinRes(cw, ch, w, h) // cw>=w && ch>=h
 export function pickPhotoCropUrl(originalUrl, w, h) // 加 ?w&h&fit=crop&dpr=1
-export function pickVideoFile(files, w, h)         // ≥目标且面积最接近，否则最大
+export function pickVideoFile(files, w, h)         // 仅 finite w/h + 直链 mp4；≥目标且面积最接近，否则最大合法档；无则 null
 export function pickLeastUsed(cands, counts, usedThisRun) // counts: Map<id,count> → 选中 id
 export function parseKeywords(text)       // LLM 输出 → string[]（slice 0,40）
 export function buildConcatArgs(clips, w, h, fps, durationSec, outPath) // → ffmpeg 参数数组
@@ -243,11 +243,12 @@ export function openCacheDb(cacheDir)     // → {getCounts(type,ids), bumpUsage
 - `aspectScore` / 比例过滤阈值（0.35→0.6 放宽）。
 - `meetsMinRes`：边界（恰好相等通过、任一维不足拒绝）。
 - `pickPhotoCropUrl`：正确拼接 `w/h/fit=crop`。
-- `pickVideoFile`：选 ≥目标且最接近、无≥目标时取最大、超宽片排除。
+- `pickVideoFile`：选 ≥目标且最接近、无≥目标时取最大**合法**档、超宽片排除、**跳过 HLS/m3u8/非 mp4/空宽高**、全非法返回 null。
 - `pickLeastUsed`：优先 count 0、排除已用、同 count 稳定顺序。
 - `parseKeywords`：去序号/空行/去重、`slice(0,40)`。
 - `buildConcatArgs`：N 段输入 → 正确 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、近无损 `-crf 16 -preset slow`、输出路径。
 - `openCacheDb`：建两表、`bumpUsage` 递增、`getCounts` 缺失=0、`putAttribution`/`getAttribution` 往返。
+- 缓存键：图片键含 `WxH`（不同 `--res` 键不同）、视频键含 `fileId`；usage 仍按媒体 id。
 - `renderCreditsMd`：含 Pexels 链接行 + 每条作者/URL。
 - `renderCreditsLine`：去重作者、作者过多截断为 `…等N位`、含 "Pexels"。
 - 视频段数累积 + 循环填满（总时长 ≥ 目标）；预算上限触发后停止。
@@ -256,7 +257,7 @@ export function openCacheDb(cacheDir)     // → {getCounts(type,ids), bumpUsage
 
 ## 13. 依赖与文档
 
-- `src/package.json` 加依赖：`pexels`（官方 SDK）、`better-sqlite3`（usage 计数）。
+- `src/package.json` 加依赖：`better-sqlite3`（usage/attribution 计数）。**不加 `pexels` SDK**——Pexels 走全局 `fetch`（见 §5，需 status/headers）。
 - 前置：系统 `ffmpeg`（`--bg-pexels-video` 需要）+ 已有的 `ffprobe`。
 - `.gitignore` 加 `cache/`、`scripts/_pextest/`。
 - 探针（已写并验证）：`scripts/test-openrouter-keywords.mjs`、`scripts/test-pexels.mjs`，零依赖（全局 fetch），实现时作为参数/响应字段的事实依据。
