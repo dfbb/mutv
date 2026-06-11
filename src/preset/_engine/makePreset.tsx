@@ -3,7 +3,8 @@ import {Composition} from 'remotion';
 import type {CalculateMetadataFunction} from 'remotion';
 import {MVInputProps, defaultProps} from '../../types';
 import {ScrollLyrics} from './ScrollLyrics';
-import type {TextEffect} from './types';
+import {VisualLyrics} from './VisualLyrics';
+import type {TextEffect, VisualEffect} from './types';
 
 const calculateMetadata: CalculateMetadataFunction<MVInputProps> = ({props}) => ({
   durationInFrames: Math.ceil(props.durationInSeconds * props.fps),
@@ -17,6 +18,23 @@ const calculateMetadata: CalculateMetadataFunction<MVInputProps> = ({props}) => 
 // 要求"入口文件文本须含 registerRoot"。
 export function registerTextPreset(effect: TextEffect): React.FC {
   const Comp: React.FC<MVInputProps> = (p) => <ScrollLyrics {...p} effect={effect} />;
+  return () => (
+    <Composition
+      id="MusicVideo"
+      component={Comp}
+      fps={defaultProps.fps}
+      width={defaultProps.width}
+      height={defaultProps.height}
+      defaultProps={defaultProps}
+      calculateMetadata={calculateMetadata}
+    />
+  );
+}
+
+// 为一个 visual 类 preset 构造 Remotion Root 渲染函数（把效果定义注入 VisualLyrics 引擎）。
+// 同 registerTextPreset：返回 React.FC，registerRoot 调用放在各 preset 的 index.ts。
+export function registerVisualPreset(effect: VisualEffect): React.FC {
+  const Comp: React.FC<MVInputProps> = (p) => <VisualLyrics {...p} effect={effect} />;
   return () => (
     <Composition
       id="MusicVideo"

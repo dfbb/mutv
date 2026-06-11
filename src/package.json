@@ -23,6 +23,9 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.13",
+    "postcss": "^8.5.15",
+    "postcss-selector-parser": "^7.1.4",
+    "postcss-value-parser": "^4.2.0",
     "typescript": "^5.9.3"
   }
 }
