@@ -457,6 +457,10 @@ if (args['bg-pexels-image'] || args['bg-pexels-video']) {
   const lyricsText = lyrics.map((l) => l.text).join('\n');
   const locale = langToLocale(detectLang(lyricsText));
   const intvl = args['bg-image-intvl'] ? parseFloat(args['bg-image-intvl']) : 5;
+  if (!(intvl > 0)) {
+    console.error(`Error: --bg-image-intvl must be a positive number, got: ${args['bg-image-intvl']}`);
+    process.exit(1);
+  }
   let pex;
   try {
     pex = await preparePexelsBackground({
