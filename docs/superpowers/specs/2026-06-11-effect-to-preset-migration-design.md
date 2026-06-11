@@ -64,11 +64,11 @@ src/preset/
 
 ### 驱帧规则（CSS 动画 → 逐帧确定性）
 
-对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`（t = 当前帧时间）。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。one-shot 动画在 `t > 原delay + duration` 后停在终态属预期行为。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
+对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`。**t = 行内时间 = 当前帧时间 − 当前歌词行 start**（demo 在换行时重建 Shadow DOM、动画逐行重播，引擎等价做法是换行时重挂效果子树 + 行内时间驱帧），one-shot 入场动画因此每行重播。需要全局相位的无限循环动画（如持续跑马灯）在效果定义中以 `timeBase: 'global'` 单独标注。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
 
 ### CSS scope 规则（替代 Shadow DOM）
 
-转换时用 postcss（已在依赖中）做选择器改写，不用裸字符串替换：
+转换时用 postcss 做选择器改写，不用裸字符串替换（postcss + postcss-selector-parser **显式加入 devDependencies**，不依赖 Remotion 的传递依赖）：
 - `:host` → 效果根容器类 `.fx-<id>`；`:host .x` → `.fx-<id> .x`；其余选择器统一加 `.fx-<id> ` 前缀（伪类/伪元素保持在末位）
 - `@keyframes` 名与所有 `animation-name` 引用统一加 `fx<id>-` 前缀，防跨效果串名
 - 样式注入顺序与 demo 一致：效果 css 在前、引擎 VISUAL_OVERRIDE 等价层在后；源效果里既有的 `:host .bl-wrap … !important` 黑屏修复经映射后特异度关系不变，原样生效
@@ -89,8 +89,8 @@ src/preset/
 
 1. `_shared/` 整理 + 旧 preset 改名 → 验证：`render.mjs --preset fx-neon --html` 正常
 2. `_engine/` 两引擎 + makePreset → 验证：手写 fx-001（text）+ fx-014（visual）渲染出帧
-3. 脚本批量转换 97 个效果定义 + 生成薄 preset 目录 → 验证：render.mjs 列出全部目录
-4. 批量出帧抽检（复用 `--debug-preset`），重点查 visual 类黑屏 / 动画不动 / 颜色覆盖失效，逐个修复
+3. 脚本批量转换 97 个效果定义 + 生成薄 preset 目录 → 验证：**97 个 preset 全量 smoke render（各出 1 帧 still）成功**，TS/CSS/模板错误在此层全部暴露
+4. 批量出帧**视觉**抽检（复用 `--debug-preset`），重点查 visual 类黑屏 / 动画不动 / 颜色覆盖失效，逐个修复——抽检只判视觉质量，可用性以步骤 3 的全量 smoke 为准
 5. 写 `preset/README.md` 索引
 
 ## 已知风险
