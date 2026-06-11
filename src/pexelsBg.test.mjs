@@ -161,3 +161,15 @@ test('generateKeywords: 空关键词抛错', async () => {
   const fakeFetch = async () => ({ok: true, status: 200, json: async () => ({choices: [{message: {content: ''}}]})});
   await assert.rejects(() => generateKeywords({lyricsText: 'x', apiKey: 'k', fetchImpl: fakeFetch}));
 });
+
+test('generateKeywords: 429 抛速率限制错误', async () => {
+  const fakeFetch = async () => ({ok: false, status: 429, text: async () => 'rate limit'});
+  await assert.rejects(() => generateKeywords({lyricsText: 'x', apiKey: 'k', fetchImpl: fakeFetch}),
+    /速率限制/);
+});
+
+test('generateKeywords: 401 抛鉴权失败错误', async () => {
+  const fakeFetch = async () => ({ok: false, status: 401, text: async () => 'unauthorized'});
+  await assert.rejects(() => generateKeywords({lyricsText: 'x', apiKey: 'k', fetchImpl: fakeFetch}),
+    /鉴权失败/);
+});
