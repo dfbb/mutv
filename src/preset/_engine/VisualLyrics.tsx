@@ -86,15 +86,28 @@ ${p} .bl-wrap {
     if (fg) {
       decls.push(`color: ${fg} !important;`);
       decls.push(`-webkit-text-fill-color: ${fg} !important;`);
-      decls.push(`background-image: none !important;`);
+      // 用 background 简写而非仅 background-image：部分特效用 background 简写注入
+      // 取色渐变(specificity 更高 + !important)，仅覆盖 background-image 盖不住；连同
+      // background 一并清空，让字面回到 text-fill-color。
+      decls.push(`background: none !important;`);
+      // 关键：渐变文字特效保留 background-clip:text（取色渐变 clip 进字形）。若只清
+      // background 而不复位 clip，则 clip:text + 无背景 = 字形被裁成透明，fill-color 也
+      // 显不出（055 全黑 / 028 仍露父级噪点底色）。复位 clip 到 border-box 让指定 fg 显出。
+      decls.push(`-webkit-background-clip: border-box !important;`);
+      decls.push(`background-clip: border-box !important;`);
     }
     decls.push(`-webkit-text-stroke-color: ${bg || fg} !important;`);
     if (bg) {
       const shadow = OUTLINE_OFFSETS.map((off) => `${off} 0 ${bg}`).join(', ');
       decls.push(`text-shadow: ${shadow} !important;`);
     }
+    // 多个特效手写了 `.fx-<id> .bl-wrap .x` 级(最深 0,4,0)+!important 规则刻意恢复自身
+    // 渐变/描边色("覆盖顶层 VISUAL_OVERRIDE 的强制色")。!important 平手时由 specificity
+    // 决出胜负，故传色时把 .fx-<id> 重复 4 次，叠加 .bl-wrap 后达 (0,5,*) 稳压这些特效
+    // 规则，让全部可见文字落到指定 fg/bg。仅在传色时启用，不影响默认渲染。
+    const pp = `${p}${p}${p}${p}`; // 4×id + .bl-wrap = (0,5,*)，压过特效最深 (0,4,0) 规则
     css += `
-${p} .bl-wrap, ${p} .bl-wrap *, ${p} .bl-wrap *::before, ${p} .bl-wrap *::after { ${decls.join(' ')} }`;
+${pp} .bl-wrap, ${pp} .bl-wrap *, ${pp} .bl-wrap *::before, ${pp} .bl-wrap *::after { ${decls.join(' ')} }`;
   }
   return css;
 }
