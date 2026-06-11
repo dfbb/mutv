@@ -70,10 +70,10 @@ src/preset/
 
 转换时用 postcss 做选择器改写，不用裸字符串替换（postcss + postcss-selector-parser + postcss-value-parser **显式加入 devDependencies**，不依赖 Remotion 的传递依赖）：
 - 所有 `animation` **shorthand**（如 `animation: marquee 16s infinite linear`）用 postcss-value-parser 拆解后读写 name/duration/delay/iteration-count，与显式 `animation-name`/`animation-delay`/`animation-iteration-count` 属性走同一套读写逻辑；keyframes 改名、delay 合成、infinite 检测均同时覆盖 shorthand 与 longhand，并各有单测
-- `:host` → 效果根容器类 `.fx-<id>`；`:host .x` → `.fx-<id> .x`；其余选择器统一加 `.fx-<id> ` 前缀（伪类/伪元素保持在末位）
+- `:host` → 效果根容器类 `.fx-<id>`；`:host .x` → `.fx-<id> .x`；`:root` → `.fx-<id>`（CSS 变量定义改挂效果根，var() 引用照常生效）；其余选择器统一加 `.fx-<id> ` 前缀（伪类/伪元素保持在末位）
 - `@keyframes` 名与所有 `animation-name` 引用统一加 `fx<id>-` 前缀，防跨效果串名
 - 样式注入顺序与 demo 一致：效果 css 在前、引擎 VISUAL_OVERRIDE 等价层在后；源效果里既有的 `:host .bl-wrap … !important` 黑屏修复经映射后特异度关系不变，原样生效
-- 以 014（黑屏修复 + mask 关闭）、020（`:host` 覆盖）为代表性样例写转换单测
+- 以 014（黑屏修复 + mask 关闭）、020（`:host` 覆盖）、034/048/077（`:root` CSS 变量）为代表性样例写转换单测
 
 ### 颜色覆盖语义（fontFgColor / fontBgColor）
 
