@@ -97,8 +97,8 @@ Generate 20 to 40 Pexels search keywords.
 
 ## 5. Pexels 搜索与选择
 
-- **HTTP 客户端：统一用全局 `fetch`（不走官方 SDK）**。原因：401/429 报警与 `X-Ratelimit-*` 预算都依赖响应 status/headers，而官方 `pexels` SDK 只回解析后的 JSON、不暴露这些；fetch 保留 status/headers 再解析 JSON（已在探针 `scripts/test-pexels.mjs` 验证可拿到头）。搜索 `GET https://api.pexels.com/v1/search` / `/videos/search`，下载同 `fetch`。
-- **配额/报警与预算**：响应头含 `X-Ratelimit-Limit/Remaining/Reset`（实测该 key 配额 25000/小时；但新 key 默认仅 200/小时，且 429 可能不带剩余额度头）。**HTTP 429 = 次数限制（硬失败）**、**401 = 鉴权失败**，打印中文错误后退出。为防冷门词/严格过滤导致死循环打爆配额，设硬上限：
+- **HTTP 客户端：搜索用官方 `pexels` SDK（反爬必需——裸 `fetch` 在持续调用下会被反爬拦截）**。`createClient(pexelsKey)`，`.photos.search(...)` / `.videos.search(...)`。下载素材文件走 CDN（images./videos.pexels.com），用全局 `fetch` 即可。
+- **配额/报警与预算**：SDK 不暴露 `X-Ratelimit-*` 响应头，故**限流防护以客户端预算上限为主**（见下），不依赖响应头。SDK 调用 best-effort 容错：抛错或返回 `{error}` → 视为该次搜索失败；疑似限流（429/"Too Many Requests"）或**累计失败达预算上限** → 打印中文错误后退出。`401/鉴权失败`（key 错）同样退出。硬上限：
   - `maxPagesPerKeyword = 3`（每个关键词最多翻 3 页）。
   - `maxAttemptsPerSlot = 8`（单个槽位最多尝试 8 次搜索/候选后放弃该槽位）。
   - `requestBudget`（全局 Pexels 请求数上限，默认 `min(150, 槽位数×4)`）；超预算即停止继续搜索，用已得素材兜底（循环填满/减少图数）。
@@ -114,9 +114,10 @@ Generate 20 to 40 Pexels search keywords.
 
 ## 6. 缓存、使用次数与 Pexels 署名（attribution）
 
-- 资源文件（缓存键含决定文件内容的参数，避免换 `--res` 二次渲染串用旧尺寸）：
-  - 图片 `cache/pexels/photos/<photoId>-<W>x<H>-crop.jpg`（**键含目标 `WxH`**——图按 `fit=crop&w=W&h=H` 下载，不同 `--res` 内容不同）。
-  - 视频 `cache/pexels/videos/<videoId>-<fileId>.mp4`（**键含 `video_files[].id`**——同一 video 有多个不同分辨率/fps 的 file，只按 video id 会串用错文件）。
+- 资源文件（缓存键含决定文件内容的参数，避免换 `--res` 二次渲染串用旧尺寸；并按媒体 id **末尾两位散列成两级目录**避免单目录文件过多）：
+  - 散列：`shard(id) = <倒数第二位>/<最后一位>`（id 不足两位前补 0，如 id=7 → `0/7`），100 个桶；按媒体 id（photoId/videoId）散列，同一视频多 fileId 落同一桶。
+  - 图片 `cache/pexels/photos/<shard(photoId)>/<photoId>-<W>x<H>-crop.jpg`（**键含目标 `WxH`**——图按 `fit=crop&w=W&h=H` 下载，不同 `--res` 内容不同）。
+  - 视频 `cache/pexels/videos/<shard(videoId)>/<videoId>-<fileId>.mp4`（**键含 `video_files[].id`**——同一 video 有多个不同分辨率/fps 的 file，只按 video id 会串用错文件）。
 - **SQLite `cache/usage.sqlite`**（`better-sqlite3`），两张表：
   - `usage(type TEXT, id INTEGER, count INTEGER DEFAULT 0, PRIMARY KEY(type,id))`，`type ∈ ('photo','video')`，**按 Pexels 媒体 id 统计**（图片按 photoId、视频按 videoId，均不含尺寸/fileId，保证跨分辨率多样性一致）。查最少用 `SELECT id,count FROM usage WHERE type=? AND id IN (...)`（缺失 = 0）；累加 `INSERT ... ON CONFLICT(type,id) DO UPDATE SET count=count+1`。
   - `attribution(type TEXT, id INTEGER, author TEXT, author_url TEXT, pexels_url TEXT, PRIMARY KEY(type,id))`——下载时从搜索结果写入（图片 `photographer`/`photographer_url`/`url`；视频 `user.name`/`user.url`/`url`）。cache 命中也据此补全署名。
@@ -191,7 +192,7 @@ ffmpeg -y -i c0.mp4 -i c1.mp4 ... \
 
 **硬报警（立即退出，不容错）**：
 - **OpenRouter 402** → 「余额不足/欠费」；**429** → 「速率限制」；**401** → 「鉴权失败」。
-- **Pexels 429** → 「次数限制（已达配额）」，附 `X-Ratelimit-Reset`；**401** → 「鉴权失败」。
+- **Pexels 疑似限流**（SDK 抛错/解析失败/"Too Many Requests"，因 SDK 不暴露响应头，按 best-effort 判定）或**累计失败达预算上限** → 「次数限制/请求失败」；**鉴权失败**（key 错）→ 「鉴权失败」。
 - 这两类是账户级故障，重试无意义，打印对应中文错误后 `exit(1)`。
 
 ## 11. 模块接口（`src/pexelsBg.mjs`）
@@ -228,6 +229,9 @@ export function pickVideoFile(files, w, h)         // 仅 finite w/h + 直链 mp
 export function pickLeastUsed(cands, counts, usedThisRun) // counts: Map<id,count> → 选中 id
 export function parseKeywords(text)       // LLM 输出 → string[]（slice 0,40）
 export function buildConcatArgs(clips, w, h, fps, durationSec, outPath) // → ffmpeg 参数数组
+export function shard(id)                  // → '<倒二位>/<末位>'（不足两位补0）
+export function photoCachePath(cacheDir, photoId, w, h) // → .../photos/<shard>/<id>-<W>x<H>-crop.jpg
+export function videoCachePath(cacheDir, videoId, fileId) // → .../videos/<shard>/<videoId>-<fileId>.mp4
 export function renderCreditsMd(credits)  // Credit[] → credits.md 完整文本
 export function renderCreditsLine(credits) // Credit[] → 屏上一行（去重作者、过多截断），pexelsCreditsText
 // SQLite 封装（better-sqlite3），两表 usage + attribution：
@@ -249,6 +253,7 @@ export function openCacheDb(cacheDir)     // → {getCounts(type,ids), bumpUsage
 - `buildConcatArgs`：N 段输入 → 正确 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、近无损 `-crf 16 -preset slow`、输出路径。
 - `openCacheDb`：建两表、`bumpUsage` 递增、`getCounts` 缺失=0、`putAttribution`/`getAttribution` 往返。
 - 缓存键：图片键含 `WxH`（不同 `--res` 键不同）、视频键含 `fileId`；usage 仍按媒体 id。
+- `shard`/`photoCachePath`/`videoCachePath`：末两位散列（id=7→`0/7`、id=…28→`2/8`）、路径含 shard 与正确文件名。
 - `renderCreditsMd`：含 Pexels 链接行 + 每条作者/URL。
 - `renderCreditsLine`：去重作者、作者过多截断为 `…等N位`、含 "Pexels"。
 - 视频段数累积 + 循环填满（总时长 ≥ 目标）；预算上限触发后停止。
@@ -257,10 +262,10 @@ export function openCacheDb(cacheDir)     // → {getCounts(type,ids), bumpUsage
 
 ## 13. 依赖与文档
 
-- `src/package.json` 加依赖：`better-sqlite3`（usage/attribution 计数）。**不加 `pexels` SDK**——Pexels 走全局 `fetch`（见 §5，需 status/headers）。
+- `src/package.json` 加依赖：`pexels`（官方 SDK，搜索调用走它以过反爬）、`better-sqlite3`（usage/attribution 计数）。素材**下载**走 CDN 用全局 `fetch`，不经 SDK。
 - 前置：系统 `ffmpeg`（`--bg-pexels-video` 需要）+ 已有的 `ffprobe`。
 - `.gitignore` 加 `cache/`、`scripts/_pextest/`。
-- 探针（已写并验证）：`scripts/test-openrouter-keywords.mjs`、`scripts/test-pexels.mjs`，零依赖（全局 fetch），实现时作为参数/响应字段的事实依据。
+- 探针（已写并验证）：`scripts/test-openrouter-keywords.mjs`、`scripts/test-pexels.mjs`，零依赖（探针用裸 fetch 验证参数/响应字段，少量调用未触发反爬）；**生产搜索改用官方 SDK**（见 §5）。
 - `USAGE.md`：在「画面」参数表新增 `--bg-pexels-image` / `--bg-pexels-video` 两行，新增「Pexels 智能背景」小节说明关键词生成、比例匹配、ffmpeg 视频拼接、缓存与低重复策略、**Pexels 署名（`out/<name>.credits.md` + 最后 1 秒右下角字幕）**、api.key 配置、ffmpeg 前置，并在「工作原理」补充 pexels 流程。
 
 ## 14. 非目标（YAGNI）
