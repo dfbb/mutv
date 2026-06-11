@@ -9,7 +9,7 @@
 
 ## 范围
 
-- **移植**：text 类 11 个（001–011）+ visual 类 86 个（012–097），共 97 个
+- **移植**：text 类 11 个（001–011）+ visual 类 86 个（012–097），共 97 个。**97 个全部必须交付，不允许剔除**；强依赖被剥离字体的效果（如 016 Nabla）接受观感降级，在 README 索引中标注
 - **不移植**：`effect/core-*.js`（6 个 bg 类背景特效）
 - **同步整理**：现有 8 个旧 preset 改名归入新规范，共享组件移入 `_shared/`
 
@@ -32,7 +32,7 @@ src/preset/
     makePreset.tsx            # 工厂：effect 定义 → Root/Composition
     effects/
       text/001-word-by.ts …   # 11 个，来自 LOGIC.md 规范
-      visual/014-gooey-marquee.ts …  # 86 个，{css, html, letterTpl} 数据
+      visual/014-gooey-marquee.ts …  # 86 个，{css, html, letterTpl?, timeBase?} 数据
   fx-001-word-by/             # 薄 preset 目录，index.ts ≈5 行调 makePreset(effect)
   …
   fx-097-retro-glitch/
@@ -64,7 +64,7 @@ src/preset/
 
 ### 驱帧规则（CSS 动画 → 逐帧确定性）
 
-对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`。**t = 行内时间 = 当前帧时间 − 当前歌词行 start**（demo 在换行时重建 Shadow DOM、动画逐行重播，引擎等价做法是换行时重挂效果子树 + 行内时间驱帧），one-shot 入场动画因此每行重播。需要全局相位的无限循环动画（如持续跑马灯）在效果定义中以 `timeBase: 'global'` 单独标注。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
+对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`。**t = 行内时间 = 当前帧时间 − 当前歌词行 start**（demo 在换行时重建 Shadow DOM、动画逐行重播，引擎等价做法是换行时重挂效果子树 + 行内时间驱帧），one-shot 入场动画因此每行重播。需要全局相位的无限循环动画在效果定义 schema 中标注：visual 定义为 `{css, html, letterTpl?, timeBase?: 'line' | 'global'}`，默认 `'line'`。识别规则：转换脚本对 `animation-iteration-count: infinite` 且 keyframes 含位移类属性（translate/margin/left 等）的效果输出候选清单，人工确认后标注；首批已知 global：014 跑马灯、030 机场翻牌屏。步骤 3 验收含「候选清单已确认完毕」。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
 
 ### CSS scope 规则（替代 Shadow DOM）
 
@@ -78,7 +78,7 @@ src/preset/
 
 沿用现行 TextColorOverride 语义并扩展：
 - **不传**：零副作用，特效原配色（渐变、霓虹、全息等）完整保留——这是默认路径
-- **传了**：CLI 颜色优先、允许牺牲特效配色。覆盖范围从现在的 `color/text-shadow` 扩展到 `-webkit-text-fill-color`、`background-clip:text` 类渐变填充及 `*::before/*::after` 伪元素，验收标准 = 传色时画面所有可见文字均为指定色
+- **传了**：CLI 颜色优先、允许牺牲特效配色。覆盖范围从现在的 `color/text-shadow` 扩展到 `-webkit-text-fill-color`、`background-clip:text` 类渐变填充、`-webkit-text-stroke-color`（保留原 stroke 宽度）及 `*::before/*::after` 伪元素。stroke 取色优先级：传 `fontBgColor` 时 stroke-color 用 bgColor（勾边语义），否则用 fgColor。验收标准 = 传色时画面所有可见文字（含描边）均为指定色
 - README 索引中标注「强依赖配色」的特效（如 028 全息），提示传色后观感损失
 
 ### 011 呼吸效果（节拍能量）
@@ -97,4 +97,4 @@ src/preset/
 
 - 86 个 visual 质量参差（demo 阶段已修过一轮黑屏），步骤 4 的逐个排查是主要工作量
 - 依赖 CSS 变量的 animation-delay 需引擎 calc 注入路径，个别复杂时序特效可能仍需手工调整
-- 个别特效效果强依赖被剥离的特定字体（如 Nabla 彩色字体），观感会变化，抽检时记录并决定保留或剔除
+- 个别特效效果强依赖被剥离的特定字体（如 Nabla 彩色字体），观感会降级——仍交付，README 标注，不剔除
