@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "remotion studio preset/orig/index.ts",
-    "build": "remotion render preset/orig/index.ts MusicVideo out/video.mp4",
+    "start": "remotion studio preset/fx-orig/index.ts",
+    "build": "remotion render preset/fx-orig/index.ts MusicVideo out/video.mp4",
     "render": "node cli.mjs",
     "test": "node --test",
     "upgrade": "remotion upgrade"

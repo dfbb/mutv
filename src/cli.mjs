@@ -108,7 +108,7 @@ const nodeArgs = [
   '--offset', opts.offset || '-0.5',
   '--output', output,
   '--crf', opts.crf || '24',
-  '--preset', opts.preset || 'orig',
+  '--preset', opts.preset || 'fx-orig',
 ];
 if (opts.lyrics) nodeArgs.push('--lyrics', resolve(opts.lyrics));
 else if (opts['lyrics-json']) nodeArgs.push('--lyrics-json', resolve(opts['lyrics-json']));

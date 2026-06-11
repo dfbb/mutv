@@ -255,11 +255,11 @@ const beatReactive =
   !args['no-bg-anim-beat'] &&
   String(args['bg-anim-beat'] ?? 'true').toLowerCase() !== 'false';
 
-// Resolve preset: visual template under preset/<label>/. Default 'orig'. 'random' picks one at random.
+// Resolve preset: visual template under preset/<label>/. Default 'fx-orig'. 'random' picks one at random.
 const availablePresets = existsSync(resolve('preset'))
   ? readdirSync(resolve('preset')).filter(d => existsSync(join(resolve('preset'), d, 'index.ts')))
   : [];
-let presetLabel = args.preset || 'orig';
+let presetLabel = args.preset || 'fx-orig';
 if (presetLabel === 'random') {
   if (availablePresets.length === 0) {
     console.error('Error: --preset random requested but no presets found');

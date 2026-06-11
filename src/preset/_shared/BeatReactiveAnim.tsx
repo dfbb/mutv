@@ -7,7 +7,7 @@ import {
   continueRender,
 } from 'remotion';
 import {useAudioData, visualizeAudio} from '@remotion/media-utils';
-import {bandSums, createBeatState, beatStyle} from '../lib/beatLevels.mjs';
+import {bandSums, createBeatState, beatStyle} from '../../lib/beatLevels.mjs';
 
 const NUM_SAMPLES = 512;
 

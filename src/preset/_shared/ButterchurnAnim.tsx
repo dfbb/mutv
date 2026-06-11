@@ -7,7 +7,7 @@ import {
   continueRender,
 } from 'remotion';
 import {useAudioData} from '@remotion/media-utils';
-import {floatWindowToBytes, FFT_SIZE} from '../lib/waveformBytes.mjs';
+import {floatWindowToBytes, FFT_SIZE} from '../../lib/waveformBytes.mjs';
 
 /**
  * WINAMP/butterchurn 动画背景。逐帧从音频波形取一个 FFT_SIZE 窗口,转 Uint8

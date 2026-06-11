@@ -10,10 +10,10 @@ import {
 } from 'remotion';
 import {useAudioData, visualizeAudio} from '@remotion/media-utils';
 import {MVInputProps} from '../../types';
-import {BackgroundLayer} from '../BackgroundLayer';
-import {StudioControlBar} from '../StudioControlBar';
-import {FontLoader} from '../FontLoader';
-import {TextColorOverride} from '../TextColorOverride';
+import {BackgroundLayer} from '../_shared/BackgroundLayer';
+import {StudioControlBar} from '../_shared/StudioControlBar';
+import {FontLoader} from '../_shared/FontLoader';
+import {TextColorOverride} from '../_shared/TextColorOverride';
 
 export const AudioVisualization: React.FC<MVInputProps> = ({
   audioFileName,

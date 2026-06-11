@@ -1,4 +1,4 @@
-import {LyricLine} from '../types';
+import {LyricLine} from '../../types';
 
 // Word-level lyric model used by the lyrics-overlay style presets
 // (neon / cinema / bounce / typewriter), ported from

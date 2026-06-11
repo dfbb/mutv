@@ -11,11 +11,11 @@ import {
   random,
 } from 'remotion';
 import {MVInputProps} from '../../types';
-import {BackgroundLayer} from '../BackgroundLayer';
-import {StudioControlBar} from '../StudioControlBar';
-import {FontLoader} from '../FontLoader';
-import {TextColorOverride} from '../TextColorOverride';
-import {lyricsToData, LyricsLine, LyricWord} from '../lyricsToData';
+import {BackgroundLayer} from '../_shared/BackgroundLayer';
+import {StudioControlBar} from '../_shared/StudioControlBar';
+import {FontLoader} from '../_shared/FontLoader';
+import {TextColorOverride} from '../_shared/TextColorOverride';
+import {lyricsToData, LyricsLine, LyricWord} from '../_shared/lyricsToData';
 
 // Neon / cyberpunk lyric overlay (ported from ai-music-video-maker's
 // lyrics-overlay skill — LyricsOverlayNeon), adapted to props + image/audio.
