@@ -22,7 +22,7 @@
  *   --bg-image-trans   Carousel transition group: soft|cool|hard (default soft)
  *   --bg-video     Background video file (mutually exclusive)
  *   --bg-anim      Animated background effect label under animbg/<label>/, or 'random' (mutually exclusive)
- *   --preset       Visual template under preset/<label>/ (default: orig)
+ *   --preset       Visual template under preset/<label>/ (default: fx-orig)
  *   --res          Output resolution WxH (default: 1080x720)
  *   --fps          Frames per second (default: 24)
  *   --font-fg-color  文字填充色，R:G:B（如 212:122:33）或 CSS 颜色名（如 white）

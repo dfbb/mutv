@@ -31,7 +31,7 @@
  *   --no-bg-anim-beat  Disable beat-reactive animation for --bg-anim (default: enabled)
  *   --font        字体名(font/<lang>/ 下 woff2 去扩展名)或 'random'；按歌词语言自动选 en/zh_CN/zh_TW/kr/ja 目录
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
- *   --preset      Visual template under preset/<label>/ (default: orig), or 'random'
+ *   --preset      Visual template under preset/<label>/ (default: fx-orig), or 'random'
  *   --res         Output resolution WxH (default: 1080x720)
  *   --fps         Frames per second (default: 24)
  *   --font-scale  字号倍率，整体放大/缩小所有文字(默认 1=跟随 preset；clamp 0.1–10)
