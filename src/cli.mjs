@@ -28,6 +28,8 @@
  *   --bg-image-trans  Carousel transition group: soft|cool|hard (default soft)
  *   --bg-video    Background video file (mutually exclusive)
  *   --bg-anim     Animated background effect label (see src/animbg/), or 'random' (mutually exclusive)
+ *   --bg-pexels-image  LLM 关键词 + Pexels 图片轮播背景（每 intvl 秒一张，互斥）
+ *   --bg-pexels-video  LLM 关键词 + Pexels 视频拼接背景（需系统 ffmpeg，互斥）
  *   --no-bg-anim-beat  Disable beat-reactive animation for --bg-anim (default: enabled)
  *   --font        字体名(font/<lang>/ 下 woff2 去扩展名)或 'random'；按歌词语言自动选 en/zh_CN/zh_TW/kr/ja 目录
  *   --browser     Custom browser executable path (Chrome/Edge/Chromium)
@@ -55,7 +57,7 @@ const RENDER_DIR = dirname(fileURLToPath(import.meta.url));
 // PLACEHOLDER_REST
 
 // --- Parse args (value flags + boolean flags) ---
-const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim', 'debug-preset']);
+const booleanFlags = new Set(['html', 'no-bg-anim-beat', 'debug-bg-anim', 'debug-preset', 'bg-pexels-image', 'bg-pexels-video']);
 const opts = {};
 const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i++) {
@@ -119,6 +121,8 @@ if (opts['bg-image-intvl']) nodeArgs.push('--bg-image-intvl', String(opts['bg-im
 if (opts['bg-image-trans']) nodeArgs.push('--bg-image-trans', opts['bg-image-trans']);
 if (opts['bg-video']) nodeArgs.push('--bg-video', resolve(opts['bg-video']));
 if (opts['bg-anim']) nodeArgs.push('--bg-anim', opts['bg-anim']);
+if (opts['bg-pexels-image']) nodeArgs.push('--bg-pexels-image');
+if (opts['bg-pexels-video']) nodeArgs.push('--bg-pexels-video');
 if (opts['no-bg-anim-beat']) nodeArgs.push('--no-bg-anim-beat');
 if (opts.font) nodeArgs.push('--font', opts.font);
 if (opts.browser) nodeArgs.push('--browser', opts.browser);
