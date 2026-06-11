@@ -454,6 +454,10 @@ if (args['bg-pexels-image'] || args['bg-pexels-video']) {
     process.exit(1);
   }
   const apiKeys = parseApiKeys(readFileSync(keyFile, 'utf-8'));
+  if (!apiKeys.pexels || !apiKeys.openrouter) {
+    console.error('Error: scripts/api.key 缺少 pexels= 或 openrouter= 配置');
+    process.exit(1);
+  }
   const lyricsText = lyrics.map((l) => l.text).join('\n');
   const locale = langToLocale(detectLang(lyricsText));
   const intvl = args['bg-image-intvl'] ? parseFloat(args['bg-image-intvl']) : 5;

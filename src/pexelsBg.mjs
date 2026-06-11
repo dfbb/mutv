@@ -348,7 +348,7 @@ export async function preparePexelsBackground({
       const got = await acquireOne();
       if (!got) break;
       clips.push(got);
-      total += got.duration || 0;
+      total += got.duration || 1;
       console.log(`  clip #${got.id} ${got.duration}s（累计 ${total}/${durationSec}s）`);
     }
     if (!clips.length) throw new Error('Pexels 一段视频都没拿到（检查网络/关键词/key）。');
