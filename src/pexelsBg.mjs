@@ -57,10 +57,11 @@ export function pickLeastUsed(cands, counts, usedThisRun) {
   return best;
 }
 
-/** LLM 输出 → 关键词数组：去序号/项目符号/空行，lowercase 去重，最多 40。 */
+/** LLM 输出 → 关键词数组：去序号/项目符号/空行，lowercase 去重，最多 40。# 注释/章节标题行直接跳过。 */
 export function parseKeywords(text) {
   const seen = new Set(), out = [];
   for (const line of String(text).split(/\r?\n/)) {
+    if (/^\s*#/.test(line)) continue; // skip comment/section header lines
     const kw = line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim().toLowerCase();
     if (kw && !seen.has(kw)) { seen.add(kw); out.push(kw); }
   }

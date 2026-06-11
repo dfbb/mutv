@@ -76,6 +76,12 @@ test('parseKeywords: 去序号/空行/去重/slice 40', () => {
   assert.equal(kws.length, 40);
 });
 
+test('parseKeywords: 跳过 # 注释/章节标题行', () => {
+  assert.ok(!parseKeywords('# Mood:\nocean\n# Scene:\nbeach').includes('mood:'));
+  assert.ok(!parseKeywords('# Mood:\nocean\n# Scene:\nbeach').includes('scene:'));
+  assert.deepEqual(parseKeywords('# Mood:\nocean\n# Scene:\nbeach'), ['ocean', 'beach']);
+});
+
 test('shard 与缓存路径', () => {
   assert.equal(shard(7), '0/7');
   assert.equal(shard(7762128), '2/8');
