@@ -21,8 +21,8 @@ node src/cli.mjs --audio example/cn-1.mp3 --lyrics example/cn-1.srt \
 
 ## 2. 硬约束
 
-- **Remotion 可渲染**：视频拼接用 Remotion `<Series>`，不依赖系统 ffmpeg、无二次转码（沿用项目现有约定）。
-- **比例匹配**：下载素材的宽高比必须与 `--res` 生成尺寸相近，再 `objectFit: cover` 缩放到生成尺寸。
+- **视频预拼接**：用系统 **ffmpeg** 在调用 Remotion 之前把多段视频拼接成**单个完整 mp4**（长度 = 歌曲时长，尺寸 = `--res`），再走现有 `--bg-video` 单文件路径渲染。**不改** `types.ts` / `BackgroundLayer` / 各 preset。
+- **比例匹配**：下载素材的宽高比必须与 `--res` 生成尺寸相近，再缩放裁剪（cover）到生成尺寸（图片 `objectFit:cover`，视频由 ffmpeg `scale+crop`）。
 - **复用现有配置**：图片轮播完全复用 `--bg-image` 目录模式的 `buildCarousel`、`--bg-image-intvl`、`--bg-image-trans`。
 - **密钥**：Pexels 与 OpenRouter 的 key 都在 `scripts/api.key`（已 gitignore，格式 `pexels=...` / `openrouter=...`）。
 
@@ -43,7 +43,8 @@ cli.mjs（透传布尔 flag）
                  → 在「候选 ∩ 未被本次运行用过」里按 usage 升序挑最少用的 id
                  → 命中 cache 则复制，否则下载存 cache；usage[id]++
             4) image → 返回 imageUrls[]，render.mjs 复用 buildCarousel
-               video → 返回 [{src, durationInFrames}]，写入 backgroundVideoPlaylist prop
+               video → ffmpeg 把多段缩放裁剪并拼接成单个完整 mp4（长度=歌曲时长、尺寸=--res）
+                       → 返回该 public mp4 文件名 → render.mjs 当作 backgroundVideo
 ```
 
 ## 4. 关键词生成
@@ -108,38 +109,35 @@ Generate 20 to 40 Pexels search keywords.
 ## 6. 缓存与使用次数
 
 - 目录：`cache/pexels/photos/<id>.<ext>`、`cache/pexels/videos/<id>.mp4`（项目根，gitignore 加 `cache/`）。
-- 计数：`cache/pexels/usage.json` = `{ "photos": {"<id>": n}, "videos": {"<id>": n} }`。
-- 下载前查 cache：命中则从 cache 复制到 `public/`，不命中才走网络并写入 cache。
-- 选中并实际使用后 `usage[type][id]++` 并持久化（每个槽位选定即写，避免崩溃丢计数）。
+- 计数：**SQLite 数据库 `cache/usage.sqlite`**，依赖 `better-sqlite3`（同步、简单）。
+  - 表：`CREATE TABLE IF NOT EXISTS usage (type TEXT NOT NULL, id INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (type, id));`，`type ∈ ('photo','video')`。
+  - 查最少用：对一批候选 id `SELECT id, count FROM usage WHERE type=? AND id IN (...)`，库中缺失的 id 视作 count=0。
+  - 累加：`INSERT INTO usage(type,id,count) VALUES(?,?,1) ON CONFLICT(type,id) DO UPDATE SET count=count+1;`
+- 下载前查 cache（文件）：命中则从 cache 复制到 `public/`，不命中才走网络并写入 cache。
+- 选中并实际使用后立即对该 id 执行上面的 UPSERT 累加（每个槽位选定即写，避免崩溃丢计数）。
 - 复制到 public 的命名：图片 `pexbg-NNN-<id>.<ext>`，视频 `pexvid-NNN-<id>.mp4`。
 
-## 7. 视频拼接渲染（Remotion `<Series>`）
+## 7. 视频拼接（系统 ffmpeg 预拼接成单个 mp4）
 
-- `types.ts` 的 `MVInputProps` 新增：
+在调用 Remotion 之前，用系统 ffmpeg 把已下载的多段视频合成**一个**完整 mp4，再交给现有 `--bg-video` 单文件路径渲染。**不改** `types.ts` / `BackgroundLayer.tsx` / 任何 preset。
 
-```ts
-/** Pexels 多段视频顺序拼接播放列表；空数组=不启用。 */
-backgroundVideoPlaylist: {src: string; durationInFrames: number}[];
+- **前置检查**：`--bg-pexels-video` 需要系统 `ffmpeg`（项目已用 `ffprobe`）。缺失则报错退出并提示安装。
+- **段数累积**：逐关键词下载视频，累加各段 `duration`（Pexels 视频含 `duration` 秒）直到总和 ≥ 歌曲时长；不足且关键词池耗尽 → 循环复用已下载片段填满。
+- **拼接命令**（单次 `filter_complex`：每段 scale 到 cover 再 crop 到精确 `WxH`、统一 fps，再 concat，最后 `-t` 截到歌曲时长）：
+
+```
+ffmpeg -y -i c0.mp4 -i c1.mp4 ... \
+  -filter_complex \
+   "[0:v]scale=W:H:force_original_aspect_ratio=increase,crop=W:H,setsar=1,fps=F[v0]; \
+    [1:v]scale=W:H:force_original_aspect_ratio=increase,crop=W:H,setsar=1,fps=F[v1]; \
+    ... \
+    [v0][v1]...[vN-1]concat=n=N:v=1:a=0[outv]" \
+  -map "[outv]" -an -t <歌曲时长> -c:v libx264 -pix_fmt yuv420p \
+  public/pexvid-concat.mp4
 ```
 
-默认 `[]`。
-
-- render.mjs：把每段 pexels 视频时长（秒）× fps 取整为 `durationInFrames`；累积 `durationInFrames` ≥ `时长×fps` 即停；不足则循环已下载片段填满；末段由 composition 总帧自动截断。
-- `BackgroundLayer.tsx` 新增最高优先级分支：`backgroundVideoPlaylist?.length` 时渲染
-
-```tsx
-<Series>
-  {backgroundVideoPlaylist.map((v, i) => (
-    <Series.Sequence key={i} durationInFrames={v.durationInFrames}>
-      <OffthreadVideo src={toSrc(v.src)} muted style={{width:'100%',height:'100%',objectFit:'cover'}} />
-    </Series.Sequence>
-  ))}
-</Series>
-```
-
-（用 `OffthreadVideo` 而非 `Video`，渲染更稳，符合 Remotion 最佳实践；实现时验证。）
-
-- 各 preset Composition（约 10 处调用 `BackgroundLayer` 的位置：fx-typewriter/cinema/ktv/apple/no2/bounce/neon 各自 Composition、fx-orig/AudioVisualization、_engine/ScrollLyrics、_engine/VisualLyrics）机械加一行 `backgroundVideoPlaylist={backgroundVideoPlaylist}` 透传。
+- `W=resWidth, H=resHeight, F=fps`。`force_original_aspect_ratio=increase + crop` = cover，保证每段精确 `WxH`、无黑边。`-an` 去音轨（背景静音）。`-t` 截到歌曲时长。
+- 输出 `public/pexvid-concat.mp4`，render.mjs 把它作为 `backgroundVideo`（现有单视频路径，`<Video loop muted cover>`；已等长，loop 不触发）。
 
 ## 8. CLI 与互斥
 
@@ -171,9 +169,9 @@ backgroundVideoPlaylist: {src: string; durationInFrames: number}[];
 
 ```js
 /**
- * 准备 Pexels 背景。返回 { imageUrls } 或 { videoPlaylist }。
- * @returns image: { imageUrls: string[] }（public 相对文件名）
- *          video: { videoPlaylist: {src: string, durationInFrames: number}[] }
+ * 准备 Pexels 背景。返回 { imageUrls } 或 { videoFile }。
+ * @returns image: { imageUrls: string[] }（public 相对文件名，交 buildCarousel）
+ *          video: { videoFile: string }（public 相对的已拼接 mp4，交 backgroundVideo）
  */
 export async function preparePexelsBackground({
   kind,            // 'image' | 'video'
@@ -190,8 +188,11 @@ export function parseApiKeys(text)        // 'pexels=..\nopenrouter=..' → {pex
 export function langToLocale(lang)        // 'zh_CN' → 'zh-CN'
 export function orientationOf(w, h)       // → 'landscape'|'portrait'|'square'
 export function aspectScore(cw, ch, w, h) // |cw/ch − w/h|
-export function pickLeastUsed(cands, usage, usedThisRun) // → 选中 id
+export function pickLeastUsed(cands, counts, usedThisRun) // counts: Map<id,count> → 选中 id
 export function parseKeywords(text)       // LLM 输出 → string[]
+export function buildConcatArgs(clips, w, h, fps, durationSec, outPath) // → ffmpeg 参数数组
+// usage SQLite 封装（better-sqlite3）：
+export function openUsageDb(cacheDir)     // → {getCounts(type, ids), bump(type, id), close()}
 ```
 
 ## 12. 测试（`node --test`，网络部分 mock）
@@ -202,18 +203,21 @@ export function parseKeywords(text)       // LLM 输出 → string[]
 - `aspectScore` / 比例过滤阈值逻辑。
 - `pickLeastUsed`：优先 count 0、排除已用、同 count 稳定顺序。
 - `parseKeywords`：去序号/空行/去重。
-- 视频累积 + 循环填满的帧数计算。
-- 端到端 smoke：mock OpenRouter/Pexels/fetch，验证 image 返回 imageUrls、video 返回 playlist 且总帧 ≥ 目标。
+- `buildConcatArgs`：N 段输入 → 正确的 `filter_complex`（scale/crop/fps/concat=n=N）、`-t 时长`、`-an`、输出路径。
+- `openUsageDb`：建表、`bump` 后 count 递增、`getCounts` 缺失 id 返回 0（用临时 sqlite 文件）。
+- 视频段数累积 + 循环填满逻辑（总时长 ≥ 目标）。
+- 端到端 smoke：mock OpenRouter/Pexels/fetch/ffmpeg(exec)，验证 image 返回 imageUrls、video 返回单个 videoFile。
 
 ## 13. 依赖与文档
 
-- `src/package.json` 加 `pexels`（官方 SDK）依赖。
+- `src/package.json` 加依赖：`pexels`（官方 SDK）、`better-sqlite3`（usage 计数）。
+- 前置：系统 `ffmpeg`（`--bg-pexels-video` 需要）+ 已有的 `ffprobe`。
 - `.gitignore` 加 `cache/`。
-- `USAGE.md`：在「画面」参数表新增 `--bg-pexels-image` / `--bg-pexels-video` 两行，新增「Pexels 智能背景」小节说明关键词生成、比例匹配、缓存与低重复策略、api.key 配置，并在「工作原理」补充 pexels 流程。
+- `USAGE.md`：在「画面」参数表新增 `--bg-pexels-image` / `--bg-pexels-video` 两行，新增「Pexels 智能背景」小节说明关键词生成、比例匹配、ffmpeg 视频拼接、缓存与低重复策略、api.key 配置、ffmpeg 前置，并在「工作原理」补充 pexels 流程。
 
 ## 14. 非目标（YAGNI）
 
 - 不缓存关键词（每次新生成即带来多样性）。
 - 不支持手动传 query 覆盖 LLM（保持布尔 flag）。
-- 不做 ffmpeg 拼接（用 Remotion Series）。
+- 视频拼接用系统 ffmpeg 预合成单个 mp4，**不改** Remotion 组件 / preset。
 - 不引入 core-* 类抽象，逻辑集中在单一 `pexelsBg.mjs`。
