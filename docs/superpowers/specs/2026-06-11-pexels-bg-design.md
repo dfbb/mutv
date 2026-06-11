@@ -89,21 +89,22 @@ Output:
 Generate 20 to 40 Pexels search keywords.
 ```
 
-- 解析：按行 split，trim，去空行、去可能的序号前缀，去重，得到关键词池。
+- 解析：按行 split，trim，去空行、去序号/项目符号前缀，去重。**截断到最多 40 个**（实测 nemo 可能返回 48 个，超出即 `slice(0,40)`）。
 - **用法**：Pexels `query` 是单字符串，一次请求只接受一个查询。**每个关键词 = 一次独立搜索**（每词 1-4 字符合 Pexels 习惯）。需要的搜索次数 = 槽位数：图片 `ceil(时长/intvl)`，视频累积到歌曲长度的若干段。关键词池不够时循环复用并翻页（page 2、3…）取新结果。
-- 失败：OpenRouter 整体失败（网络/鉴权/空返回）→ 报错退出（属「LLM 整体失败」）。
+- 失败：OpenRouter 整体失败 → 报错退出。专项报警：**HTTP 402 = 余额不足/欠费**、**429 = 速率限制**、**401 = 鉴权失败**，各打印对应中文错误后退出（已在探针 `scripts/test-openrouter-keywords.mjs` 验证）。
 
 ## 5. Pexels 搜索与选择
 
-- SDK：官方 `pexels` npm 包，`createClient(pexelsKey)`，`.photos.search(...)` / `.videos.search(...)`。下载用全局 `fetch`（Node 18+）拉 `src`/`link` URL。
+- SDK：官方 `pexels` npm 包，`createClient(pexelsKey)`，`.photos.search(...)` / `.videos.search(...)`。下载用全局 `fetch`（Node 18+）拉 URL。
+- **配额/报警**：响应头含 `X-Ratelimit-Limit/Remaining/Reset`（实测该 key 配额 25000/小时）。**HTTP 429 = 次数限制**、**401 = 鉴权失败**，打印对应中文错误后退出（已在探针 `scripts/test-pexels.mjs` 验证）。
 - 搜索参数：`{query: 单关键词, orientation, locale, per_page: 15（图）/ 10（视频）, page}`。
 - **orientation**：`width > height → landscape`，`height > width → portrait`，相等 → `square`。
-- **比例过滤**：目标比 `R = width/height`。
-  - 图片：每条结果有 `width/height`，计算 `|w/h − R|`，保留 ≤ 阈值（如 0.25）的候选；全被过滤掉则放宽阈值重试一次，仍无则跳过该关键词。
-  - 视频：先在 `video_files` 里选 orientation 一致、分辨率 ≥ 目标且最接近的 file；再用该 file 的 `w/h` 做同样的比例过滤。
+- **比例过滤**：目标比 `R = width/height`，候选比 `r = w/h`，保留 `|r − R| ≤ 0.35` 的（实拍图常见 3:2=1.5，对 16:9=1.778 偏差 0.278，阈值须放宽到 0.35，否则误杀大量正常素材）；全被过滤则放宽到 0.6 重试一次，仍无则跳过该关键词。
+  - 图片：用结果的 `width/height` 过滤。
+  - 视频：先在视频级用 `v.width/v.height` 过滤掉超宽/超窄片（如 3840×1600=2.4）。
 - **下载分辨率选择**：
-  - 图片：用 `src.original`（最高分辨率原图，cover 裁剪到目标尺寸，保证 ≥ 目标不放大失真）。
-  - 视频：选中的 `video_files[].link`。
+  - 图片：**不下原图**（实测原图可达 12000px / 数 MB）。用 Pexels 动态裁剪：`<src.original>?auto=compress&cs=tinysrgb&w=W&h=H&fit=crop&dpr=1`，直接取**目标尺寸、已 cover 裁剪**的小图（带宽小、比例天然正确）。
+  - 视频：在 `video_files` 里选 orientation 一致、**分辨率 ≥ 目标且面积最接近**目标的档（**不取最大**——实测最大档可达 4K/53MB；多数视频有现成 1280×720）。取该档 `link`。
 - **低重复选择**：候选（已过比例过滤、排除本次 run 已用 id）按 `usage[id]` 升序排序（新资源 count=0 最优），取最小者；同 count 保持搜索相关性顺序。
 
 ## 6. 缓存与使用次数
@@ -159,11 +160,17 @@ ffmpeg -y -i c0.mp4 -i c1.mp4 ... \
 
 不在 Pexels 支持列表的 → 回退 `en-US`。
 
-## 10. 兜底（部分容错 + 循环填满）
+## 10. 兜底与报警
 
-- 某关键词无结果 / 下载失败 → 跳过，取下一个关键词。
+**部分容错 + 循环填满**：
+- 某关键词无结果 / 单次下载失败 → 跳过，取下一个关键词。
 - 视频累积时长不足且关键词池耗尽 → 循环已下载片段填满。
-- 仅当「一张图都拿不到」或「一段视频都拿不到」或「OpenRouter 整体失败」→ 报错退出（清晰提示原因）。
+- 仅当「一张图都拿不到」或「一段视频都拿不到」→ 报错退出（清晰提示原因）。
+
+**硬报警（立即退出，不容错）**：
+- **OpenRouter 402** → 「余额不足/欠费」；**429** → 「速率限制」；**401** → 「鉴权失败」。
+- **Pexels 429** → 「次数限制（已达配额）」，附 `X-Ratelimit-Reset`；**401** → 「鉴权失败」。
+- 这两类是账户级故障，重试无意义，打印对应中文错误后 `exit(1)`。
 
 ## 11. 模块接口（`src/pexelsBg.mjs`）
 
@@ -212,7 +219,8 @@ export function openUsageDb(cacheDir)     // → {getCounts(type, ids), bump(typ
 
 - `src/package.json` 加依赖：`pexels`（官方 SDK）、`better-sqlite3`（usage 计数）。
 - 前置：系统 `ffmpeg`（`--bg-pexels-video` 需要）+ 已有的 `ffprobe`。
-- `.gitignore` 加 `cache/`。
+- `.gitignore` 加 `cache/`、`scripts/_pextest/`。
+- 探针（已写并验证）：`scripts/test-openrouter-keywords.mjs`、`scripts/test-pexels.mjs`，零依赖（全局 fetch），实现时作为参数/响应字段的事实依据。
 - `USAGE.md`：在「画面」参数表新增 `--bg-pexels-image` / `--bg-pexels-video` 两行，新增「Pexels 智能背景」小节说明关键词生成、比例匹配、ffmpeg 视频拼接、缓存与低重复策略、api.key 配置、ffmpeg 前置，并在「工作原理」补充 pexels 流程。
 
 ## 14. 非目标（YAGNI）

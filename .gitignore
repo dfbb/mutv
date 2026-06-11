@@ -8,6 +8,10 @@ node_modules/
 out/
 .render-props.json
 *.mp4
+
+# Pexels 缓存与探针下载产物
+cache/
+scripts/_pextest/
 *.key
 
 # Generated POC artifacts (regenerated from scripts/poc-grid.mjs, ~3MB each)
