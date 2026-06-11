@@ -17,7 +17,7 @@
 
 1. 移植后必须支持 Remotion 逐帧确定性渲染
 2. 特效外部字体（Google Fonts `@import` 等）全部剥离，复用现有本地字体管线（FontLoader + `--font-family/--font-file`）
-3. 颜色复用现有配置：`fontFgColor/fontBgColor`（TextColorOverride）覆盖必须对所有特效生效
+3. 颜色复用现有配置：`fontFgColor/fontBgColor` 不传时特效原配色保留；传了则 CLI 颜色优先强覆盖（详见「颜色覆盖语义」）
 4. 字号复用现有 `height * 0.055 * fontScale` 体系，不用特效自带的 clamp/em 硬编码
 
 ## 架构：共享引擎 + 薄 preset（方案 A）
@@ -46,7 +46,8 @@ src/preset/
 
 - 目录名 = `--preset` 值，全小写 kebab-case，统一 `fx-` 前缀
 - 移植效果保留原三位编号对照 example：`fx-001-word-by`、`fx-014-gooey-marquee`
-- 旧 preset 加前缀改名：`apple→fx-apple`、`bounce→fx-bounce`、`cinema→fx-cinema`、`ktv→fx-ktv`、`neon→fx-neon`、`no2→fx-no2`、`orig→fx-orig`、`typewriter→fx-typewriter`；`scripts/render_all.py` 等引用同步更新
+- 旧 preset 加前缀改名：`apple→fx-apple`、`bounce→fx-bounce`、`cinema→fx-cinema`、`ktv→fx-ktv`、`neon→fx-neon`、`no2→fx-no2`、`orig→fx-orig`、`typewriter→fx-typewriter`
+- **默认入口全量改写，不留旧名 alias**：`render.mjs` 默认值（`args.preset || 'orig'`）、`cli.mjs:111`、`package.json` 的 `start`/`build`（`preset/orig/index.ts`）、`scripts/render_all.py` 等所有 `orig` 引用统一改为 `fx-orig`，改名与引用更新在同一提交内完成并以 `npm start` + 不带 `--preset` 渲染验证
 - 每个效果定义文件头保留一行来源注释（原 CodePen 名 / LyricsAnimator 出处）
 
 ## 关键技术映射
@@ -54,14 +55,35 @@ src/preset/
 | demo / 特效原状 | Remotion 移植实现 |
 |---|---|
 | audio 时钟 + rAF | `useCurrentFrame()/fps` 换算 ms，纯帧驱动 |
-| CSS keyframes 动画 | `animation-play-state: paused` + 按帧注入负 `animation-delay` |
+| CSS keyframes 动画 | 见下「驱帧规则」 |
 | 滚动 lerp（依赖上一帧状态） | 确定性插值：按行切换时刻起算 easeOut |
-| Shadow DOM 样式隔离 | 唯一 class 前缀 scope（字符串处理，`:host` 等特判） |
+| Shadow DOM 样式隔离 | 见下「CSS scope 规则」 |
 | `@import` 字体 | 剥离；特效内 `font-family` 改为继承容器（FontLoader 提供） |
-| 硬编码颜色 | 引擎层统一覆盖（等价 demo `--theme-text !important` / VISUAL_OVERRIDE），接 fontFgColor/fontBgColor |
+| 硬编码颜色 | 见下「颜色覆盖语义」 |
 | 自带字号 | 引擎容器设基准字号（height*0.055*fontScale），内部 em 相对缩放 |
 
-颜色/字号采用**引擎层统一覆盖**而非逐个改写 86 个特效 CSS，保证机械转换可行；覆盖不生效的个例在抽检阶段特判。
+### 驱帧规则（CSS 动画 → 逐帧确定性）
+
+对 scope 内每条 `animation` 声明：保留原 `animation-name/duration/timing/iteration` 等，强制 `animation-play-state: paused !important`，并把 `animation-delay` 重写为**逐项合成值** `原delay_i − t`（t = 当前帧时间）。多动画列表按 `animation-name` 个数逐项展开，缺省 delay 视为 0，原有逐字/分层 stagger（如 016、023、037 的 `--i` delay）因此保留相位。one-shot 动画在 `t > 原delay + duration` 后停在终态属预期行为。转换脚本静态可见的 delay 直接合成；依赖 CSS 变量的 delay 由引擎用 `calc(原delay表达式 − t·1s)` 注入。
+
+### CSS scope 规则（替代 Shadow DOM）
+
+转换时用 postcss（已在依赖中）做选择器改写，不用裸字符串替换：
+- `:host` → 效果根容器类 `.fx-<id>`；`:host .x` → `.fx-<id> .x`；其余选择器统一加 `.fx-<id> ` 前缀（伪类/伪元素保持在末位）
+- `@keyframes` 名与所有 `animation-name` 引用统一加 `fx<id>-` 前缀，防跨效果串名
+- 样式注入顺序与 demo 一致：效果 css 在前、引擎 VISUAL_OVERRIDE 等价层在后；源效果里既有的 `:host .bl-wrap … !important` 黑屏修复经映射后特异度关系不变，原样生效
+- 以 014（黑屏修复 + mask 关闭）、020（`:host` 覆盖）为代表性样例写转换单测
+
+### 颜色覆盖语义（fontFgColor / fontBgColor）
+
+沿用现行 TextColorOverride 语义并扩展：
+- **不传**：零副作用，特效原配色（渐变、霓虹、全息等）完整保留——这是默认路径
+- **传了**：CLI 颜色优先、允许牺牲特效配色。覆盖范围从现在的 `color/text-shadow` 扩展到 `-webkit-text-fill-color`、`background-clip:text` 类渐变填充及 `*::before/*::after` 伪元素，验收标准 = 传色时画面所有可见文字均为指定色
+- README 索引中标注「强依赖配色」的特效（如 028 全息），提示传色后观感损失
+
+### 011 呼吸效果（节拍能量）
+
+复用 `BeatReactiveAnim.tsx` 已有的 `useAudioData + visualizeAudio` 低频能量提取（确定性）。原 attack 0.2 / decay 0.05 非对称单极滤波是跨帧状态，改为确定性等价：每帧从当前行起始帧迭代重算滤波（行时长有界，开销可忽略），保证任意帧独立渲染结果一致。
 
 ## 实施步骤（每步可验证）
 
@@ -74,5 +96,5 @@ src/preset/
 ## 已知风险
 
 - 86 个 visual 质量参差（demo 阶段已修过一轮黑屏），步骤 4 的逐个排查是主要工作量
-- CSS scope 化用字符串处理而非完整 parser，复杂选择器需特判
+- 依赖 CSS 变量的 animation-delay 需引擎 calc 注入路径，个别复杂时序特效可能仍需手工调整
 - 个别特效效果强依赖被剥离的特定字体（如 Nabla 彩色字体），观感会变化，抽检时记录并决定保留或剔除
