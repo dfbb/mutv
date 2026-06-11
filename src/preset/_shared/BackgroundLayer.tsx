@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender} from 'remotion';
+import {AbsoluteFill, Img, IFrame, Video, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender, getInputProps} from 'remotion';
 import {BeatReactiveAnim} from './BeatReactiveAnim';
 import {ButterchurnAnim} from './ButterchurnAnim';
 
@@ -14,7 +14,7 @@ import {ButterchurnAnim} from './ButterchurnAnim';
  * - fallbackGradient:   CSS background value supplied by each preset so its
  *                       own visual style is preserved when no source is given
  */
-export const BackgroundLayer: React.FC<{
+const BackgroundSource: React.FC<{
   backgroundVideo?: string;
   backgroundCarousel?: string;
   backgroundImage?: string;
@@ -81,6 +81,30 @@ export const BackgroundLayer: React.FC<{
 
   return <AbsoluteFill style={{background: fallbackGradient}} />;
 };
+
+/** Pexels 署名：最后 1 秒右下角，zIndex 置顶（合规要求，不允许被前景遮挡）。 */
+const PexelsCredits: React.FC = () => {
+  const frame = useCurrentFrame();
+  const {durationInFrames, fps} = useVideoConfig();
+  const text = (getInputProps() as {pexelsCreditsText?: string}).pexelsCreditsText || '';
+  if (!text || frame < durationInFrames - fps) return null;
+  return (
+    <div style={{
+      position: 'absolute', right: 24, bottom: 24, zIndex: 9999,
+      background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 18,
+      padding: '6px 14px', borderRadius: 8, fontFamily: 'sans-serif',
+    }}>
+      {text}
+    </div>
+  );
+};
+
+export const BackgroundLayer: React.FC<Parameters<typeof BackgroundSource>[0]> = (props) => (
+  <>
+    <BackgroundSource {...props} />
+    <PexelsCredits />
+  </>
+);
 
 /**
  * Carousel background driven by a self-contained CSS slideshow inside an iframe.

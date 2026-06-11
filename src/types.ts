@@ -47,6 +47,8 @@ export interface MVInputProps extends Record<string, unknown> {
   fontFgColor: string;
   /** Text outline color (from --font-bg-color), CSS color string; '' = no forced outline. */
   fontBgColor: string;
+  /** Pexels 屏上署名一行（最后 1 秒右下角显示）；'' = 不显示。 */
+  pexelsCreditsText: string;
 }
 
 export const defaultProps: MVInputProps = {
@@ -71,4 +73,5 @@ export const defaultProps: MVInputProps = {
   fontScale: 1,
   fontFgColor: '',
   fontBgColor: '',
+  pexelsCreditsText: '',
 };
