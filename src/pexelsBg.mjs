@@ -2,9 +2,10 @@
  * pexelsBg.mjs — --bg-pexels-image / --bg-pexels-video 的全部业务逻辑。
  * 设计文档：docs/superpowers/specs/2026-06-11-pexels-bg-design.md
  */
-import {join} from 'path';
+import {join, dirname} from 'path';
 import Database from 'better-sqlite3';
-import {mkdirSync} from 'fs';
+import {mkdirSync, copyFileSync, writeFileSync, existsSync} from 'fs';
+import {spawnSync} from 'child_process';
 
 export function parseApiKeys(text) {
   const out = {};
@@ -208,4 +209,160 @@ export async function generateKeywords({lyricsText, apiKey, fetchImpl = fetch}) 
   const kws = parseKeywords(data.choices?.[0]?.message?.content ?? '');
   if (!kws.length) throw new Error('OpenRouter 返回空关键词，无法继续。');
   return kws;
+}
+
+const ASPECT_TOL = 1.25, ASPECT_TOL_RELAXED = 1.5;
+
+async function downloadToFile(url, dest, downloadImpl) {
+  const buf = await downloadImpl(url);
+  mkdirSync(dirname(dest), {recursive: true});
+  writeFileSync(dest, buf);
+}
+
+async function defaultDownload(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`下载失败 HTTP ${resp.status}: ${url}`);
+  return Buffer.from(await resp.arrayBuffer());
+}
+
+/**
+ * 主入口。kind='image' → {imageUrls, credits}；kind='video' → {videoFile, credits}。
+ * pexelsClient/fetchImpl/downloadImpl/execImpl 可注入（测试 mock）。
+ */
+export async function preparePexelsBackground({
+  kind, lyricsText, durationSec, width, height, fps, locale, intvl = 5,
+  apiKeys, publicDir, cacheDir,
+  limits = {},
+  pexelsClient = null, fetchImpl = fetch, downloadImpl = defaultDownload,
+  execImpl = (cmd, args) => spawnSync(cmd, args, {stdio: 'inherit'}),
+}) {
+  const {maxPagesPerKeyword = 3, maxAttemptsPerSlot = 8} = limits;
+  const slots = kind === 'image' ? Math.ceil(durationSec / intvl) : Infinity;
+  const requestBudget = limits.requestBudget ??
+    Math.min(150, (kind === 'image' ? Math.ceil(durationSec / intvl) : Math.ceil(durationSec / 15)) * 4);
+
+  // 1) 关键词
+  const keywords = await generateKeywords({lyricsText, apiKey: apiKeys.openrouter, fetchImpl});
+  console.log(`Pexels 关键词（${keywords.length}）：${keywords.slice(0, 8).join(', ')}…`);
+
+  // 2) SDK client（生产）：搜索必须走 SDK 过反爬
+  if (!pexelsClient) {
+    const {createClient} = await import('pexels');
+    pexelsClient = createClient(apiKeys.pexels);
+  }
+
+  const orientation = orientationOf(width, height);
+  const db = openCacheDb(cacheDir);
+  const usedThisRun = new Set();
+  const credits = [];
+  let requests = 0;
+  let kwIdx = 0;
+  const kwPage = new Map();
+
+  async function searchNext(tol) {
+    while (requests < requestBudget) {
+      // Check if all keywords are exhausted before picking next
+      const allExhausted = keywords.every((kw) => (kwPage.get(kw) ?? 1) > maxPagesPerKeyword);
+      if (allExhausted) break;
+      const kw = keywords[kwIdx % keywords.length];
+      kwIdx++;
+      const page = kwPage.get(kw) ?? 1;
+      if (page > maxPagesPerKeyword) continue;
+      kwPage.set(kw, page + 1);
+      requests++;
+      let res;
+      try {
+        res = kind === 'image'
+          ? await pexelsClient.photos.search({query: kw, orientation, locale, per_page: 15, page, size: 'large'})
+          : await pexelsClient.videos.search({query: kw, orientation, locale, per_page: 10, page});
+      } catch (e) {
+        const msg = String(e?.message || e);
+        if (/429|Too Many Requests/i.test(msg)) throw new Error(`Pexels 次数限制（疑似 429）。请稍后再试。\n${msg}`);
+        if (/401|Unauthorized/i.test(msg)) throw new Error(`Pexels 鉴权失败。检查 scripts/api.key 的 pexels key。\n${msg}`);
+        console.warn(`  搜索失败（跳过 "${kw}" p${page}）：${msg}`);
+        continue;
+      }
+      if (res?.error) { console.warn(`  搜索返回 error（跳过 "${kw}"）：${res.error}`); continue; }
+      const items = kind === 'image' ? (res.photos || []) : (res.videos || []);
+      const cands = items.filter((it) => aspectOk(it.width, it.height, width, height, tol))
+        .filter((it) => kind === 'video' || meetsMinRes(it.width, it.height, width, height));
+      if (cands.length) return cands;
+    }
+    return [];
+  }
+
+  async function acquireOne() {
+    for (let attempt = 0; attempt < maxAttemptsPerSlot; attempt++) {
+      let cands = await searchNext(ASPECT_TOL);
+      if (!cands.length) cands = await searchNext(ASPECT_TOL_RELAXED);
+      if (!cands.length) return null;
+      const counts = db.getCounts(kind === 'image' ? 'photo' : 'video', cands.map((c) => c.id));
+      const pick = pickLeastUsed(cands, counts, usedThisRun);
+      if (!pick) continue;
+      try {
+        if (kind === 'image') {
+          const dest = photoCachePath(cacheDir, pick.id, width, height);
+          if (!existsSync(dest)) await downloadToFile(pickPhotoCropUrl(pick.src.original, width, height), dest, downloadImpl);
+          const credit = {type: 'photo', id: pick.id, author: pick.photographer, authorUrl: pick.photographer_url, pexelsUrl: pick.url};
+          db.putAttribution(credit); db.bumpUsage('photo', pick.id);
+          usedThisRun.add(pick.id); credits.push(credit);
+          return {cachePath: dest, id: pick.id};
+        } else {
+          const file = pickVideoFile(pick.video_files, width, height);
+          if (!file) continue;
+          const dest = videoCachePath(cacheDir, pick.id, file.id);
+          if (!existsSync(dest)) await downloadToFile(file.link, dest, downloadImpl);
+          const credit = {type: 'video', id: pick.id, author: pick.user?.name, authorUrl: pick.user?.url, pexelsUrl: pick.url};
+          db.putAttribution(credit); db.bumpUsage('video', pick.id);
+          usedThisRun.add(pick.id); credits.push(credit);
+          return {cachePath: dest, id: pick.id, duration: pick.duration};
+        }
+      } catch (e) {
+        console.warn(`  下载失败（跳过 #${pick.id}）：${e.message}`);
+        usedThisRun.add(pick.id);
+      }
+    }
+    return null;
+  }
+
+  try {
+    if (kind === 'image') {
+      const imageUrls = [];
+      for (let i = 0; i < slots; i++) {
+        const got = await acquireOne();
+        if (!got) break;
+        const name = `pexbg-${String(i).padStart(3, '0')}-${got.id}.jpg`;
+        mkdirSync(publicDir, {recursive: true});
+        copyFileSync(got.cachePath, join(publicDir, name));
+        imageUrls.push(name);
+        console.log(`  [${i + 1}/${slots}] photo #${got.id}`);
+      }
+      if (!imageUrls.length) throw new Error('Pexels 一张图都没拿到（检查网络/关键词/key）。');
+      return {imageUrls, credits};
+    }
+
+    // video mode
+    const clips = [];
+    let total = 0;
+    while (total < durationSec) {
+      const got = await acquireOne();
+      if (!got) break;
+      clips.push(got);
+      total += got.duration || 0;
+      console.log(`  clip #${got.id} ${got.duration}s（累计 ${total}/${durationSec}s）`);
+    }
+    if (!clips.length) throw new Error('Pexels 一段视频都没拿到（检查网络/关键词/key）。');
+    const seq = [];
+    let t = 0;
+    for (let i = 0; t < durationSec; i++) { const c = clips[i % clips.length]; seq.push(c.cachePath); t += c.duration || 1; }
+    mkdirSync(publicDir, {recursive: true});
+    const outPath = join(publicDir, 'pexvid-concat.mp4');
+    const args = buildConcatArgs(seq, width, height, fps, durationSec, outPath);
+    console.log(`ffmpeg 拼接 ${seq.length} 段 → pexvid-concat.mp4 ...`);
+    const r = execImpl('ffmpeg', args);
+    if (r.status !== 0 || !existsSync(outPath)) throw new Error('ffmpeg 拼接失败。');
+    return {videoFile: 'pexvid-concat.mp4', credits};
+  } finally {
+    db.close();
+  }
 }

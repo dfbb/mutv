@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, rmSync} from 'node:fs';
+import {mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {
@@ -8,7 +8,7 @@ import {
   pickPhotoCropUrl, pickVideoFile, pickLeastUsed, parseKeywords,
   shard, photoCachePath, videoCachePath, buildConcatArgs,
   renderCreditsMd, renderCreditsLine, isLastSecond, openCacheDb,
-  generateKeywords,
+  generateKeywords, preparePexelsBackground,
 } from './pexelsBg.mjs';
 
 test('parseApiKeys: 多行/含等号值/缺键', () => {
@@ -172,4 +172,93 @@ test('generateKeywords: 401 抛鉴权失败错误', async () => {
   const fakeFetch = async () => ({ok: false, status: 401, text: async () => 'unauthorized'});
   await assert.rejects(() => generateKeywords({lyricsText: 'x', apiKey: 'k', fetchImpl: fakeFetch}),
     /鉴权失败/);
+});
+
+function fakePhoto(id, w = 6000, h = 4000) {
+  return {id, width: w, height: h, url: `https://pexels.com/photo/${id}`,
+    photographer: `P${id}`, photographer_url: `https://p/${id}`,
+    src: {original: `https://images.pexels.com/photos/${id}/x.jpeg`}};
+}
+function fakeVideo(id, dur = 20) {
+  return {id, width: 1920, height: 1080, duration: dur, url: `https://pexels.com/video/${id}`,
+    user: {name: `U${id}`, url: `https://u/${id}`},
+    video_files: [{id: id * 10, width: 1280, height: 720, link: `https://v/${id}.mp4`, file_type: 'video/mp4'}]};
+}
+function mkDirs() {
+  const root = mkdtempSync(join(tmpdir(), 'pexbg-'));
+  const publicDir = join(root, 'public'), cacheDir = join(root, 'cache');
+  mkdirSync(publicDir, {recursive: true});
+  return {root, publicDir, cacheDir};
+}
+const fakeDownload = async () => Buffer.from('fakemedia');
+const baseOpts = (o) => ({
+  lyricsText: '词', durationSec: 12, width: 1280, height: 720, fps: 24,
+  locale: 'zh-CN', intvl: 5,
+  apiKeys: {pexels: 'pk', openrouter: 'ok'},
+  fetchImpl: async () => ({ok: true, status: 200, json: async () => ({choices: [{message: {content: 'ocean\nwaves\nsky'}}]})}),
+  downloadImpl: fakeDownload,
+  ...o,
+});
+
+test('preparePexelsBackground image: 返回 imageUrls+credits，写 cache 与 public', async () => {
+  const {root, publicDir, cacheDir} = mkDirs();
+  let nextId = 100;
+  const pexelsClient = {
+    photos: {search: async () => ({photos: [fakePhoto(nextId++), fakePhoto(nextId++), fakePhoto(nextId++)]})},
+    videos: {search: async () => ({videos: []})},
+  };
+  try {
+    const r = await preparePexelsBackground(baseOpts({kind: 'image', publicDir, cacheDir, pexelsClient}));
+    assert.equal(r.imageUrls.length, Math.ceil(12 / 5)); // 3 slots
+    assert.equal(r.credits.length, 3);
+    assert.ok(existsSync(join(publicDir, r.imageUrls[0])));
+    assert.ok(existsSync(photoCachePath(cacheDir, 100, 1280, 720)));
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('preparePexelsBackground video: ffmpeg 拼接返回单 videoFile', async () => {
+  const {root, publicDir, cacheDir} = mkDirs();
+  let nextId = 200;
+  const pexelsClient = {
+    photos: {search: async () => ({photos: []})},
+    videos: {search: async () => ({videos: [fakeVideo(nextId++, 20)]})},
+  };
+  const execCalls = [];
+  const execImpl = (cmd, args) => { execCalls.push(args); writeFileSync(args[args.length - 1], 'mp4'); return {status: 0}; };
+  try {
+    const r = await preparePexelsBackground(baseOpts({kind: 'video', durationSec: 30, publicDir, cacheDir, pexelsClient, execImpl}));
+    assert.equal(r.videoFile, 'pexvid-concat.mp4');
+    assert.ok(existsSync(join(publicDir, 'pexvid-concat.mp4')));
+    assert.ok(r.credits.length >= 1);
+    assert.ok(execCalls[0].join(' ').includes('concat'));
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('preparePexelsBackground: 全部搜索空 → 抛错', async () => {
+  const {root, publicDir, cacheDir} = mkDirs();
+  const pexelsClient = {photos: {search: async () => ({photos: []})}, videos: {search: async () => ({videos: []})}};
+  try {
+    await assert.rejects(() => preparePexelsBackground(baseOpts({kind: 'image', publicDir, cacheDir, pexelsClient})));
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('preparePexelsBackground video: 时长不足循环填满', async () => {
+  const {root, publicDir, cacheDir} = mkDirs();
+  let searchCount = 0;
+  const pexelsClient = {
+    photos: {search: async () => ({photos: []})},
+    videos: {search: async () => {
+      searchCount++;
+      return searchCount === 1 ? {videos: [fakeVideo(300, 5)]} : {videos: []};
+    }},
+  };
+  const inputCounts = [];
+  const execImpl = (cmd, args) => {
+    inputCounts.push(args.filter((a) => a === '-i').length);
+    writeFileSync(args[args.length - 1], 'mp4'); return {status: 0};
+  };
+  try {
+    await preparePexelsBackground(baseOpts({kind: 'video', publicDir, cacheDir, pexelsClient, execImpl}));
+    assert.ok(inputCounts[0] >= 3); // 5s clip × 3 = 15s ≥ 12s
+  } finally { rmSync(root, {recursive: true, force: true}); }
 });
