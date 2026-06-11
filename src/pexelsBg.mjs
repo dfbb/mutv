@@ -152,3 +152,60 @@ export function openCacheDb(cacheDir) {
     close() { db.close(); },
   };
 }
+
+const KEYWORD_PROMPT = `You are a keyword generator for searching free stock videos on Pexels.
+Your task is to read song lyrics and generate search keywords for finding visual
+background videos suitable for a music video or lyric video.
+Goal: Generate keywords that describe mood, scene, atmosphere, color, motion, and
+visual style. The keywords should be useful for searching on Pexels.
+Rules:
+1. Do not summarize the lyrics.
+2. Do not translate the lyrics line by line.
+3. Do not generate abstract concepts that cannot be searched visually.
+4. Prefer concrete visual keywords.
+5. Use simple English keywords.
+6. Each keyword should be 1 to 4 words.
+7. Avoid names of people, brands, songs, artists, copyrighted characters, or specific places unless clearly needed.
+8. Avoid violent, sexual, political, or unsafe keywords.
+9. If the lyrics are sad, generate moody, lonely, rainy, night, slow-motion, cinematic keywords.
+10. If the lyrics are romantic, generate warm, soft, sunset, couple, flowers, dreamy keywords.
+11. If the lyrics are energetic, generate neon, city night, dancing, stage lights, motion, party keywords.
+12. If the lyrics are nostalgic, generate vintage, film grain, old room, sunset road, memory, retro keywords.
+13. If the lyrics mention nature, generate ocean, waves, forest, mountains, clouds, moon, stars, wind, rain keywords.
+14. Include both general keywords and specific search phrases.
+15. Output only keywords, one per line. No explanation.
+Keyword categories to consider:
+* mood: dreamy, lonely, romantic, emotional, peaceful, mysterious
+* scene: ocean, beach, city night, forest, road, bedroom, cafe, train station
+* weather: rain, fog, snow, wind, storm clouds, sunset, sunrise
+* light: neon lights, bokeh lights, soft light, golden hour, moonlight, stage lights
+* motion: slow motion, waves, dancing, walking alone, moving clouds, light trails
+* texture: film grain, light leak, water reflection, rain window, abstract texture
+* music video style: cinematic background, lyric video background, abstract background, visualizer background
+Input lyrics:
+{{LYRICS}}
+Output:
+Generate 20 to 40 Pexels search keywords.`;
+
+/** OpenRouter mistral-nemo 生成关键词池。402/429/401 专项报警，空结果抛错。 */
+export async function generateKeywords({lyricsText, apiKey, fetchImpl = fetch}) {
+  const resp = await fetchImpl('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'mistralai/mistral-nemo',
+      messages: [{role: 'user', content: KEYWORD_PROMPT.replace('{{LYRICS}}', lyricsText)}],
+    }),
+  });
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => '');
+    if (resp.status === 402) throw new Error(`OpenRouter 余额不足/欠费（HTTP 402）。请充值后重试。\n${body}`);
+    if (resp.status === 429) throw new Error(`OpenRouter 速率限制（HTTP 429）。请稍后重试。\n${body}`);
+    if (resp.status === 401) throw new Error(`OpenRouter 鉴权失败（HTTP 401）。检查 scripts/api.key。\n${body}`);
+    throw new Error(`OpenRouter HTTP ${resp.status}\n${body}`);
+  }
+  const data = await resp.json();
+  const kws = parseKeywords(data.choices?.[0]?.message?.content ?? '');
+  if (!kws.length) throw new Error('OpenRouter 返回空关键词，无法继续。');
+  return kws;
+}

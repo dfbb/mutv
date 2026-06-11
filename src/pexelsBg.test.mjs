@@ -8,6 +8,7 @@ import {
   pickPhotoCropUrl, pickVideoFile, pickLeastUsed, parseKeywords,
   shard, photoCachePath, videoCachePath, buildConcatArgs,
   renderCreditsMd, renderCreditsLine, isLastSecond, openCacheDb,
+  generateKeywords,
 } from './pexelsBg.mjs';
 
 test('parseApiKeys: 多行/含等号值/缺键', () => {
@@ -139,4 +140,24 @@ test('openCacheDb: usage 计数与 attribution 往返', () => {
     assert.deepEqual(db.getAttribution('photo', 1), {type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
     db.close();
   } finally { rmSync(dir, {recursive: true, force: true}); }
+});
+
+test('generateKeywords: 正常返回解析为关键词', async () => {
+  const fakeFetch = async () => ({
+    ok: true, status: 200,
+    json: async () => ({choices: [{message: {content: 'ocean\nwaves\nocean'}}]}),
+  });
+  const kws = await generateKeywords({lyricsText: '词', apiKey: 'k', fetchImpl: fakeFetch});
+  assert.deepEqual(kws, ['ocean', 'waves']);
+});
+
+test('generateKeywords: 402 抛余额错误', async () => {
+  const fakeFetch = async () => ({ok: false, status: 402, text: async () => 'no credit'});
+  await assert.rejects(() => generateKeywords({lyricsText: 'x', apiKey: 'k', fetchImpl: fakeFetch}),
+    /余额不足|欠费/);
+});
+
+test('generateKeywords: 空关键词抛错', async () => {
+  const fakeFetch = async () => ({ok: true, status: 200, json: async () => ({choices: [{message: {content: ''}}]})});
+  await assert.rejects(() => generateKeywords({lyricsText: 'x', apiKey: 'k', fetchImpl: fakeFetch}));
 });
