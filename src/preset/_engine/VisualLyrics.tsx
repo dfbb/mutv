@@ -56,13 +56,20 @@ const OUTLINE_OFFSETS = [
   '0 0.07em',
 ];
 
-// 引擎统一覆盖：暂停动画 + 字号/换行 + 逐字露出遮罩 +（仅当指定时）颜色覆盖。
-// 全部 scope 到 .fx-<id> 下。改编自 demo 的 VISUAL_OVERRIDE。
+// 引擎统一覆盖：暂停动画 + 中和 .bl-wrap 面板底色 + 字号/换行 + 逐字露出遮罩 +
+// （仅当指定时）颜色覆盖。全部 scope 到 .fx-<id> 下。改编自 demo 的 VISUAL_OVERRIDE。
+//
+// 面板底色中和：visual 特效常给 .bl-wrap 加 background（盒/框/贴纸面板）。该面板按
+// max-content 撑满整行，逐字露出时未露出的字仍占位 → 已露出文字被推到面板左缘、首字被
+// 面板左边裁切。demo 的 VISUAL_OVERRIDE 用 `background:transparent !important` 抹掉了
+// 这层面板（仅余文字），移植时漏掉此规则导致 ~13 个面板类特效首字左缘裁切。此处仅中和
+// .bl-wrap 自身底色，不动其子元素（保留 background-clip:text 取色的渐变文字特效）。
 function overrideCss(id: string, fontSize: number, fg: string, bg: string): string {
   const p = `.fx-${id}`;
   const mask = `linear-gradient(90deg,#000 calc(var(--reveal,1)*100% - 0.4ch), transparent calc(var(--reveal,1)*100% + 0.1ch))`;
   let css = `
 ${p} * { animation-play-state: paused !important; }
+${p} .bl-wrap { background: transparent !important; }
 ${p} .bl-wrap, ${p} .bl-wrap * { font-size: ${fontSize}px !important; white-space: nowrap !important; }
 ${p} .bl-wrap {
   width: max-content; max-width: 94%; margin: 0 auto; line-height: 1.3;
