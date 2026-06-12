@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {
   parseApiKeys, langToLocale, orientationOf, aspectOk, meetsMinRes,
   pickPhotoCropUrl, pickVideoFile, pickLeastUsed, parseKeywords,
-  sanitizeTag, photoCachePath, videoCachePath, listCachedPhotos, listCachedVideos,
+  sanitizeTag, photoCachePath, videoCachePath,
   buildConcatArgs, renderCreditsMd, renderCreditsLine, isLastSecond, openCacheDb,
   generateKeywords, preparePexelsBackground,
 } from './pexelsBg.mjs';
@@ -100,30 +100,6 @@ test('缓存路径含 tag（按关键词分目录）', () => {
     .endsWith('/c/pexels/videos/city-night/19955848-123-20s.mp4'));
 });
 
-test('listCachedPhotos: 空目录→[]、按 WxH 过滤、解析 id', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'pexlist2-'));
-  try {
-    assert.deepEqual(listCachedPhotos(dir, 'ocean', 1280, 720), []); // 目录不存在→[]
-    const p1 = photoCachePath(dir, 'ocean', 100, 1280, 720);
-    const p2 = photoCachePath(dir, 'ocean', 200, 1280, 720);
-    const pOther = photoCachePath(dir, 'ocean', 300, 640, 360); // 不同分辨率
-    mkdirSync(join(dir, 'pexels', 'photos', 'ocean'), {recursive: true});
-    writeFileSync(p1, 'x'); writeFileSync(p2, 'x'); writeFileSync(pOther, 'x');
-    const got = listCachedPhotos(dir, 'ocean', 1280, 720).map((e) => e.id).sort((a, b) => a - b);
-    assert.deepEqual(got, [100, 200]); // 640x360 的不计入
-  } finally { rmSync(dir, {recursive: true, force: true}); }
-});
-
-test('listCachedVideos: 解析 id/fileId/duration', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'pexlist3-'));
-  try {
-    const v = videoCachePath(dir, 'waves', 500, 5000, 14);
-    mkdirSync(join(dir, 'pexels', 'videos', 'waves'), {recursive: true});
-    writeFileSync(v, 'x');
-    assert.deepEqual(listCachedVideos(dir, 'waves'), [{id: 500, fileId: 5000, duration: 14, cachePath: v}]);
-  } finally { rmSync(dir, {recursive: true, force: true}); }
-});
-
 test('buildConcatArgs: filter_complex/-t/-an/近无损', () => {
   const args = buildConcatArgs(['/a.mp4', '/b.mp4'], 1280, 720, 24, 30.5, '/out.mp4');
   const s = args.join(' ');
@@ -170,6 +146,13 @@ test('openCacheDb: 按 tag 的 usage 计数与 attribution 往返', () => {
     assert.equal(db.getCounts('video', 'ocean', [1]).get(1), 0); // type 隔离
     db.putAttribution({type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
     assert.deepEqual(db.getAttribution('photo', 1), {type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
+    // 候选索引：按 (type,tag) 取回、upsert
+    assert.deepEqual(db.getCandidates('photo', 'ocean'), []);
+    db.putCandidate({type: 'photo', tag: 'ocean', id: 9, url: 'https://img/9', fileId: null, duration: null});
+    db.putCandidate({type: 'video', tag: 'ocean', id: 9, url: 'https://v/9', fileId: 90, duration: 12});
+    assert.deepEqual(db.getCandidates('photo', 'ocean'), [{id: 9, url: 'https://img/9', fileId: null, duration: null}]);
+    assert.deepEqual(db.getCandidates('video', 'ocean'), [{id: 9, url: 'https://v/9', fileId: 90, duration: 12}]);
+    assert.deepEqual(db.getCandidates('photo', 'waves'), []); // tag 隔离
     db.close();
   } finally { rmSync(dir, {recursive: true, force: true}); }
 });
@@ -312,8 +295,25 @@ test('preparePexelsBackground image: 第二次同关键词命中缓存、零 API
       videos: {search: async () => { searchCalls++; return {videos: []}; }},
     };
     const r2 = await preparePexelsBackground(baseOpts({kind: 'image', publicDir, cacheDir, pexelsClient: client2}));
-    assert.equal(searchCalls, 0);         // 全部命中缓存，零 API
+    assert.equal(searchCalls, 0);         // 全部命中候选索引，零 API
     assert.equal(r2.imageUrls.length, 3); // 仍产出 3 张
     assert.equal(r2.credits.length, 3);   // 署名从 attribution 表取回
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('preparePexelsBackground image: 单关键词靠候选索引产出多张、仅 1 次搜索', async () => {
+  const {root, publicDir, cacheDir} = mkDirs();
+  let searchCalls = 0;
+  const pexelsClient = {
+    photos: {search: async () => { searchCalls++; return {photos: [fakePhoto(10), fakePhoto(11), fakePhoto(12)]}; }},
+    videos: {search: async () => ({videos: []})},
+  };
+  const opts = baseOpts({kind: 'image', publicDir, cacheDir, pexelsClient,
+    fetchImpl: async () => ({ok: true, status: 200, json: async () => ({choices: [{message: {content: 'ocean'}}]})})});
+  try {
+    const r = await preparePexelsBackground(opts);              // 12s/5s = 3 槽位，关键词仅 'ocean'
+    assert.equal(r.imageUrls.length, 3);
+    assert.equal(new Set(r.credits.map((c) => c.id)).size, 3);  // 3 张互不相同（索引内轮换）
+    assert.equal(searchCalls, 1);                               // 一次搜索建索引即够，非每槽位搜一次
   } finally { rmSync(root, {recursive: true, force: true}); }
 });

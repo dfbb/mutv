@@ -162,7 +162,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 1. **关键词生成**：读取歌词文本，调用 OpenRouter `mistralai/mistral-nemo` 生成 20–40 个英文搜索关键词（描述氛围/场景/色调/运动感）。
 2. **Pexels 搜索**：用官方 SDK（避免反爬）按关键词 + `--res` 推断的 orientation + 歌词语言 locale 逐词搜索。
 3. **比例匹配**：筛选宽高比与输出分辨率接近的素材（容差 ≤ 1.25 倍），再 cover 缩放裁剪到精确 `--res` 尺寸。
-4. **按关键词缓存 + 低重复**：素材**按搜索关键词分目录**缓存在 `cache/pexels/photos/<关键词>/`、`cache/pexels/videos/<关键词>/`（图片文件名含目标 `WxH`，视频含 file id 与时长）。取素材时**优先读该关键词目录的缓存**——命中就直接用、不再请求 Pexels（同一首歌重复渲染、不同歌曲共享关键词时都省 API/带宽）；SQLite `cache/usage.sqlite` 按 `(关键词, id)` 记录使用次数，在同一关键词内优先选次数少的。
+4. **按关键词候选索引 + 按需下载 + 低重复**：每次搜索把该关键词返回的全部合法候选**元数据**（id/作者/链接/视频档/时长）记入 SQLite 候选索引（`cache/usage.sqlite`，按 `(关键词, id)`），**不立即下载**；取素材时在该关键词的候选里按使用次数最少选一个、**按需下载**到 `cache/pexels/photos/<关键词>/`、`cache/pexels/videos/<关键词>/`（已下载则直接复用）。效果：每个关键词攒下约 10–15 个候选，**同一首歌重复渲染、跨歌曲共享关键词时在同关键词内轮换、低重复**，且几乎不再请求 Pexels；带宽只花在实际用到的素材上。
 5. **图片**（`--bg-pexels-image`）：`ceil(时长 / --bg-image-intvl)` 张，交给现有轮播机制（支持 `--bg-image-trans` 转场）。
 6. **视频**（`--bg-pexels-video`）：累积下载直到总时长 ≥ 歌曲长度，用系统 ffmpeg `-crf 16 -preset veryfast` 近无损拼接为单个 mp4，再按 `--bg-video` 路径渲染。
 7. **Pexels 署名（合规）**：

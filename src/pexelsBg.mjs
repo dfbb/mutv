@@ -4,7 +4,7 @@
  */
 import {join, dirname} from 'path';
 import Database from 'better-sqlite3';
-import {mkdirSync, copyFileSync, writeFileSync, existsSync, readdirSync} from 'fs';
+import {mkdirSync, copyFileSync, writeFileSync, existsSync} from 'fs';
 import {spawnSync} from 'child_process';
 
 export function parseApiKeys(text) {
@@ -84,32 +84,6 @@ export function videoCachePath(cacheDir, tag, videoId, fileId, durationSec) {
   return join(cacheDir, 'pexels', 'videos', tag, `${videoId}-${fileId}-${durationSec}s.mp4`);
 }
 
-/** 列出某 tag 目录下匹配目标 WxH 的已缓存图片：[{id, cachePath}]。目录不存在→[]。 */
-export function listCachedPhotos(cacheDir, tag, w, h) {
-  const dir = join(cacheDir, 'pexels', 'photos', tag);
-  if (!existsSync(dir)) return [];
-  const re = new RegExp(`^(\\d+)-${w}x${h}-crop\\.jpg$`);
-  const out = [];
-  for (const name of readdirSync(dir)) {
-    const m = name.match(re);
-    if (m) out.push({id: Number(m[1]), cachePath: join(dir, name)});
-  }
-  return out;
-}
-
-/** 列出某 tag 目录下已缓存视频（分辨率无关，ffmpeg 缩放）：[{id, fileId, duration, cachePath}]。 */
-export function listCachedVideos(cacheDir, tag) {
-  const dir = join(cacheDir, 'pexels', 'videos', tag);
-  if (!existsSync(dir)) return [];
-  const re = /^(\d+)-(\d+)-(\d+)s\.mp4$/;
-  const out = [];
-  for (const name of readdirSync(dir)) {
-    const m = name.match(re);
-    if (m) out.push({id: Number(m[1]), fileId: Number(m[2]), duration: Number(m[3]), cachePath: join(dir, name)});
-  }
-  return out;
-}
-
 /** ffmpeg 预拼接参数：scale(cover)+crop+fps → concat → -t 截断，近无损中间件。 */
 export function buildConcatArgs(clips, w, h, fps, durationSec, outPath) {
   const inputs = clips.flatMap((c) => ['-i', c]);
@@ -156,13 +130,21 @@ export function openCacheDb(cacheDir) {
     CREATE TABLE IF NOT EXISTS attribution (
       type TEXT NOT NULL, id INTEGER NOT NULL,
       author TEXT, author_url TEXT, pexels_url TEXT,
-      PRIMARY KEY (type, id));`);
+      PRIMARY KEY (type, id));
+    CREATE TABLE IF NOT EXISTS candidate (
+      type TEXT NOT NULL, tag TEXT NOT NULL, id INTEGER NOT NULL,
+      url TEXT NOT NULL, file_id INTEGER, duration INTEGER,
+      PRIMARY KEY (type, tag, id));`);
   const bump = db.prepare(
     'INSERT INTO usage(type,tag,id,count) VALUES(?,?,?,1) ON CONFLICT(type,tag,id) DO UPDATE SET count=count+1');
   const putAttr = db.prepare(
     'INSERT INTO attribution(type,id,author,author_url,pexels_url) VALUES(?,?,?,?,?) ' +
     'ON CONFLICT(type,id) DO UPDATE SET author=excluded.author,author_url=excluded.author_url,pexels_url=excluded.pexels_url');
   const getAttr = db.prepare('SELECT * FROM attribution WHERE type=? AND id=?');
+  const putCand = db.prepare(
+    'INSERT INTO candidate(type,tag,id,url,file_id,duration) VALUES(?,?,?,?,?,?) ' +
+    'ON CONFLICT(type,tag,id) DO UPDATE SET url=excluded.url,file_id=excluded.file_id,duration=excluded.duration');
+  const getCands = db.prepare('SELECT id,url,file_id AS fileId,duration FROM candidate WHERE type=? AND tag=?');
   return {
     /** 某 tag 下这批 id 的使用次数；缺失=0。 */
     getCounts(type, tag, ids) {
@@ -181,6 +163,9 @@ export function openCacheDb(cacheDir) {
       const r = getAttr.get(type, id);
       return r ? {type: r.type, id: r.id, author: r.author, authorUrl: r.author_url, pexelsUrl: r.pexels_url} : null;
     },
+    /** 候选索引：记录某关键词搜到的素材元数据（不下载），供跨次/同次轮换按需下载。 */
+    putCandidate(c) { putCand.run(c.type, c.tag, c.id, c.url, c.fileId ?? null, c.duration ?? null); },
+    getCandidates(type, tag) { return getCands.all(type, tag); },
     close() { db.close(); },
   };
 }
@@ -291,24 +276,7 @@ export async function preparePexelsBackground({
   let kwIdx = 0;
   const kwPage = new Map();
 
-  /** 缓存优先：在该 tag 目录里按 usage 最少选一个直接用（不调 API）。返回素材或 null。 */
-  function serveFromCache(tag) {
-    const entries = kind === 'image'
-      ? listCachedPhotos(cacheDir, tag, width, height)
-      : listCachedVideos(cacheDir, tag);
-    const avail = entries.filter((e) => !usedThisRun.has(e.id));
-    if (!avail.length) return null;
-    const counts = db.getCounts(type, tag, avail.map((e) => e.id));
-    const pick = pickLeastUsed(avail, counts, usedThisRun);
-    if (!pick) return null;
-    const credit = db.getAttribution(type, pick.id) || {type, id: pick.id, author: '', authorUrl: '', pexelsUrl: ''};
-    db.bumpUsage(type, tag, pick.id);
-    usedThisRun.add(pick.id);
-    credits.push(credit);
-    return {cachePath: pick.cachePath, id: pick.id, duration: pick.duration};
-  }
-
-  /** 搜该关键词的下一页（预算/翻页上限内），比例过滤（严格→放宽）。返回候选数组或 []。 */
+  /** 搜该关键词的下一页（预算/翻页上限内），比例过滤（严格→放宽）。返回原始候选项数组或 []。 */
   async function searchPage(kw) {
     if (requests >= requestBudget) return [];
     const page = kwPage.get(kw) ?? 1;
@@ -336,52 +304,81 @@ export async function preparePexelsBackground({
     return cands;
   }
 
-  /** 下载一个新选中的搜索候选到该 tag 目录，登记 usage+attribution+credit。返回素材或 null。 */
-  async function downloadFresh(tag, pick) {
+  /** 搜一页并把全部合法候选的元数据（不下载）写入候选索引 + attribution。返回是否新增了候选 id。 */
+  async function searchAndIndex(kw, tag) {
+    const items = await searchPage(kw);
+    if (!items.length) return false;
+    const known = new Set(db.getCandidates(type, tag).map((c) => c.id));
+    let added = 0;
+    for (const it of items) {
+      if (kind === 'image') {
+        if (!known.has(it.id)) added++;
+        db.putCandidate({type: 'photo', tag, id: it.id, url: it.src.original, fileId: null, duration: null});
+        db.putAttribution({type: 'photo', id: it.id, author: it.photographer, authorUrl: it.photographer_url, pexelsUrl: it.url});
+      } else {
+        const file = pickVideoFile(it.video_files, width, height);
+        if (!file) continue;
+        if (!known.has(it.id)) added++;
+        db.putCandidate({type: 'video', tag, id: it.id, url: file.link, fileId: file.id, duration: Math.max(1, Math.round(it.duration || 0))});
+        db.putAttribution({type: 'video', id: it.id, author: it.user?.name, authorUrl: it.user?.url, pexelsUrl: it.url});
+      }
+    }
+    return added > 0;
+  }
+
+  /** 按需下载一个候选（缓存已存在则跳过下载）。返回素材或 null（下载失败）。 */
+  async function ensureDownloaded(tag, cand) {
     try {
       if (kind === 'image') {
-        const dest = photoCachePath(cacheDir, tag, pick.id, width, height);
-        if (!existsSync(dest)) await downloadToFile(pickPhotoCropUrl(pick.src.original, width, height), dest, downloadImpl);
-        const credit = {type: 'photo', id: pick.id, author: pick.photographer, authorUrl: pick.photographer_url, pexelsUrl: pick.url};
-        db.putAttribution(credit); db.bumpUsage('photo', tag, pick.id);
-        usedThisRun.add(pick.id); credits.push(credit);
-        return {cachePath: dest, id: pick.id};
+        const dest = photoCachePath(cacheDir, tag, cand.id, width, height);
+        if (!existsSync(dest)) await downloadToFile(pickPhotoCropUrl(cand.url, width, height), dest, downloadImpl);
+        return {cachePath: dest, id: cand.id};
       }
-      const file = pickVideoFile(pick.video_files, width, height);
-      if (!file) return null;
-      const dur = Math.max(1, Math.round(pick.duration || 0));
-      const dest = videoCachePath(cacheDir, tag, pick.id, file.id, dur);
-      if (!existsSync(dest)) await downloadToFile(file.link, dest, downloadImpl);
-      const credit = {type: 'video', id: pick.id, author: pick.user?.name, authorUrl: pick.user?.url, pexelsUrl: pick.url};
-      db.putAttribution(credit); db.bumpUsage('video', tag, pick.id);
-      usedThisRun.add(pick.id); credits.push(credit);
-      return {cachePath: dest, id: pick.id, duration: dur};
+      const dur = Math.max(1, Math.round(cand.duration || 0));
+      const dest = videoCachePath(cacheDir, tag, cand.id, cand.fileId, dur);
+      if (!existsSync(dest)) await downloadToFile(cand.url, dest, downloadImpl);
+      return {cachePath: dest, id: cand.id, duration: dur};
     } catch (e) {
-      console.warn(`  下载失败（跳过 #${pick.id}）：${e.message}`);
-      usedThisRun.add(pick.id);
+      console.warn(`  下载失败（跳过 #${cand.id}）：${e.message}`);
       return null;
     }
   }
 
-  /** 取一个素材：轮转关键词，每个先查该 tag 缓存，命中即用；缺失才搜 Pexels 下载。 */
+  /** 在该关键词的候选索引里按 usage 最少选一个、按需下载并服务。返回素材或 null（无可用候选）。 */
+  async function serveFromIndex(tag) {
+    while (true) {
+      const pool = db.getCandidates(type, tag).filter((c) => !usedThisRun.has(c.id));
+      if (!pool.length) return null;
+      const counts = db.getCounts(type, tag, pool.map((c) => c.id));
+      const pick = pickLeastUsed(pool, counts, usedThisRun);
+      if (!pick) return null;
+      const got = await ensureDownloaded(tag, pick);
+      if (got) {
+        db.bumpUsage(type, tag, pick.id);
+        usedThisRun.add(pick.id);
+        credits.push(db.getAttribution(type, pick.id) || {type, id: pick.id, author: '', authorUrl: '', pexelsUrl: ''});
+        return got;
+      }
+      usedThisRun.add(pick.id); // 下载失败 → 本次跳过该候选，试下一个
+    }
+  }
+
+  /** 取一个素材：轮转关键词，先在候选索引里按 usage 轮换（命中不调 API）；索引无未用候选才搜一页扩充。 */
   async function acquireOne() {
     for (let attempt = 0; attempt < maxAttemptsPerSlot; attempt++) {
       const kw = keywords[kwIdx % keywords.length];
       kwIdx++;
       const tag = sanitizeTag(kw);
 
-      // (a) 缓存优先：该关键词命中就用
-      const cached = serveFromCache(tag);
-      if (cached) return cached;
-
-      // (b) 缓存缺失 → 搜 Pexels、下载进该 tag 目录
-      const cands = await searchPage(kw);
-      if (!cands.length) continue;
-      const counts = db.getCounts(type, tag, cands.map((c) => c.id));
-      const pick = pickLeastUsed(cands, counts, usedThisRun);
-      if (!pick) continue;
-      const got = await downloadFresh(tag, pick);
+      // (a) 候选索引命中：按 usage 最少选、按需下载（跨次/同次轮换，零或少 API）
+      let got = await serveFromIndex(tag);
       if (got) return got;
+
+      // (b) 索引无未用候选 → 搜一页扩充索引，再取
+      if (await searchAndIndex(kw, tag)) {
+        got = await serveFromIndex(tag);
+        if (got) return got;
+      }
     }
     return null;
   }
