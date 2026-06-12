@@ -18,6 +18,7 @@ node src/cli.mjs --audio song.mp3 --lyrics song.srt --title "歌名"
 - **814 款多语言字体** —— 本地字库覆盖 7 种语言（en 548 / zh_CN 143 / ja 57 / kr 49 / ar 12 / zh_TW 3 / zh_HK 2），按歌词语言自动选库；`--font`/`--font-scale`/`--font-fg-color`/`--font-bg-color` 全可控。字库未随仓库分发（见 INSTALL.md）。
 - **歌词格式** —— LRC / SRT / JSON，自动解析回退。
 - **任意分辨率与帧率** —— `--res 1080x1920 --fps 60`，横竖屏共用一套自适应缩放规则。
+- **🎙️ 完全 vibe coding 打造** —— 全程与 AI 结对、对话式编码完成。代码规模 **~10,300 行**（核心 9,300 + 测试 952，共 281 个 `.ts`/`.tsx`/`.mjs`/`.js`/`.py` 文件；统计不含 `node_modules`、第三方 vendor 与抓取的动画特效素材）。
 
 ## 快速开始
 
@@ -136,3 +137,15 @@ out/             渲染输出
 ```bash
 cd src && npm test      # node --test，覆盖歌词解析、动画注入、Pexels 等
 ```
+
+## 版权与许可
+
+本项目所用素材与依赖均为开源或自由授权，可放心使用：
+
+- **字体** —— 全部来自开源字体项目，绝大多数为 [SIL Open Font License (OFL)](https://openfontlicense.org/)（如 Pretendard、思源黑/宋体、Noto CJK、LXGW 文楷、霞鹜文楷、Inter、Montserrat、JetBrains Mono 等），少数为 Apache-2.0（如 Roboto），鸿蒙/阿里巴巴普惠为免费商用授权。本地字库未随仓库分发（见 [INSTALL.md](INSTALL.md)）。
+- **动画背景特效（animbg）** ——
+  - 57 个全屏特效为**自行重写的原创实现**。
+  - 74 个 WINAMP 音频可视化由开源的 **butterchurn**（MIT）及其 preset 包驱动；底层渲染引擎 **three.js**、**p5.js**、**VANTA.js** 均为 MIT 许可。
+- **Pexels 背景（`--bg-pexels-*`）** —— 图片/视频取自 [Pexels](https://www.pexels.com)，遵循其[免费许可](https://www.pexels.com/license/)（可商用、免署名，但本项目仍**内置合规署名**：输出同目录写 `<name>.credits.md`，并在视频末尾叠加 "Pexels.com + 作者" 字幕）。
+
+> 综上，仓库内不包含受限的第三方版权素材；分发/商用前如有疑虑，请以各自原始许可为准。
