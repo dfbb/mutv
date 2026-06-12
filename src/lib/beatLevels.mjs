@@ -81,6 +81,35 @@ export function beatStyle({bass, mid, treb}) {
     scale: 1 + 0.04 * c(bass), // 低频缩放脉冲
     brightness: 1 + 0.06 * c(mid), // 亮度闪动
     saturate: 1 + 0.1 * c(treb), // 饱和闪动
-    timeGain: 1 + 0.6 * c(bass), // 时钟加速增益
+    timeGain: 1 + 0.6 * c(bass), // 时钟加速增益(瞬时;积分见 advanceVirtualTime)
   };
+}
+
+// 漏积分松弛系数:每帧把虚拟时间向实时回拉的比例(~1/LEAK 帧的时间常数)。
+// 0.05 ≈ 24fps 下 0.8s 归位,既保留鼓点踢感又快速消除超前量。
+export const VT_LEAK = 0.05;
+
+/**
+ * 把瞬时 timeGain 积分成 iframe 的虚拟时间(ms),并松弛回实时以消除净漂移。
+ *
+ * 背景:beatStyle.timeGain ∈ [1, 2.2] 恒 ≥ 1(只加速不减速)。若直接累加
+ * `vt += dt * timeGain`,则整首歌的平均速率 > 实时,时间积分型动画(canvas
+ * rAF / VANTA / p5)会系统性偏快——这正是录制视频"速度过快"的根因。
+ *
+ * 解法(漏积分):鼓点帧虚拟时间瞬时超前(保留"踢一下"的加速观感),随后每帧
+ * 按 VT_LEAK 比例把超前量拉回实时。稳态下超前量有界、与帧数无关,故长期平均
+ * 速率严格等于实时,不再整体偏快。
+ *
+ * 必须从 frame 0 起、按帧顺序调用(组件侧用缓存保证),以确保确定性。
+ *
+ * @param {number} prevVtMs 上一帧虚拟时间(frame 0 传 0)
+ * @param {number} timeGain 当前帧瞬时增益(来自 beatStyle,≥1)
+ * @param {number} frame    当前帧序号(从 0 起)
+ * @param {number} fps
+ * @returns {number} 当前帧虚拟时间(ms)
+ */
+export function advanceVirtualTime(prevVtMs, timeGain, frame, fps) {
+  const dt = 1000 / fps;
+  const vt = prevVtMs + dt * timeGain; // 鼓点瞬时加速:虚拟时间超前于实时
+  return vt - VT_LEAK * (vt - frame * dt); // 松弛回实时:消除净漂移
 }

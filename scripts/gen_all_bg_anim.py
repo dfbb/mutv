@@ -10,7 +10,7 @@
 增量：同名 mp4 已存在则跳过（可中断后续跑）。单个失败不影响其余，末尾汇总。
 
 用法：
-    python3 scripts/render_all.py
+    python3 scripts/gen_all_bg_anim.py
 """
 import random
 import subprocess

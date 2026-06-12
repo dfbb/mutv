@@ -22,8 +22,8 @@ node src/cli.mjs --audio <音频> --lyrics <lrc/srt> --title "歌名" --preset <
 批量渲染全部 preset（输出 `out/preset_all/<preset>.mp4`，增量跳过已存在文件）：
 
 ```bash
-python3 scripts/preset_all.py            # 全部
-python3 scripts/preset_all.py fx-019-css-neon   # 仅指定（可多个）
+python3 scripts/gen_all_preset_demo.py            # 全部
+python3 scripts/gen_all_preset_demo.py fx-019-css-neon   # 仅指定（可多个）
 ```
 
 ## 文字颜色覆盖（`--font-fg-color` / `--font-bg-color`）

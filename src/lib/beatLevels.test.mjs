@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {bandSums, createBeatState, beatStyle} from './beatLevels.mjs';
+import {bandSums, createBeatState, beatStyle, advanceVirtualTime} from './beatLevels.mjs';
 
 test('bandSums: 仅低频有能量时 bass>0、mid/treb=0', () => {
   // sampleRate 44100, nyquist 22050; 512 bins → binHz ≈ 43.07
@@ -78,4 +78,43 @@ test('beatStyle: clamp 上限', () => {
   assert.ok(Math.abs(st.brightness - 1.12) < 1e-9);
   assert.ok(Math.abs(st.saturate - 1.2) < 1e-9);
   assert.ok(Math.abs(st.timeGain - 2.2) < 1e-9);
+});
+
+test('advanceVirtualTime: 恒定 timeGain=1 收敛到实时(vt≈frame*dt)', () => {
+  const fps = 24;
+  const dt = 1000 / fps;
+  let vt = 0;
+  for (let f = 0; f < 500; f++) vt = advanceVirtualTime(vt, 1, f, fps);
+  // 基线无鼓点时虚拟时间应贴合实时,残差仅为初始松弛瞬态
+  assert.ok(Math.abs(vt - 499 * dt) < dt, `vt 应≈实时, 差 ${(vt - 499 * dt).toFixed(2)}ms`);
+});
+
+test('advanceVirtualTime: 鼓点帧瞬时加速(单帧推进 > dt)', () => {
+  const fps = 24;
+  const dt = 1000 / fps;
+  // 先用 timeGain=1 稳定到实时附近
+  let vt = 0;
+  for (let f = 0; f < 200; f++) vt = advanceVirtualTime(vt, 1, f, fps);
+  const before = vt;
+  vt = advanceVirtualTime(vt, 2.2, 200, fps); // 一记最强鼓点
+  assert.ok(vt - before > dt, `鼓点帧应加速, 推进 ${(vt - before).toFixed(2)}ms 应 > ${dt.toFixed(2)}ms`);
+});
+
+test('advanceVirtualTime: 长程零漂移(平均速率=实时,不再整体偏快)', () => {
+  const fps = 24;
+  const dt = 1000 / fps;
+  const N = 2400; // 100 秒
+  // 模拟规律鼓点:每 24 帧前 3 帧是强拍(timeGain=2.2),其余基线 1.0
+  // 旧逻辑(vt += dt*timeGain 无松弛)会累计 (avgGain-1)*N*dt ≈ 0.15*N*dt ≈ 360*dt 的漂移
+  let vt = 0;
+  for (let f = 0; f < N; f++) {
+    const timeGain = f % 24 < 3 ? 2.2 : 1.0;
+    vt = advanceVirtualTime(vt, timeGain, f, fps);
+  }
+  const realMs = (N - 1) * dt;
+  // 漏积分使超前量有界(几个 dt 量级),与帧数无关 → 长程平均速率=实时
+  assert.ok(
+    Math.abs(vt - realMs) < 20 * dt,
+    `应无净漂移, vt-real=${((vt - realMs) / dt).toFixed(1)} 帧 (应 <20)`
+  );
 });

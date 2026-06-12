@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """把所有 preset 各渲染一遍，输出 out/preset_all/<preset>.mp4（720x480）。
 
-与 render_all.py 互为镜像：render_all 固定 bg-anim、随机 preset；本脚本固定
+与 gen_all_bg_anim.py 互为镜像：gen_all_bg_anim 固定 bg-anim、随机 preset；本脚本固定
 preset 与背景，逐个展示各 preset 自带的配色/特效（不覆盖字色，仅字体随机）：
     node src/cli.mjs --audio example/cn-3.mp3 --lyrics example/cn-3.srt \\
         --title "歌名" --preset <name> --bg-anim digital-dust --no-bg-anim-beat \\
@@ -10,8 +10,8 @@ preset 与背景，逐个展示各 preset 自带的配色/特效（不覆盖字�
 增量：同名 mp4 已存在则跳过（可中断后续跑）。单个失败不影响其余，末尾汇总。
 
 用法：
-    python3 scripts/preset_all.py                 # 渲染全部 preset
-    python3 scripts/preset_all.py fx-001-word-by  # 仅渲染指定 preset（可多个，用于测试）
+    python3 scripts/gen_all_preset_demo.py                 # 渲染全部 preset
+    python3 scripts/gen_all_preset_demo.py fx-001-word-by  # 仅渲染指定 preset（可多个，用于测试）
 """
 import subprocess
 import sys

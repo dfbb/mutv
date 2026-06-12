@@ -7,7 +7,7 @@ import {
   continueRender,
 } from 'remotion';
 import {useAudioData, visualizeAudio} from '@remotion/media-utils';
-import {bandSums, createBeatState, beatStyle} from '../../lib/beatLevels.mjs';
+import {bandSums, createBeatState, beatStyle, advanceVirtualTime} from '../../lib/beatLevels.mjs';
 
 const NUM_SAMPLES = 512;
 
@@ -43,7 +43,8 @@ function getFrameData(
     const imm = bandSums(spectrum, audioData.sampleRate);
     const levels = cache.state.step(imm, f);
     const {timeGain} = beatStyle(levels);
-    cache.vtMs += (1000 / fps) * timeGain;
+    // 漏积分:鼓点瞬时加速但松弛回实时,长期平均速率=实时(消除整体偏快漂移)。
+    cache.vtMs = advanceVirtualTime(cache.vtMs, timeGain, f, fps);
     cache.frames[f] = {levels, virtualTimeMs: cache.vtMs};
   }
   return cache.frames[frame];
