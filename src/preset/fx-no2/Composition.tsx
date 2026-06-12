@@ -53,7 +53,7 @@ export const MyComposition: React.FC<MVInputProps> = ({
 			/>
 			<StudioControlBar />
 			<FontLoader fontFamily={fontFamily} fontFile={fontFile} />
-			<TextColorOverride fgColor={fontFgColor} bgColor={fontBgColor} />
+			<TextColorOverride fgColor={fontFgColor} bgColor={fontBgColor} hasStroke={false} />{/* 纯白无描边：--font-bg-color 不强加勾边 */}
 			<Subtitles lyrics={lyrics} lyricOffset={lyricOffset} fontScale={fontScale} />
 			<Audio src={audioSrc} />
 			<Bottom audioSrc={audioSrc} title={title} fontScale={fontScale} />

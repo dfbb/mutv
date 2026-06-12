@@ -2,11 +2,10 @@
 """把所有 preset 各渲染一遍，输出 out/preset_all/<preset>.mp4（720x480）。
 
 与 render_all.py 互为镜像：render_all 固定 bg-anim、随机 preset；本脚本固定
-preset、随机 bg-anim/font/文字颜色（沿用基准命令）：
+preset 与背景，逐个展示各 preset 自带的配色/特效（不覆盖字色，仅字体随机）：
     node src/cli.mjs --audio example/cn-3.mp3 --lyrics example/cn-3.srt \\
-        --title "歌名" --preset <name> --bg-anim random --no-bg-anim-beat --font random \\
-        --font-fg-color <随机CSS颜色> --font-bg-color <随机CSS颜色> \\
-        --res 720x480 --output out/preset_all/<name>.mp4
+        --title "歌名" --preset <name> --bg-anim digital-dust --no-bg-anim-beat \\
+        --font random --res 720x480 --output out/preset_all/<name>.mp4
 
 增量：同名 mp4 已存在则跳过（可中断后续跑）。单个失败不影响其余，末尾汇总。
 
@@ -14,7 +13,6 @@ preset、随机 bg-anim/font/文字颜色（沿用基准命令）：
     python3 scripts/preset_all.py                 # 渲染全部 preset
     python3 scripts/preset_all.py fx-001-word-by  # 仅渲染指定 preset（可多个，用于测试）
 """
-import random
 import subprocess
 import sys
 from pathlib import Path
@@ -27,35 +25,6 @@ AUDIO = "example/cn-3.mp3"
 LYRICS = "example/cn-3.srt"
 TITLE = " 沧海一声笑"
 RES = "720x480"
-
-# CSS 命名颜色（CSS3 extended color keywords），去掉 black（文字颜色不能为黑色）。
-CSS_COLORS = [
-    "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque",
-    "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue",
-    "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson",
-    "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen",
-    "darkkhaki", "darkmagenta", "darkolivegreen", "darkorange", "darkorchid",
-    "darkred", "darksalmon", "darkseagreen", "darkslateblue", "darkslategray",
-    "darkturquoise", "darkviolet", "deeppink", "deepskyblue", "dimgray",
-    "dodgerblue", "firebrick", "floralwhite", "forestgreen", "fuchsia",
-    "gainsboro", "ghostwhite", "gold", "goldenrod", "gray", "green",
-    "greenyellow", "honeydew", "hotpink", "indianred", "indigo", "ivory",
-    "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon",
-    "lightblue", "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray",
-    "lightgreen", "lightpink", "lightsalmon", "lightseagreen", "lightskyblue",
-    "lightslategray", "lightsteelblue", "lightyellow", "lime", "limegreen",
-    "linen", "magenta", "maroon", "mediumaquamarine", "mediumblue",
-    "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue",
-    "mediumspringgreen", "mediumturquoise", "mediumvioletred", "midnightblue",
-    "mintcream", "mistyrose", "moccasin", "navajowhite", "navy", "oldlace",
-    "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod",
-    "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff",
-    "peru", "pink", "plum", "powderblue", "purple", "rebeccapurple", "red",
-    "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen",
-    "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "snow",
-    "springgreen", "steelblue", "tan", "teal", "thistle", "tomato", "turquoise",
-    "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen",
-]
 
 
 def list_presets() -> list[str]:
@@ -98,19 +67,16 @@ def main() -> None:
             continue
 
         print(f"{prefix} → 渲染中…")
-        # bg-anim、font 随机；填充色与勾边色随机且互不相同（相同会让勾边不可见）。
-        fg_color, bg_color = random.sample(CSS_COLORS, 2)
+        # 固定背景、随机字体；不传字色 → 保留各 preset 自带配色/描边/发光。
         cmd = [
             "node", "src/cli.mjs",
             "--audio", AUDIO,
             "--lyrics", LYRICS,
             "--title", TITLE,
             "--preset", preset,
-            "--bg-anim", "random",
+            "--bg-anim", "digital-dust",
             "--no-bg-anim-beat",
             "--font", "random",
-            "--font-fg-color", fg_color,
-            "--font-bg-color", bg_color,
             "--res", RES,
             "--output", str(out_file),
         ]

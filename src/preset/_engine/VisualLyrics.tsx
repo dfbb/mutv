@@ -4,6 +4,7 @@ import {MVInputProps} from '../../types';
 import {BackgroundLayer} from '../_shared/BackgroundLayer';
 import {StudioControlBar} from '../_shared/StudioControlBar';
 import {FontLoader} from '../_shared/FontLoader';
+import {detectColorTargets} from '../_shared/colorOverride.mjs';
 import {buildLineInfo, currentLineIndex} from './timing.mjs';
 import type {VisualEffect} from './types';
 
@@ -73,7 +74,7 @@ const OUTLINE_OFFSETS = [
 // 面板左边裁切。demo 的 VISUAL_OVERRIDE 用 `background:transparent !important` 抹掉了
 // 这层面板（仅余文字），移植时漏掉此规则导致 ~13 个面板类特效首字左缘裁切。此处仅中和
 // .bl-wrap 自身底色，不动其子元素（保留 background-clip:text 取色的渐变文字特效）。
-function overrideCss(id: string, fontSize: number, fg: string, bg: string): string {
+function overrideCss(id: string, fontSize: number, fg: string, bg: string, targets: {hasFill: boolean; hasStroke: boolean; hasTextStroke: boolean}): string {
   const p = `.fx-${id}`;
   const mask = `linear-gradient(90deg,#000 calc(var(--reveal,1)*100% - 0.4ch), transparent calc(var(--reveal,1)*100% + 0.1ch))`;
   let css = `
@@ -90,9 +91,12 @@ ${p} .bl-wrap {
   -webkit-mask-image: ${mask};
           mask-image: ${mask};
 }`;
+  // 只替换 preset 已有的字色：fg 填充仅当 preset 自带填充(hasFill)、bg 勾边仅当
+  // 自带描边/发光(hasStroke)时才覆盖；preset 没有的就不强加。换色不换形——沿用
+  // 8 向实心勾边机制，只把颜色换成指定 bg。
   if (fg || bg) {
     const decls: string[] = [];
-    if (fg) {
+    if (fg && targets.hasFill) {
       decls.push(`color: ${fg} !important;`);
       decls.push(`-webkit-text-fill-color: ${fg} !important;`);
       // 用 background 简写而非仅 background-image：部分特效用 background 简写注入
@@ -105,8 +109,8 @@ ${p} .bl-wrap {
       decls.push(`-webkit-background-clip: border-box !important;`);
       decls.push(`background-clip: border-box !important;`);
     }
-    decls.push(`-webkit-text-stroke-color: ${bg || fg} !important;`);
-    if (bg) {
+    if (targets.hasTextStroke) decls.push(`-webkit-text-stroke-color: ${bg || fg} !important;`);
+    if (bg && targets.hasStroke) {
       const shadow = OUTLINE_OFFSETS.map((off) => `${off} 0 ${bg}`).join(', ');
       decls.push(`text-shadow: ${shadow} !important;`);
     }
@@ -114,9 +118,11 @@ ${p} .bl-wrap {
     // 渐变/描边色("覆盖顶层 VISUAL_OVERRIDE 的强制色")。!important 平手时由 specificity
     // 决出胜负，故传色时把 .fx-<id> 重复 4 次，叠加 .bl-wrap 后达 (0,5,*) 稳压这些特效
     // 规则，让全部可见文字落到指定 fg/bg。仅在传色时启用，不影响默认渲染。
-    const pp = `${p}${p}${p}${p}`; // 4×id + .bl-wrap = (0,5,*)，压过特效最深 (0,4,0) 规则
-    css += `
+    if (decls.length) {
+      const pp = `${p}${p}${p}${p}`; // 4×id + .bl-wrap = (0,5,*)，压过特效最深 (0,4,0) 规则
+      css += `
 ${pp} .bl-wrap, ${pp} .bl-wrap *, ${pp} .bl-wrap *::before, ${pp} .bl-wrap *::after { ${decls.join(' ')} }`;
+    }
   }
   return css;
 }
@@ -189,7 +195,7 @@ export const VisualLyrics: React.FC<MVInputProps & {effect: VisualEffect}> = ({
 
       <Audio src={audioSrc} />
 
-      <style>{effect.css + overrideCss(effect.id, fontSize, fontFgColor, fontBgColor)}</style>
+      <style>{effect.css + overrideCss(effect.id, fontSize, fontFgColor, fontBgColor, detectColorTargets(effect.css))}</style>
 
       {/* key 随行变化（line 模式）→ 切行时重挂子树，使一次性动画每行重新开始，
           复现 demo 的 Shadow-DOM 重建；global 模式用固定 key 不重挂。 */}
