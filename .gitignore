@@ -18,6 +18,9 @@ scripts/_pextest/
 poc-grid-*.html
 carousel-poc.html
 
+# Demo 画廊 HTML（由 demo/gen-index.mjs 从本地 mp4 生成）
+demo/index-*.html
+
 # Runtime-copied assets in public/ (regenerated from source on each run)
 src/public/
 
