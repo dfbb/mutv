@@ -127,7 +127,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 | `--bg-video <file>` | 无 | 背景视频文件（循环播放）。与其它背景源互斥。自动复制到 `public/`。 |
 | `--bg-anim <label>` | 无 | 动画特效背景，对应 `src/animbg/<label>/`（由 `scripts/fetch_animbg.py` 抓取）。传 `random` 随机选一个。可用特效见下方[动画背景特效（bg-anim）列表](#动画背景特效bg-anim列表)。与其它背景源互斥。 |
 | `--no-bg-anim-beat` | 关闭（即默认开启节拍） | 关闭 `--bg-anim` 的节拍反应。默认开启：动画背景会随音乐低频”呼吸/放大”、随中高频闪动（复刻 butterchurn 频段归一化）。基于时间积分的模板（canvas/VANTA/p5）还会在鼓点时动画加速；纯帧计数的模板只有缩放/滤镜脉冲。少数特效（`net`、`net-dots`、`cartoon`、`clouds`、`particle-*`、`supernova`）不适合节拍抖动，始终不加节拍反应（不受此开关影响）。 |
-| `--bg-pexels-image` | 关 | 自动背景：OpenRouter(mistral-nemo) 读歌词生成英文关键词 → Pexels 搜索按比例匹配的图片 → 每 `--bg-image-intvl` 秒一张轮播（复用 `--bg-image-trans` 转场）。素材缓存于 `cache/pexels/`，优先选历史使用次数少的。与其它背景源互斥。需 `scripts/api.key`。 |
+| `--bg-pexels-image` | 关 | 自动背景：OpenRouter(mistral-nemo) 读歌词生成英文关键词 → Pexels 搜索按比例匹配的图片 → 每 `--bg-image-intvl` 秒一张轮播（复用 `--bg-image-trans` 转场）。素材**按关键词分目录**缓存于 `cache/pexels/`，优先读缓存、同关键词内选使用次数少的。与其它背景源互斥。需 `scripts/api.key`。 |
 | `--bg-pexels-video` | 关 | 同上但下载视频：多段按比例匹配的视频经系统 ffmpeg 近无损拼接为整首长度的单个 mp4 作背景。**需系统 ffmpeg**。与其它背景源互斥。需 `scripts/api.key`。 |
 | `--font <名\|random>` | 无（用各 preset 内置字体） | 指定文字字体。先按歌词（srt/lrc）语言自动选字库目录：英语/欧洲语言→`en`、简体中文→`zh_CN`、繁体中文→`zh_TW`、韩语→`kr`、日语→`ja`（检测不出或无对应目录→回退 `en`）。值为该目录下 woff2 文件名（去扩展名，如 `Pretendard-Regular`），或 `random` 随机选一个。选中字体经 `@font-face` 加载并前置到各 preset 字体栈。依赖本地 `font/` 目录（已 gitignore，未随仓库分发）。 |
 | `--font-scale <n>` | `1` | 字号倍率，整体放大/缩小**所有文字**（标题/歌词/署名等比缩放），不改变排版比例。`1`=跟随 preset 原样，`1.5`=放大 50%，`0.8`=缩小。非正数回退 `1`，并 clamp 到 `[0.1, 10]`。所有 preset 一致生效，与 `--font` 正交。 |
@@ -162,7 +162,7 @@ npm run build      # 渲染 preset/orig 到 out/video.mp4（默认 props）
 1. **关键词生成**：读取歌词文本，调用 OpenRouter `mistralai/mistral-nemo` 生成 20–40 个英文搜索关键词（描述氛围/场景/色调/运动感）。
 2. **Pexels 搜索**：用官方 SDK（避免反爬）按关键词 + `--res` 推断的 orientation + 歌词语言 locale 逐词搜索。
 3. **比例匹配**：筛选宽高比与输出分辨率接近的素材（容差 ≤ 1.25 倍），再 cover 缩放裁剪到精确 `--res` 尺寸。
-4. **低重复**：素材按 Pexels id 缓存在 `cache/pexels/`（散列两级目录，图片含目标 `WxH`，视频含 file id），SQLite `cache/usage.sqlite` 记录各 id 历史使用次数，优先选次数少的。
+4. **按关键词缓存 + 低重复**：素材**按搜索关键词分目录**缓存在 `cache/pexels/photos/<关键词>/`、`cache/pexels/videos/<关键词>/`（图片文件名含目标 `WxH`，视频含 file id 与时长）。取素材时**优先读该关键词目录的缓存**——命中就直接用、不再请求 Pexels（同一首歌重复渲染、不同歌曲共享关键词时都省 API/带宽）；SQLite `cache/usage.sqlite` 按 `(关键词, id)` 记录使用次数，在同一关键词内优先选次数少的。
 5. **图片**（`--bg-pexels-image`）：`ceil(时长 / --bg-image-intvl)` 张，交给现有轮播机制（支持 `--bg-image-trans` 转场）。
 6. **视频**（`--bg-pexels-video`）：累积下载直到总时长 ≥ 歌曲长度，用系统 ffmpeg `-crf 16 -preset veryfast` 近无损拼接为单个 mp4，再按 `--bg-video` 路径渲染。
 7. **Pexels 署名（合规）**：

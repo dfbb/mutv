@@ -6,8 +6,8 @@ import {join} from 'node:path';
 import {
   parseApiKeys, langToLocale, orientationOf, aspectOk, meetsMinRes,
   pickPhotoCropUrl, pickVideoFile, pickLeastUsed, parseKeywords,
-  shard, photoCachePath, videoCachePath, buildConcatArgs,
-  renderCreditsMd, renderCreditsLine, isLastSecond, openCacheDb,
+  sanitizeTag, photoCachePath, videoCachePath, listCachedPhotos, listCachedVideos,
+  buildConcatArgs, renderCreditsMd, renderCreditsLine, isLastSecond, openCacheDb,
   generateKeywords, preparePexelsBackground,
 } from './pexelsBg.mjs';
 
@@ -86,11 +86,42 @@ test('parseKeywords: 跳过 # 注释/章节标题行', () => {
   assert.deepEqual(parseKeywords('# Mood:\nocean\n# Scene:\nbeach'), ['ocean', 'beach']);
 });
 
-test('shard 与缓存路径', () => {
-  assert.equal(shard(7), '0/7');
-  assert.equal(shard(7762128), '2/8');
-  assert.ok(photoCachePath('/c', 7762128, 1280, 720).endsWith('/c/pexels/photos/2/8/7762128-1280x720-crop.jpg'));
-  assert.ok(videoCachePath('/c', 19955848, 123).endsWith('/c/pexels/videos/4/8/19955848-123.mp4'));
+test('sanitizeTag: 文件名安全串', () => {
+  assert.equal(sanitizeTag('ocean'), 'ocean');
+  assert.equal(sanitizeTag('City Night'), 'city-night');
+  assert.equal(sanitizeTag('  slow / motion  '), 'slow-motion');
+  assert.equal(sanitizeTag('---'), '_'); // 全非法字符 → 占位
+});
+
+test('缓存路径含 tag（按关键词分目录）', () => {
+  assert.ok(photoCachePath('/c', 'ocean', 7762128, 1280, 720)
+    .endsWith('/c/pexels/photos/ocean/7762128-1280x720-crop.jpg'));
+  assert.ok(videoCachePath('/c', 'city-night', 19955848, 123, 20)
+    .endsWith('/c/pexels/videos/city-night/19955848-123-20s.mp4'));
+});
+
+test('listCachedPhotos: 空目录→[]、按 WxH 过滤、解析 id', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pexlist2-'));
+  try {
+    assert.deepEqual(listCachedPhotos(dir, 'ocean', 1280, 720), []); // 目录不存在→[]
+    const p1 = photoCachePath(dir, 'ocean', 100, 1280, 720);
+    const p2 = photoCachePath(dir, 'ocean', 200, 1280, 720);
+    const pOther = photoCachePath(dir, 'ocean', 300, 640, 360); // 不同分辨率
+    mkdirSync(join(dir, 'pexels', 'photos', 'ocean'), {recursive: true});
+    writeFileSync(p1, 'x'); writeFileSync(p2, 'x'); writeFileSync(pOther, 'x');
+    const got = listCachedPhotos(dir, 'ocean', 1280, 720).map((e) => e.id).sort((a, b) => a - b);
+    assert.deepEqual(got, [100, 200]); // 640x360 的不计入
+  } finally { rmSync(dir, {recursive: true, force: true}); }
+});
+
+test('listCachedVideos: 解析 id/fileId/duration', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pexlist3-'));
+  try {
+    const v = videoCachePath(dir, 'waves', 500, 5000, 14);
+    mkdirSync(join(dir, 'pexels', 'videos', 'waves'), {recursive: true});
+    writeFileSync(v, 'x');
+    assert.deepEqual(listCachedVideos(dir, 'waves'), [{id: 500, fileId: 5000, duration: 14, cachePath: v}]);
+  } finally { rmSync(dir, {recursive: true, force: true}); }
 });
 
 test('buildConcatArgs: filter_complex/-t/-an/近无损', () => {
@@ -127,15 +158,16 @@ test('isLastSecond: 最后 1 秒边界', () => {
   assert.ok(isLastSecond(99, 100, 24));
 });
 
-test('openCacheDb: usage 计数与 attribution 往返', () => {
+test('openCacheDb: 按 tag 的 usage 计数与 attribution 往返', () => {
   const dir = mkdtempSync(join(tmpdir(), 'pexdb-'));
   try {
     const db = openCacheDb(dir);
-    assert.deepEqual(db.getCounts('photo', [1, 2]), new Map([[1, 0], [2, 0]])); // 缺失=0
-    db.bumpUsage('photo', 1);
-    db.bumpUsage('photo', 1);
-    assert.equal(db.getCounts('photo', [1]).get(1), 2);
-    assert.equal(db.getCounts('video', [1]).get(1), 0); // type 隔离
+    assert.deepEqual(db.getCounts('photo', 'ocean', [1, 2]), new Map([[1, 0], [2, 0]])); // 缺失=0
+    db.bumpUsage('photo', 'ocean', 1);
+    db.bumpUsage('photo', 'ocean', 1);
+    assert.equal(db.getCounts('photo', 'ocean', [1]).get(1), 2);
+    assert.equal(db.getCounts('photo', 'waves', [1]).get(1), 0); // tag 隔离
+    assert.equal(db.getCounts('video', 'ocean', [1]).get(1), 0); // type 隔离
     db.putAttribution({type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
     assert.deepEqual(db.getAttribution('photo', 1), {type: 'photo', id: 1, author: 'J', authorUrl: 'u', pexelsUrl: 'p'});
     db.close();
@@ -212,7 +244,7 @@ test('preparePexelsBackground image: 返回 imageUrls+credits，写 cache 与 pu
     assert.equal(r.imageUrls.length, Math.ceil(12 / 5)); // 3 slots
     assert.equal(r.credits.length, 3);
     assert.ok(existsSync(join(publicDir, r.imageUrls[0])));
-    assert.ok(existsSync(photoCachePath(cacheDir, 100, 1280, 720)));
+    assert.ok(existsSync(photoCachePath(cacheDir, 'ocean', 100, 1280, 720))); // 首槽关键词 'ocean'
   } finally { rmSync(root, {recursive: true, force: true}); }
 });
 
@@ -260,5 +292,28 @@ test('preparePexelsBackground video: 时长不足循环填满', async () => {
   try {
     await preparePexelsBackground(baseOpts({kind: 'video', publicDir, cacheDir, pexelsClient, execImpl}));
     assert.ok(inputCounts[0] >= 3); // 5s clip × 3 = 15s ≥ 12s
+  } finally { rmSync(root, {recursive: true, force: true}); }
+});
+
+test('preparePexelsBackground image: 第二次同关键词命中缓存、零 API', async () => {
+  const {root, publicDir, cacheDir} = mkDirs();
+  let nextId = 100;
+  const client1 = {
+    photos: {search: async () => ({photos: [fakePhoto(nextId++), fakePhoto(nextId++), fakePhoto(nextId++)]})},
+    videos: {search: async () => ({videos: []})},
+  };
+  try {
+    const r1 = await preparePexelsBackground(baseOpts({kind: 'image', publicDir, cacheDir, pexelsClient: client1}));
+    assert.equal(r1.imageUrls.length, 3);
+    // 第二次：同 cacheDir、关键词不变；search 若被调用即记数
+    let searchCalls = 0;
+    const client2 = {
+      photos: {search: async () => { searchCalls++; return {photos: []}; }},
+      videos: {search: async () => { searchCalls++; return {videos: []}; }},
+    };
+    const r2 = await preparePexelsBackground(baseOpts({kind: 'image', publicDir, cacheDir, pexelsClient: client2}));
+    assert.equal(searchCalls, 0);         // 全部命中缓存，零 API
+    assert.equal(r2.imageUrls.length, 3); // 仍产出 3 张
+    assert.equal(r2.credits.length, 3);   // 署名从 attribution 表取回
   } finally { rmSync(root, {recursive: true, force: true}); }
 });
