@@ -91,7 +91,7 @@ const PexelsCredits: React.FC = () => {
   return (
     <div style={{
       position: 'absolute', right: 24, bottom: 24, zIndex: 9999,
-      background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 18,
+      background: 'rgba(0,0,0,0.28)', color: '#fff', fontSize: 18,
       padding: '6px 14px', borderRadius: 8, fontFamily: 'sans-serif',
     }}>
       {text}

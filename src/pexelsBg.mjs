@@ -104,10 +104,10 @@ export function renderCreditsMd(credits) {
   return lines.join('\n') + '\n';
 }
 
-/** 屏上一行署名：作者去重，>4 位截断为 …等N位；必含 Pexels.com。 */
+/** 屏上一行署名：作者去重，>4 位截断为 ...；必含 Pexels.com。 */
 export function renderCreditsLine(credits) {
   const authors = [...new Set(credits.map((c) => c.author).filter(Boolean))];
-  const shown = authors.length > 4 ? `${authors.slice(0, 4).join(', ')} …等${authors.length}位` : authors.join(', ');
+  const shown = authors.length > 4 ? `${authors.slice(0, 4).join(', ')} ...` : authors.join(', ');
   return `Backgrounds: Pexels.com — ${shown}`;
 }
 

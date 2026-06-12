@@ -118,7 +118,7 @@ test('renderCreditsMd / renderCreditsLine', () => {
   assert.ok(line.includes('Jane') && line.includes('Bob'));
   assert.equal((line.match(/Jane/g) || []).length, 1); // 作者去重
   const many = Array.from({length: 10}, (_, i) => ({type: 'photo', id: i, author: `A${i}`, authorUrl: '', pexelsUrl: ''}));
-  assert.ok(renderCreditsLine(many).includes('等')); // 过多截断
+  assert.ok(renderCreditsLine(many).includes('...')); // 过多截断
 });
 
 test('isLastSecond: 最后 1 秒边界', () => {
